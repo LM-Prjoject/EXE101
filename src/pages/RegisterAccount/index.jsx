@@ -10,7 +10,7 @@ export default function RegisterAccount() {
         {/* Navbar */}
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e9e2da] px-6 py-4 lg:px-20 bg-white z-10 relative">
           <Link to="/home" className="flex items-center gap-3 text-[#2b2b2b] no-underline">
-            <img src="/img/onlyLogo.png" alt="Logo" className="h-10 object-contain" />
+            <img src="/public/img/onlyLogo.png" alt="Logo" className="h-10 object-contain" />
             <h2 className="text-xl font-bold leading-tight tracking-[-0.015em] text-[#c3996c]">Hands &amp; Hour</h2>
           </Link>
 

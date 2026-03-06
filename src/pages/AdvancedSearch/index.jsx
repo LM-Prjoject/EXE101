@@ -221,7 +221,7 @@ export default function AdvancedSearch() {
                 to="/home"
               >
                 <img
-                  src="/img/onlyLogo.png"
+                  src="/public/img/onlyLogo.png"
                   alt="Hands & Hour logo"
                   className="h-9 w-9 object-contain"
                 />
@@ -561,7 +561,7 @@ export default function AdvancedSearch() {
           <div className="max-w-[1440px] mx-auto px-10 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <img
-                src="/img/onlyLogo.png"
+                src="/public/img/onlyLogo.png"
                 alt="Hands & Hour logo"
                 className="h-7 w-7 object-contain"
               />
