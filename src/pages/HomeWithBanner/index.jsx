@@ -55,7 +55,7 @@ export default function HomeWithBanner() {
             <div className="flex items-center gap-4">
               <div className="flex size-10 items-center justify-center overflow-visible">
                 <img
-                  src="/img/onlyLogo.png"
+                  src="/public/img/onlyLogo.png"
                   alt="Hands & Hour Logo"
                   className="h-8 w-8 object-contain scale-150 origin-center"
                 />

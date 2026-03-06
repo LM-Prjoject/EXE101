@@ -8,7 +8,7 @@ export default function HostSidebar() {
         <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 sticky top-0 h-screen z-20">
             <Link to="/" className="p-6 flex items-center gap-3">
                 <img
-                    src="/img/logo.png"
+                    src="/public/img/logo.png"
                     alt="Hands & Hour logo"
                     className="h-9 w-9 object-contain"
                 />

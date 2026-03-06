@@ -29,7 +29,7 @@ export default function EnterParticipantInfo() {
                 <Link to="/home" className="flex items-center gap-3">
                   <div className="relative w-8 h-8 overflow-visible shrink-0">
                     <img
-                      src="/img/onlyLogo.png"
+                      src="/public/img/onlyLogo.png"
                       alt="Hands & Hour logo"
                       className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 object-contain"
                     />
@@ -413,7 +413,7 @@ export default function EnterParticipantInfo() {
               <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-3 text-slate-500">
                   <img
-                    src="/img/onlyLogo.png"
+                    src="/public/img/onlyLogo.png"
                     alt="Hands & Hour logo"
                     className="h-6 w-6 object-contain opacity-80"
                   />
