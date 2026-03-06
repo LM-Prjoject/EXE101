@@ -6,7 +6,7 @@ export default function MySchedule() {
 
   return (
     <>
-      <div className="bg-[#fffaf5] dark:bg-[#0f1115] font-display text-[#c3996c] dark:text-slate-100">
+      <div className="bg-[#F6F2E9] dark:bg-[#0f1115] font-display text-[#c3996c] dark:text-slate-100">
         <div
   className="relative flex min-h-screen w-full flex-col"
   style={{
@@ -15,12 +15,12 @@ export default function MySchedule() {
   }}
 >
           {/* Top Navigation */}
-          <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#fff3ec] dark:bg-[#151822] px-6 md:px-10 py-3 sticky top-0 z-50">
+          <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FDFCFA] dark:bg-[#151822] px-6 md:px-10 py-3 sticky top-0 z-50">
             <Link to="/home" className="flex items-center gap-4">
               {/* Logo */}
               <div className="flex size-10 items-center justify-center overflow-visible">
                 <img
-                  src="/public/img/onlyLogo.png"
+                  src="/img/onlyLogo.png"
                   alt="Hands & Hour Logo"
                   className="h-8 w-8 object-contain scale-150 origin-center"
                 />
@@ -271,7 +271,7 @@ export default function MySchedule() {
           </main>
 
           {/* Bottom Nav Mobile */}
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#fff3ec] dark:bg-[#151822] border-t border-[#fbc4ae]/60 dark:border-slate-800 flex justify-around py-3">
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#FDFCFA] dark:bg-[#151822] border-t border-[#fbc4ae]/60 dark:border-slate-800 flex justify-around py-3">
             <button className="flex flex-col items-center gap-1 text-[#c3996c]/55">
               <span className="material-symbols-outlined">home</span>
               <span className="text-[10px]">Trang chủ</span>
