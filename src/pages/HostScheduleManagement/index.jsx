@@ -1,4 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
+import HostHeader from '../../components/HostHeader';
+import HostSidebar from '../../components/HostSidebar';
 export default function HostScheduleManagement() {
   const navigate = useNavigate();
   return (
@@ -6,84 +8,11 @@ export default function HostScheduleManagement() {
       <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
       <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 sticky top-0 h-screen">
-      <div className="p-6 flex items-center gap-3">
-      <div className="size-10 bg-primary rounded-full flex items-center justify-center text-white">
-      <span className="material-symbols-outlined">back_hand</span>
-      </div>
-      <div>
-      <h1 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">Hands &amp; Hour</h1>
-      <p className="text-xs text-slate-500 dark:text-slate-400">Workshop Host</p>
-      </div>
-      </div>
-      <nav className="flex-1 px-4 space-y-2 mt-4">
-      <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" to="/home">
-      <span className="material-symbols-outlined">dashboard</span>
-      <span className="font-medium">Bảng điều khiển</span>
-      </Link>
-      <Link className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary transition-colors" to="/home">
-      <span className="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1">calendar_today</span>
-      <span className="font-medium">Lịch trình</span>
-      </Link>
-      <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" to="/home">
-      <span className="material-symbols-outlined">grade</span>
-      <span className="font-medium">Đánh giá</span>
-      </Link>
-      <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" to="/home">
-      <span className="material-symbols-outlined">account_balance_wallet</span>
-      <span className="font-medium">Thu nhập</span>
-      </Link>
-      </nav>
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-      <div className="flex items-center gap-3 p-2">
-      <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" data-alt="Profile picture of workshop host" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1l94jSCyam1-4s9FReN-glbTMeROEysjmhZv4MKHUO7zq1bGhKnhaUbZrOmMw-RRTVzsozYHKYEn8XKSUWgg9KknbAYE4hVpm6f6wWpY7g-XdaJWYH8FHl08jDP2FNwa5KWcvuKbvsi0HDBAWU1kc5tmWHJ9Dcni3qlCkMKVC4sw7sJQsmt40pjjGqbJLSiagSLYfm79Q1bUgZr4ChaQ_zlV37XxFMMF73EDbgSYexiKEzlf4Xs0YsxT1PvQdTJT_FlU-xOHZvmgr"); background-size: cover;'></div>
-      <div className="flex-1 min-w-0">
-      <p className="text-sm font-semibold truncate">Alex Rivera</p>
-      <p className="text-xs text-slate-500 truncate">Người tổ chức Chuyên nghiệp</p>
-      </div>
-      </div>
-      </div>
-      </aside>
+      <HostSidebar />
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
       {/* Header */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-8 flex items-center justify-between sticky top-0 z-10">
-      <div className="flex items-center gap-4">
-      <h2 className="text-lg font-bold">Quản lý Lịch trình</h2>
-      </div>
-      <div className="flex items-center gap-4">
-      <div className="relative hidden sm:block">
-      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-      <input className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary w-64 text-sm" placeholder="Tìm kiếm workshop..." type="text"/>
-      </div>
-      <button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-      <span className="material-symbols-outlined">notifications</span>
-      </button>
-      <button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-      <span className="material-symbols-outlined">settings</span>
-      </button>
-      {/* Avatar Menu (Open State Simulation) */}
-      <div className="relative">
-      <button className="size-10 rounded-full bg-primary overflow-hidden border-2 border-primary" data-alt="User avatar menu toggle" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA0gFS9towzx8cMNGR4zCCgHnuzx9l3nsHpcpmrnZenkdos6sWmwGZzsIhwSjH0Enh_u8pIVU7eYahHSo2p9bRwiWc78FFldSzkZcTcsA5Pf7dPURs2Jcc3rbu_a6KhutfaozqHRKgOdP9Ng0jbBd8U3iT5AXx2nuxMaS0xYcxMYVG6Y4oOiDqv-9I_Lkef-jr3vVp75EYwOgKr0yUE92wHcmtreb6knfw7mfch8RKegLlJMRCBGXg3Xl1rKXivJeHG4W5RyzUhpxRb"); background-size: cover;'></button>
-      {/* Popover Menu */}
-      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50">
-      <Link className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700" to="/home">
-      <span className="material-symbols-outlined text-slate-500 text-xl">dashboard</span>
-      <span className="text-sm font-medium">Bảng điều khiển</span>
-      </Link>
-      <Link className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700" to="/home">
-      <span className="material-symbols-outlined text-slate-500 text-xl">handyman</span>
-      <span className="text-sm font-medium">Workshop của tôi</span>
-      </Link>
-      <div className="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
-      <Link className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 text-red-500" to="/home">
-      <span className="material-symbols-outlined text-xl">logout</span>
-      <span className="text-sm font-medium">Đăng xuất</span>
-      </Link>
-      </div>
-      </div>
-      </div>
-      </header>
+      <HostHeader title="Quản lý Lịch trình" />
       {/* Page Content */}
       <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
       <div className="flex flex-wrap items-end justify-between gap-4">

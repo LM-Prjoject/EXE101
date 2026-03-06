@@ -8,7 +8,7 @@ const MOCK_USERS = [
         email: 'user@demo.com',
         password: '123456',
         role: 'user',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBC-F37kS69QjL6m-hH_K2xR5pE0XpP_1u7L-H7t4E-4r3f-W9z-x6L-I_0',
+        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE',
     },
     {
         id: 2,
