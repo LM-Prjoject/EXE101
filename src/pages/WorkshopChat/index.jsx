@@ -35,7 +35,7 @@ export default function WorkshopChat() {
                 {/* Logo */}
                 <div className="relative w-9 h-9 overflow-visible shrink-0">
                   <img
-                    src="/public/img/onlyLogo.png"
+                    src="/img/onlyLogo.png"
                     alt="Hands & Hour logo"
                     className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 object-contain"
                   />

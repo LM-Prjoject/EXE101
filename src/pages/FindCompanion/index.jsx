@@ -1052,7 +1052,7 @@ export default function FindCompanion() {
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8 overflow-visible">
                   <img
-                    src="/public/img/onlyLogo.png"
+                    src="/img/onlyLogo.png"
                     alt="Hands & Hour logo"
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 object-contain"
                   />

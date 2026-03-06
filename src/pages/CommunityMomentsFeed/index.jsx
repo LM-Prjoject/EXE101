@@ -62,7 +62,7 @@ export default function CommunityMomentsFeed() {
                 {/* Logo */}
                 <div className="flex size-10 items-center justify-center overflow-visible">
                   <img
-                    src="/public/img/onlyLogo.png"
+                    src="/img/onlyLogo.png"
                     alt="Hands & Hour Logo"
                     className="h-8 w-8 object-contain scale-150 origin-center"
                   />
@@ -650,7 +650,7 @@ export default function CommunityMomentsFeed() {
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex items-center gap-2">
                 <img
-                  src="/public/img/onlyLogo.png"
+                  src="/img/onlyLogo.png"
                   alt="Hands & Hour logo"
                   className="h-7 w-7 object-contain"
                 />

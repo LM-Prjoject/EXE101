@@ -31,7 +31,7 @@ export default function SelectSessionTime() {
                 {/* Logo to hơn nhưng không làm header cao */}
                 <div className="relative w-10 h-10 overflow-visible shrink-0">
                   <img
-                    src="/public/img/onlyLogo.png"
+                    src="/img/onlyLogo.png"
                     alt="Hands & Hour logo"
                     className="absolute left-0 top-1/2 -translate-y-1/2 h-14 w-14 object-contain"
                   />

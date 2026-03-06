@@ -48,7 +48,7 @@ export default function LoginPage() {
 
           {/* Logo — click về home */}
           <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', zIndex: 2 }}>
-            <img src="/public/img/onlyLogo.png" alt="Logo" style={{ height: 140, objectFit: 'contain' }} />
+            <img src="/img/onlyLogo.png" alt="Logo" style={{ height: 140, objectFit: 'contain' }} />
             <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#c3996c', letterSpacing: '-0.02em' }}>Hands &amp; Hour</span>
           </Link>
 
@@ -120,7 +120,7 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <Link to="/home" style={{ display: 'none', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: '1.5rem' }}>
-            <img src="/public/img/onlyLogo.png" alt="Logo" style={{ height: 32, objectFit: 'contain' }} />
+            <img src="/img/onlyLogo.png" alt="Logo" style={{ height: 32, objectFit: 'contain' }} />
             <span style={{ fontWeight: 900, color: '#2b2b2b' }}>Hands &amp; Hour</span>
           </Link>
 
