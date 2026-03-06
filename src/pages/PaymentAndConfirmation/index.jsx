@@ -36,7 +36,7 @@ export default function PaymentAndConfirmation() {
                   {/* Logo to hơn nhưng không làm header cao */}
                   <div className="relative w-8 h-8 overflow-visible shrink-0">
                     <img
-                      src="/public/img/onlyLogo.png"
+                      src="/img/onlyLogo.png"
                       alt="Hands & Hour logo"
                       className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 object-contain"
                     />
@@ -316,7 +316,7 @@ export default function PaymentAndConfirmation() {
                       {/* Center Logo Overlay */}
                       <div className="absolute bg-white p-1.5 rounded-full shadow-md z-10">
                         <img
-                          src="/public/img/onlyLogo.png"
+                          src="/img/onlyLogo.png"
                           alt="Hands & Hour logo"
                           className="h-6 w-6 object-contain"
                         />

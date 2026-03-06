@@ -12,7 +12,7 @@ export default function HostVerifyStep2() {
           <header className="flex items-center justify-between border-b border-[#f08a78]/10 bg-white dark:bg-background-dark px-6 md:px-10 py-4">
             <Link to="/home" className="flex items-center gap-4">
               <img
-                src="/public/img/onlyLogo.png"
+                src="/img/onlyLogo.png"
                 alt="Hands & Hour logo"
                 className="h-9 w-9 object-contain"
               />
