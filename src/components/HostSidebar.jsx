@@ -36,24 +36,11 @@ export default function HostSidebar() {
                     <span className="material-symbols-outlined" style={path === '/host/income' ? { fontVariationSettings: `'FILL' 1` } : {}}>account_balance_wallet</span>
                     <span>Thu nhập</span>
                 </Link>
-            </nav>
-
-            <div className="px-4 mb-4 mt-2">
-                <Link to="/host/create-workshop" className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary-dark text-white py-2.5 px-4 rounded-xl shadow-lg shadow-primary/30 transition-all font-bold text-sm">
+                  <Link to="/host/create-workshop" className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary-dark text-white py-2.5 px-4 rounded-xl shadow-lg shadow-primary/30 transition-all font-bold text-sm">
                     <span className="material-symbols-outlined text-[20px]">add</span>
                     Tạo Workshop
                 </Link>
-            </div>
-
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3 p-2">
-                    <div className="size-10 flex-shrink-0 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" style={{ backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1l94jSCyam1-4s9FReN-glbTMeROEysjmhZv4MKHUO7zq1bGhKnhaUbZrOmMw-RRTVzsozYHKYEn8XKSUWgg9KknbAYE4hVpm6f6wWpY7g-XdaJWYH8FHl08jDP2FNwa5KWcvuKbvsi0HDBAWU1kc5tmWHJ9Dcni3qlCkMKVC4sw7sJQsmt40pjjGqbJLSiagSLYfm79Q1bUgZr4ChaQ_zlV37XxFMMF73EDbgSYexiKEzlf4Xs0YsxT1PvQdTJT_FlU-xOHZvmgr")`, backgroundSize: "cover" }}></div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate text-slate-800">Alex Rivera</p>
-                        <p className="text-xs text-slate-500 truncate">Host</p>
-                    </div>
-                </div>
-            </div>
+            </nav>
         </aside>
     );
 }
