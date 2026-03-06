@@ -34,7 +34,8 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
+        <div style={{ paddingBottom: "var(--floating-nav-h, 0px)" }}>
+          <Routes>
           {/* Default: redirect to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -69,6 +70,7 @@ export default function App() {
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </div>
 
         {/* Bottom nav — auto-hides on login/register */}
         <FloatingNav />
