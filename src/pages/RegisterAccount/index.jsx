@@ -1,7 +1,59 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { confirmOtp } from '../../api';
 
 export default function RegisterAccount() {
   const navigate = useNavigate();
+  const { register } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState('register');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleRegister(event) {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+
+    if (!name.trim()) {
+      setError('Vui lòng nhập họ và tên của bạn.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await register(name, email, password);
+      setMessage('Đăng ký thành công. Mã OTP đã được gửi đến email của bạn.');
+      setStep('confirm');
+    } catch (err) {
+      setError(err?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirm(event) {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+
+    try {
+      await confirmOtp(email, otp);
+      setMessage('Xác thực OTP thành công. Bạn có thể đăng nhập ngay bây giờ.');
+      setTimeout(() => navigate('/login'), 1400);
+    } catch (err) {
+      setError(err?.message || 'Xác thực OTP thất bại. Vui lòng kiểm tra lại mã.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -17,7 +69,7 @@ export default function RegisterAccount() {
           <div className="hidden md:flex flex-1 justify-end gap-8">
             <div className="flex items-center gap-9">
               <a className="text-[#4a6663] text-sm font-medium hover:text-[#c3996c] transition-colors" href="#">
-                Xưởng thủ công
+                Workshop
               </a>
               <a className="text-[#4a6663] text-sm font-medium hover:text-[#c3996c] transition-colors" href="#">
                 Về chúng tôi
@@ -66,7 +118,7 @@ export default function RegisterAccount() {
                   Tham gia cộng đồng sáng tạo của chúng tôi
                 </h1>
                 <p className="text-white/90 text-lg font-medium leading-normal mb-8">
-                  Khám phá các xưởng thủ công, gặp gỡ các nghệ nhân địa phương và học những nghề thủ công mới tại Đà Nẵng.
+                  Khám phá các Workshop, gặp gỡ các nghệ nhân địa phương và học những nghề thủ công mới tại Đà Nẵng.
                 </p>
 
                 <div className="flex items-center gap-3 text-white/80 text-sm font-medium">
@@ -97,78 +149,101 @@ export default function RegisterAccount() {
               <div className="max-w-md mx-auto w-full">
                 <div className="mb-8">
                   <h2 className="text-3xl font-extrabold text-[#2b2b2b] mb-2">Tạo tài khoản</h2>
-                  <p className="text-[#4a6663]">Đăng ký để đặt xưởng thủ công đầu tiên của bạn ngay hôm nay.</p>
+                  <p className="text-[#4a6663]">Đăng ký để đặt Workshop đầu tiên của bạn ngay hôm nay.</p>
                 </div>
 
-                <form action="#" className="flex flex-col gap-5">
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#2b2b2b] text-sm font-bold">Họ và tên</span>
-                    <input
-                      className="w-full rounded-xl border border-[#e9e2da] bg-white px-4 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
-                      placeholder="Họ và tên"
-                      type="text"
-                    />
-                  </label>
+                {error && (
+                  <div className="mb-5 rounded-2xl border border-[#f8d4d0] bg-[#fff1f0] px-4 py-3 text-sm text-[#b91c1c]">
+                    {error}
+                  </div>
+                )}
+                {message && (
+                  <div className="mb-5 rounded-2xl border border-[#d1fae5] bg-[#ecfdf5] px-4 py-3 text-sm text-[#065f46]">
+                    {message}
+                  </div>
+                )}
 
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#2b2b2b] text-sm font-bold">Địa chỉ Email</span>
-                    <input
-                      className="w-full rounded-xl border border-[#e9e2da] bg-white px-4 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
-                      placeholder="abc@gmail.com"
-                      type="email"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[#2b2b2b] text-sm font-bold">Mật khẩu</span>
-                    <div className="relative">
+                {step === 'register' ? (
+                  <form onSubmit={handleRegister} className="flex flex-col gap-5">
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[#2b2b2b] text-sm font-bold">Họ và tên</span>
                       <input
-                        className="w-full rounded-xl border border-[#e9e2da] bg-white pl-4 pr-12 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
-                        placeholder="Nhập mật khẩu"
-                        type="password"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full rounded-xl border border-[#e9e2da] bg-white px-4 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
+                        placeholder="Họ và tên"
+                        type="text"
                       />
-                    </div>
-                  </label>
+                    </label>
 
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="mt-2 w-full h-12 bg-[#fbc4ae] hover:bg-[#f08a78] text-white font-bold rounded-full transition-all transform active:scale-[0.98] shadow-[0_6px_18px_rgba(195,153,108,0.18)]"
-                    type="button"
-                  >
-                    Tạo tài khoản
-                  </button>
-                </form>
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[#2b2b2b] text-sm font-bold">Địa chỉ Email</span>
+                      <input
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full rounded-xl border border-[#e9e2da] bg-white px-4 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
+                        placeholder="abc@gmail.com"
+                        type="email"
+                        required
+                      />
+                    </label>
 
-                <div className="relative flex py-6 items-center">
-                  <div className="flex-grow border-t border-[#e9e2da]"></div>
-                  <span className="flex-shrink-0 mx-4 text-[#9ca3af] text-sm font-medium">Hoặc tiếp tục với</span>
-                  <div className="flex-grow border-t border-[#e9e2da]"></div>
-                </div>
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[#2b2b2b] text-sm font-bold">Mật khẩu</span>
+                      <div className="relative">
+                        <input
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full rounded-xl border border-[#e9e2da] bg-white pl-4 pr-12 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
+                          placeholder="Nhập mật khẩu"
+                          type="password"
+                          minLength={8}
+                          required
+                        />
+                      </div>
+                    </label>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    className="flex items-center justify-center gap-2 h-12 rounded-xl border border-[#e9e2da] hover:bg-[#fbc4ae]/35 bg-white text-[#2b2b2b] font-medium transition-colors"
-                    type="button"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M23.766 12.2764C23.766 11.4607 23.6999 10.6406 23.5588 9.83807H12.24V14.4591H18.7217C18.4528 15.9494 17.5885 17.2678 16.323 18.1056V21.1039H20.19C22.4608 19.0139 23.766 15.9274 23.766 12.2764Z" fill="#4285F4" />
-                      <path d="M12.24 24.0008C15.4765 24.0008 18.2059 22.9382 20.19 21.1039L16.323 18.1056C15.2517 18.8375 13.8627 19.252 12.24 19.252C9.11388 19.252 6.45946 17.1399 5.50705 14.3003H1.5166V17.3912C3.55371 21.4434 7.7029 24.0008 12.24 24.0008Z" fill="#34A853" />
-                      <path d="M5.50705 14.3003C5.00636 12.8099 5.00636 11.1961 5.50705 9.70575V6.61481H1.5166C-0.185593 10.0056 -0.185593 14.0005 1.5166 17.3912L5.50705 14.3003Z" fill="#FBBC05" />
-                      <path d="M12.24 4.74966C13.9509 4.7232 15.6044 5.36697 16.8434 6.54867L20.2695 3.12262C18.1001 1.0855 15.2208 -0.034466 12.24 0.000808666C7.7029 0.000808666 3.55371 2.55822 1.5166 6.61481L5.50705 9.70575C6.45064 6.86173 9.10947 4.74966 12.24 4.74966Z" fill="#EA4335" />
-                    </svg>
-                    Google
-                  </button>
+                    <button
+                      className="mt-2 w-full h-12 bg-[#fbc4ae] hover:bg-[#f08a78] text-white font-bold rounded-full transition-all transform active:scale-[0.98] shadow-[0_6px_18px_rgba(195,153,108,0.18)]"
+                      type="submit"
+                      disabled={loading}
+                    >
+                      {loading ? 'Đang gửi...' : 'Tạo tài khoản'}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleConfirm} className="flex flex-col gap-5">
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[#2b2b2b] text-sm font-bold">Email</span>
+                      <input
+                        value={email}
+                        disabled
+                        className="w-full rounded-xl border border-[#e9e2da] bg-[#f3f4f6] px-4 h-12 text-base text-[#6b7280] focus:outline-none"
+                        type="email"
+                      />
+                    </label>
 
-                  <button
-                    className="flex items-center justify-center gap-2 h-12 rounded-xl border border-[#e9e2da] hover:bg-[#fbc4ae]/35 bg-white text-[#2b2b2b] font-medium transition-colors"
-                    type="button"
-                  >
-                    <svg className="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                    Facebook
-                  </button>
-                </div>
+                    <label className="flex flex-col gap-2">
+                      <span className="text-[#2b2b2b] text-sm font-bold">Mã OTP</span>
+                      <input
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="w-full rounded-xl border border-[#e9e2da] bg-white px-4 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
+                        placeholder="Nhập mã OTP"
+                        type="text"
+                        required
+                      />
+                    </label>
+
+                    <button
+                      className="mt-2 w-full h-12 bg-[#fbc4ae] hover:bg-[#f08a78] text-white font-bold rounded-full transition-all transform active:scale-[0.98] shadow-[0_6px_18px_rgba(195,153,108,0.18)]"
+                      type="submit"
+                      disabled={loading}
+                    >
+                      {loading ? 'Đang xác thực...' : 'Xác thực OTP'}
+                    </button>
+                  </form>
+                )}
 
                 <div className="mt-8 text-center">
                   <p className="text-[#4a6663] text-sm">
@@ -183,7 +258,7 @@ export default function RegisterAccount() {
           </div>
         </main>
 
-        <footer className="text-center py-6 text-[#4a6663]/60 text-xs">© 2023 Hands &amp; Hour. Bảo lưu mọi quyền.</footer>
+        <footer className="text-center py-6 text-[#4a6663]/60 text-xs">© 2025 Hands &amp; Hour. Bảo lưu mọi quyền.</footer>
       </div>
     </>
   );

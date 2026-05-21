@@ -48,9 +48,9 @@ for (const dir of hostDirs) {
         /(<Link[^>]*to=)["']\/home["']([^>]*>[\s\S]*?Thu nhập[\s\S]*?<\/Link>)/g,
         '$1"/host/income"$2'
     );
-    // Workshop của tôi / Xưởng của tôi -> /host/workshops
+    // Workshop của tôi / Workshopcủa tôi -> /host/workshops
     content = content.replace(
-        /(<Link[^>]*to=)["']\/home["']([^>]*>[\s\S]*?(?:Workshop của tôi|Xưởng của tôi)[\s\S]*?<\/Link>)/g,
+        /(<Link[^>]*to=)["']\/home["']([^>]*>[\s\S]*?(?:Workshop của tôi|Workshopcủa tôi)[\s\S]*?<\/Link>)/g,
         '$1"/host/workshops"$2'
     );
     // Học viên -> /host/participants

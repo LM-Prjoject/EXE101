@@ -1,7 +1,44 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, Link, useParams } from "react-router-dom";
+import { getWorkshopById } from "../../api";
+
+function formatCurrency(value) {
+  if (value == null) return "Liên hệ";
+  return `${Number(value).toLocaleString("vi-VN")}₫`;
+}
+
+function formatDuration(minutes) {
+  if (!minutes) return "Đang cập nhật";
+  if (minutes < 60) return `${minutes} phút`;
+  const hours = minutes / 60;
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} giờ`;
+}
+
+function formatDate(date) {
+  if (!date) return "Đang cập nhật";
+  return new Intl.DateTimeFormat("vi-VN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+function formatLanguage(language) {
+  if (!language) return "Đang cập nhật";
+  const normalized = language.toLowerCase();
+  if (normalized === "en") return "Tiếng Anh";
+  if (normalized === "vi") return "Tiếng Việt";
+  return language;
+}
 
 export default function FindCompanion() {
   const navigate = useNavigate();
+  const { workshopId } = useParams();
+  const location = useLocation();
+  const [workshop, setWorkshop] = useState(location.state?.workshop || null);
+  const [loading, setLoading] = useState(Boolean(workshopId));
+  const [error, setError] = useState("");
 
   const BRAND = {
     primary: "#c3996c", // warm gold (text/brand)
@@ -23,6 +60,87 @@ export default function FindCompanion() {
     background: "rgba(15,20,27,0.86)",
     borderColor: BRAND.darkBorder,
   };
+
+  useEffect(() => {
+    if (!workshopId) {
+      setLoading(false);
+      setError("Không tìm thấy workshop. Vui lòng chọn workshop từ trang chủ.");
+      return;
+    }
+
+    let ignore = false;
+    async function loadWorkshop() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const data = await getWorkshopById(workshopId);
+        if (!ignore) setWorkshop(data);
+      } catch (err) {
+        if (!ignore) {
+          setError(err?.message || "Không thể tải thông tin workshop.");
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    loadWorkshop();
+    return () => {
+      ignore = true;
+    };
+  }, [workshopId]);
+
+  const detail = useMemo(() => {
+    const firstSchedule = workshop?.schedules?.[0] || {};
+    const priceLower = workshop?.priceLower ?? firstSchedule.priceLower ?? workshop?.price;
+    const priceUpper = workshop?.priceUpper ?? firstSchedule.priceUpper ?? priceLower;
+    const thumbnail = workshop?.thumbnailLink || "/img/onlyLogo.png";
+
+    return {
+      title: workshop?.title || "Workshop",
+      thumbnail,
+      galleryImages: [thumbnail],
+      description: workshop?.description || "Thông tin workshop đang được cập nhật.",
+      language: formatLanguage(workshop?.language),
+      location: workshop?.location || "Đang cập nhật",
+      category: workshop?.category || "Workshop",
+      instructorName: workshop?.instructorName || "Người hướng dẫn",
+      duration: formatDuration(workshop?.duration),
+      level: workshop?.level || "Đang cập nhật",
+      rating: workshop?.rating ?? 0,
+      reviewCount: workshop?.reviewCount ?? 0,
+      priceText:
+        priceLower != null && priceUpper != null && Number(priceLower) !== Number(priceUpper)
+          ? `${formatCurrency(priceLower)} - ${formatCurrency(priceUpper)}`
+          : formatCurrency(priceLower),
+      schedules: workshop?.schedules || [],
+      remainingTickets: firstSchedule.remainingTickets,
+    };
+  }, [workshop]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-display" style={{ background: BRAND.lightBg }}>
+        <div className="rounded-2xl border bg-white px-6 py-5 text-sm font-semibold" style={{ borderColor: `${BRAND.soft}99`, color: "#475569" }}>
+          Đang tải thông tin workshop...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-display px-4" style={{ background: BRAND.lightBg }}>
+        <div className="max-w-md rounded-2xl border bg-white p-6 text-center" style={{ borderColor: `${BRAND.soft}99` }}>
+          <p className="mb-4 text-sm font-semibold" style={{ color: "#b91c1c" }}>{error}</p>
+          <button className="rounded-xl px-5 py-2 text-sm font-black text-white" style={{ background: BRAND.accent }} onClick={() => navigate("/home")}>
+            Về trang chủ
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -193,7 +311,7 @@ export default function FindCompanion() {
               chevron_right
             </span>
             <span className="font-semibold" style={{ color: "#0f172a" }}>
-              Bãi biển Mỹ Khê, Đà Nẵng
+              {detail.location}
             </span>
           </nav>
 
@@ -209,7 +327,7 @@ export default function FindCompanion() {
                     color: BRAND.primary,
                   }}
                 >
-                  Arts &amp; Crafts
+                  {detail.category}
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -223,19 +341,19 @@ export default function FindCompanion() {
                     className="text-sm font-black"
                     style={{ color: "#0f172a" }}
                   >
-                    Bãi biển Mỹ Khê, Đà Nẵng
+                    {Number(detail.rating).toFixed(1)}
                   </span>
                   <span
                     className="text-sm font-medium"
                     style={{ color: "#94a3b8" }}
                   >
-                    (128 đánh giá)
+                    ({detail.reviewCount} đánh giá)
                   </span>
                 </div>
               </div>
 
               <h1 className="text-3xl md:text-4xl font-black leading-tight">
-                Workshop Vẽ Tranh Canvas Hoàng Hôn
+                {detail.title}
               </h1>
 
               <div
@@ -248,7 +366,7 @@ export default function FindCompanion() {
                 >
                   location_on
                 </span>
-                <span>Bãi biển Mỹ Khê, Đà Nẵng</span>
+                <span>{detail.location}</span>
               </div>
             </div>
 
@@ -302,8 +420,7 @@ export default function FindCompanion() {
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                 style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3xTVFNo4qKB-rTZ7U4cIUiwjOqiwC0Z0pqDV9F-cVCRdRh2DKVJaqW_VE-0W2ly-J0aTnPBznFMLpMv7ejDvI5R6na3IbMY9FDq9JpYCBj_9Bsw52zjpLM_wvaQR_mJ4WTA_OLBmvs4abSrtig-O-sxeDpmfW8-ivzsOU_lkIk1WZC_dPGkR3scHRQ-A80EKsh0a1IwKGgsa2RUKEg-O7zEKGkxlRrCxVwFoSKcOCwFTmIfFag4HNZ_Jf1A2ICdEE6Qi7KjprMVuC')",
+                  backgroundImage: `url('${detail.thumbnail}')`,
                 }}
               />
               <div
@@ -312,19 +429,14 @@ export default function FindCompanion() {
               />
             </div>
 
-            {[
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuDF6QmJfID8hl4ipHUp4UbZfmkMKmxu8ayIuR7Nr_GuJl0qrvgBwmghz43gSDTOJsBu2SS0MDWWvk0fb7Vem40CDpaemqyBFXU9VE7_N3XtMXFxqZUSEg2ziLd6N95LbrBt25SpLw8VY4cbmfUJPJdUGNswreEsEQXh74fIrt1h8e4PC7x7kBFcahwvhRxbuavMSd-vY-19yPXPUEX24-yIsfP9_EHe7p9kPCpZEHMI7x7Jnopw1daCmRbUaV-yzrRrAlYUvCczdNCl",
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuBc6GJMxdoNULmQ6L_DNepv7zt1qKyFD9SbuzYJrwta3E4bA9pDJz8e-KEaD24jNGxABrDHF-a7Tj_JUSlJxferyPxmVfCGiFTUyx7Mppm9OY97pDjIj8BIfophresBnT32X241XUJgwKxurZGNFO525cE6bbXGVA9jGFFj036PfwziR2e7jA5NH7U0PCh9xJqYL563oVijVv-5A2ydWb1NZ7aiuLTURAxJ9u7d6POEWYMIZEYWy-l0qoaCZ8ZWpmSo6ZsexnIoZPom",
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuCtF6KctFIh_nkzOzMUaS0Z_lWGLuZ8aRWO3YsLr9T05FkJV4PnzM3UGuWJkirmizEnkSdAN6WsD7lpEOUeIGucwoGoqr9jnYBueYLo2vazx4zDEsxmaTc4MrAhs5u3bCFC1YgNwUxKb640MskVWoYMj6GkSls-ckTZpaHKGdztTDn6QINNR6vMlQ1S3BC-j7KOuNQaTR0LJBXdHOY_HXvuHGWIjfGoLaGSEGDRK1HuPN8hes8G6gEF_krNJcV-aquw9oeB8GU4Ki-C",
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuCHSJ8ba9oGkeZyL95Jnp5m2YnJThkXbjWKkH1967cj3ahj_MtqYjl2R-HTEYcKFu2fBf76756UICMDQiRyoNAXfA5x5Z1o_wGgRTUzIo98qPsDhw6x0Z7h_KhRgVwEADwsVSBOipzRBMq-bdmGuT4g6FwgJXVrPTSmbqL7L3aYMp8P8LQhLtjybUJt2aNqbH3L3IfqzoaOvTa8tl_Y1762kT98SWVFNqmnR3U7rScFK5eqhIoRnUghnWutOPTDgSXJz1P5gUtDRfkT",
-            ].map((src, idx) => (
+            {[0, 1, 2, 3].map((_, idx) => (
               <div
-                key={src}
+                key={idx}
                 className="md:col-span-1 relative group cursor-pointer"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: `url('${src}')` }}
+                  style={{ backgroundImage: `url('${detail.galleryImages[idx] || detail.thumbnail}')` }}
                 />
                 {idx === 3 && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -368,20 +480,9 @@ export default function FindCompanion() {
                   className="max-w-none leading-relaxed"
                   style={{ color: "#475569" }}
                 >
-                  <p className="mb-4">
-                    Thỏa sức sáng tạo cùng workshop Vẽ Tranh Canvas Hoàng Hôn!
-                    Tọa lạc ngay gần bãi biển Mỹ Khê xinh đẹp, buổi học này được
-                    thiết kế cho cả người mới bắt đầu và những người đam mê hội
-                    họa. Bạn sẽ được hướng dẫn từng bước bởi họa sĩ địa phương
-                    giàu kinh nghiệm của chúng tôi, anh Minh, người chuyên về
-                    tranh phong cảnh acrylic.
-                  </p>
+                  <p className="mb-4">{detail.description}</p>
                   <p>
-                    Tất cả vật liệu đều được cung cấp sẵn, bao gồm toan vẽ
-                    40x50cm, sơn acrylic, cọ vẽ và tạp dề. Thưởng thức đồ uống
-                    miễn phí (cà phê, trà hoặc nước trái cây) trong khi bạn vẽ.
-                    Kết thúc buổi học kéo dài 3 giờ, bạn sẽ có tác phẩm của
-                    riêng mình để mang về làm kỷ niệm độc đáo từ Đà Nẵng.
+                    Workshop được hướng dẫn bởi {detail.instructorName}. Thông tin lịch học, giá vé và số chỗ còn lại được cập nhật trực tiếp từ hệ thống.
                   </p>
                 </div>
 
@@ -390,17 +491,17 @@ export default function FindCompanion() {
                   style={{ borderColor: `${BRAND.soft}66` }}
                 >
                   {[
-                    { label: "Thời lượng", icon: "schedule", value: "3 Giờ" },
-                    { label: "Cấp độ", icon: "stairs", value: "Cơ bản" },
+                    { label: "Thời lượng", icon: "schedule", value: detail.duration },
+                    { label: "Cấp độ", icon: "stairs", value: detail.level },
                     {
                       label: "Ngôn ngữ",
                       icon: "translate",
-                      value: "Tiếng Anh, Tiếng Việt",
+                      value: detail.language,
                     },
                     {
-                      label: "Số lượng khách",
+                      label: "Còn trống",
                       icon: "groups",
-                      value: "Tối đa 10",
+                      value: detail.remainingTickets != null ? `${detail.remainingTickets} chỗ` : "Đang cập nhật",
                     },
                   ].map((it) => (
                     <div key={it.label} className="flex flex-col gap-1">
@@ -449,7 +550,7 @@ export default function FindCompanion() {
                 </h2>
 
                 <p className="mb-4" style={{ color: "#475569" }}>
-                  123 Tran Bach Dang, My An, Ngu Hanh Son, Da Nang
+                  {detail.location}
                 </p>
 
                 <div
@@ -668,13 +769,13 @@ export default function FindCompanion() {
                           className="text-3xl font-black"
                           style={{ color: "#0f172a" }}
                         >
-                          450k
+                          {detail.priceText}
                         </span>
                         <span
                           className="text-lg font-semibold"
                           style={{ color: "#64748b" }}
                         >
-                          VND
+                          mỗi người
                         </span>
                       </div>
                     </div>
@@ -721,9 +822,15 @@ export default function FindCompanion() {
                             e.currentTarget.style.borderColor = `${BRAND.soft}99`;
                           }}
                         >
-                          <option>Sat, Oct 28 - 2:00 PM</option>
-                          <option>Sun, Oct 29 - 9:00 AM</option>
-                          <option>Sun, Oct 29 - 2:00 PM</option>
+                          {detail.schedules.length > 0 ? (
+                            detail.schedules.map((schedule) => (
+                              <option key={schedule.id || schedule.startOn}>
+                                {formatDate(schedule.startOn)} - {schedule.remainingTickets ?? 0} chỗ
+                              </option>
+                            ))
+                          ) : (
+                            <option>Đang cập nhật lịch học</option>
+                          )}
                         </select>
 
                         <div
@@ -826,7 +933,11 @@ export default function FindCompanion() {
                     <span className="material-symbols-outlined text-lg">
                       local_fire_department
                     </span>
-                    <span>Chỉ còn 4 chỗ cho ngày này!</span>
+                    <span>
+                      {detail.remainingTickets != null
+                        ? `Còn ${detail.remainingTickets} chỗ cho lịch gần nhất!`
+                        : "Số chỗ trống đang được cập nhật."}
+                    </span>
                   </div>
 
                   {/* CTA */}
@@ -950,7 +1061,7 @@ export default function FindCompanion() {
           {/* Related Workshops */}
           <div
             className="mt-16 border-t pt-12"
-            style={{ borderColor: `${BRAND.soft}99` }}
+            style={{ borderColor: `${BRAND.soft}99`, display: "none" }}
           >
             <h2 className="text-2xl font-black mb-8">Bạn cũng có thể thích</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1066,7 +1177,7 @@ export default function FindCompanion() {
               </div>
 
               <div className="text-sm" style={{ color: "#64748b" }}>
-                © 2023 Hands &amp; Hour Đà Nẵng. Bảo lưu mọi quyền.
+                © 2025 Hands &amp; Hour Đà Nẵng. Bảo lưu mọi quyền.
               </div>
 
               <div className="flex gap-4">

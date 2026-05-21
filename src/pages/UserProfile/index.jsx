@@ -1,7 +1,62 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getUserById } from "../../api";
+import { useAuth } from "../../context/AuthContext";
+
+function getJoinedYear(user) {
+  if (!user?.createdOn) return null;
+  const year = new Date(user.createdOn).getFullYear();
+  return Number.isNaN(year) ? null : year;
+}
 
 export default function UserProfile() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState("");
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      setLoadingProfile(false);
+      setProfileError("Không tìm thấy thông tin đăng nhập.");
+      return;
+    }
+
+    let ignore = false;
+    async function loadProfile() {
+      setLoadingProfile(true);
+      setProfileError("");
+
+      try {
+        const data = await getUserById(currentUser.id);
+        if (!ignore) setProfile(data);
+      } catch (err) {
+        if (!ignore) setProfileError(err?.message || "Không thể tải thông tin user.");
+      } finally {
+        if (!ignore) setLoadingProfile(false);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      ignore = true;
+    };
+  }, [currentUser?.id]);
+
+  const user = useMemo(() => {
+    const name = profile?.name || currentUser?.name || currentUser?.email?.split("@")[0] || "Người dùng";
+    return {
+      id: profile?.id || currentUser?.id,
+      name,
+      email: profile?.email || currentUser?.email || "Chưa cập nhật email",
+      phoneNumber: profile?.phoneNumber || "Chưa cập nhật số điện thoại",
+      role: profile?.role || currentUser?.role || "user",
+      verified: profile?.verified,
+      isActive: profile?.isActive,
+      joinedYear: getJoinedYear(profile),
+    };
+  }, [profile, currentUser]);
 
   return (
     <>
@@ -73,7 +128,9 @@ export default function UserProfile() {
               </div>
 
               {/* CTA: accent là màu chủ đạo */}
-              <button onClick={() => navigate('/host/verification')} className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"><span className="truncate">Trở thành Host</span></button>
+              {user.role !== "host" && (
+                <button onClick={() => navigate('/host/verification')} className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"><span className="truncate">Trở thành Host</span></button>
+              )}
 
               <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
                 <button className="relative group">
@@ -85,7 +142,7 @@ export default function UserProfile() {
 
                 <div
                   className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
-                  data-alt="Portrait of Linh Nguyen"
+                  data-alt={`${user.name} avatar`}
                   style={{
                     backgroundImage:
                       'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE")',
@@ -107,7 +164,7 @@ export default function UserProfile() {
                   <div className="relative mt-4 md:mt-0">
                     <div
                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-32 border-4 border-white dark:border-[#151822] shadow-md"
-                      data-alt="Portrait of Linh Nguyen"
+                      data-alt={`${user.name} avatar`}
                       style={{
                         backgroundImage:
                           'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE")',
@@ -122,23 +179,23 @@ export default function UserProfile() {
 
                   <div className="flex flex-col items-center md:items-start flex-1 pt-4 md:pt-12 text-center md:text-left">
                     <h1 className="text-[#2B2B2B] dark:text-slate-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
-                      Linh Nguyen
+                      {loadingProfile ? "Đang tải..." : user.name}
                     </h1>
                     <p className="text-[#2B2B2B]/70 dark:text-[#d5ddc3] text-base font-medium mt-1">
-                      Người yêu gốm &amp; họa sĩ cuối tuần
+                      {user.email}
                     </p>
                     <div className="flex items-center gap-2 mt-2 text-sm text-[#2B2B2B]/60 dark:text-[#d5ddc3]">
                       <span className="material-symbols-outlined text-lg">
-                        location_on
+                        badge
                       </span>
-                      <span>Đà Nẵng, Việt Nam</span>
+                      <span>{user.role === "host" ? "Host" : "User"}</span>
                       <span className="mx-2">•</span>
-                      <span>Thành viên từ 2023</span>
+                      <span>{user.joinedYear ? `Thành viên từ ${user.joinedYear}` : `ID: ${user.id || "N/A"}`}</span>
                     </div>
                     <p className="mt-4 text-[#2B2B2B] dark:text-slate-300 max-w-lg leading-relaxed">
-                      Tôi yêu thích khám phá các làng nghề truyền thống Việt Nam
-                      và gặp gỡ những người bạn mới. Luôn tìm kiếm những buổi
-                      làm gốm hoặc workshop màu nước bên bờ biển!
+                      {profileError
+                        ? profileError
+                        : `Số điện thoại: ${user.phoneNumber}. Trạng thái: ${user.verified == null ? "chưa có dữ liệu xác minh" : user.verified ? "đã xác minh" : "chưa xác minh"}.`}
                     </p>
                   </div>
 
@@ -210,8 +267,20 @@ export default function UserProfile() {
                 </a>
               </div>
 
+              <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
+                <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
+                  event_busy
+                </span>
+                <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                  Chưa có workshop sắp tới
+                </h4>
+                <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mt-2">
+                  API profile hiện chưa trả danh sách booking, nên khu vực này không hiển thị dữ liệu mẫu.
+                </p>
+              </div>
+
               {/* Cards giữ nguyên layout, chỉ đổi accent/soft/border */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12" style={{ display: "none" }}>
                 {/* Card 1 */}
                 <div className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col h-full">
                   <div className="relative h-48 overflow-hidden">
@@ -394,7 +463,18 @@ export default function UserProfile() {
               </div>
 
               <div className="bg-white dark:bg-[#151822] rounded-3xl p-6 shadow-sm border border-[#fbc4ae]/40 dark:border-slate-800">
-                <div className="flex flex-col gap-6">
+                <div className="text-center py-8">
+                  <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
+                    history
+                  </span>
+                  <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                    Chưa có hoạt động gần đây
+                  </h4>
+                  <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mt-2">
+                    Backend `/api/User/{user.id}` hiện chỉ trả thông tin user cơ bản.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-6" style={{ display: "none" }}>
                   <div className="flex flex-col sm:flex-row gap-4 border-b border-[#fbc4ae]/40 dark:border-slate-700 pb-6 last:border-0 last:pb-0">
                     <div
                       className="w-full sm:w-32 h-24 rounded-xl bg-cover bg-center shrink-0"
@@ -411,7 +491,7 @@ export default function UserProfile() {
                             Workshop làm Macrame treo tường
                           </h5>
                           <p className="text-xs text-[#2B2B2B]/60 dark:text-[#d5ddc3] mb-2">
-                            Đã tham gia 15 thg 9, 2023 • Trung tâm Đà Nẵng
+                            Đã tham gia 15 thg 9, 2025 • Trung tâm Đà Nẵng
                           </p>
                         </div>
                         <div className="flex text-amber-400">
@@ -449,7 +529,7 @@ export default function UserProfile() {
                             Workshop làm nến thơm
                           </h5>
                           <p className="text-xs text-[#2B2B2B]/60 dark:text-[#d5ddc3] mb-2">
-                            Đã tham gia 02 thg 8, 2023 • Hội An
+                            Đã tham gia 02 thg 8, 2025 • Hội An
                           </p>
                         </div>
                         <div className="flex text-amber-400">
@@ -482,7 +562,7 @@ export default function UserProfile() {
           <footer className="bg-[#FEFEFD] dark:bg-[#151822] border-t border-[#fbc4ae]/60 dark:border-slate-800 py-8 px-10 text-center">
             <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-[#c3996c]/60 dark:text-[#d5ddc3]">
               <p>
-                © 2023 Hands &amp; Hour. Được tạo nên với tâm hồn nghệ sĩ tại Đà
+                © 2025 Hands &amp; Hour. Được tạo nên với tâm hồn nghệ sĩ tại Đà
                 Nẵng.
               </p>
               <div className="flex gap-6">

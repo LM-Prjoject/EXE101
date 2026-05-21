@@ -35,6 +35,10 @@ export default function FloatingNav() {
   const shouldHide = AUTH_PAGES.includes(location.pathname) || !currentUser;
 
   const isHost = !!currentUser && currentUser.role === "host";
+  const displayName =
+    currentUser?.name ||
+    currentUser?.email?.split("@")[0] ||
+    (isHost ? "Host" : "User");
   const links = useMemo(() => (isHost ? hostLinks : userLinks), [isHost]);
 
   // ✅ BRAND COLORS
@@ -118,12 +122,13 @@ export default function FloatingNav() {
           marginRight: "0.25rem",
           borderRadius: "0.625rem",
           background: supportColor,
-          minWidth: 60,
+          minWidth: 72,
+          maxWidth: 120,
         }}
       >
         <img
           src={"https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"}
-          alt={currentUser?.name || "User"}
+          alt={displayName}
           style={{
             width: 22,
             height: 22,
@@ -139,9 +144,13 @@ export default function FloatingNav() {
             color: accentColor,
             marginTop: 1,
             whiteSpace: "nowrap",
+            maxWidth: 96,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
+          title={displayName}
         >
-          {isHost ? "Host" : "User"}
+          {displayName}
         </span>
       </div>
 

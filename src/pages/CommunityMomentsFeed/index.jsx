@@ -660,7 +660,7 @@ export default function CommunityMomentsFeed() {
               </div>
 
               <div className="text-sm" style={{ color: MUTED }}>
-                © 2023 Hands &amp; Hour. Được tạo ra với tình yêu tại Đà Nẵng.
+                © 2025 Hands &amp; Hour. Được tạo ra với tình yêu tại Đà Nẵng.
               </div>
 
               <div className="flex gap-4">

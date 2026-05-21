@@ -1,7 +1,88 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { getWorkshops } from "../../api";
+
+function getWorkshopList(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.workshops)) return data.workshops;
+  if (Array.isArray(data?.result)) return data.result;
+  return [];
+}
+
+function formatCurrency(value) {
+  if (value == null) return "Liên hệ";
+  return `${Number(value).toLocaleString("vi-VN")}₫`;
+}
+
+function formatDuration(minutes) {
+  if (!minutes) return "Đang cập nhật";
+  if (minutes < 60) return `${minutes} phút`;
+  const hours = minutes / 60;
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} giờ`;
+}
+
+function toCard(workshop) {
+  const price = workshop.price ?? workshop.priceLower ?? workshop.priceUpper;
+  return {
+    id: workshop.id,
+    rating: Number(workshop.rating ?? 0).toFixed(1),
+    reviews: workshop.reviewCount ?? 0,
+    liked: workshop.liked,
+    img: workshop.thumbnailLink || "/img/onlyLogo.png",
+    title: workshop.title || "Workshop",
+    desc: workshop.description || "Thông tin workshop đang được cập nhật.",
+    duration: formatDuration(workshop.duration),
+    schedule: workshop.nextSchedule || "Đang cập nhật",
+    location: workshop.location || "Đang cập nhật",
+    instructorName: workshop.instructorName || "Người hướng dẫn",
+    instructorImg: workshop.instructorImgLink,
+    instructorInitial: (workshop.instructorName || "HH").slice(0, 2).toUpperCase(),
+    price: formatCurrency(price),
+    badge: workshop.category || null,
+  };
+}
 
 export default function AdvancedSearch() {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [workshops, setWorkshops] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadWorkshops() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const data = await getWorkshops(1, 50, searchTerm);
+        if (!ignore) setWorkshops(getWorkshopList(data));
+      } catch (err) {
+        if (!ignore) setError(err?.message || "Không thể tải danh sách workshop.");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    const timer = setTimeout(loadWorkshops, 250);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
+
+  const resultCards = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+    return workshops
+      .filter((workshop) => {
+        if (!keyword) return true;
+        return (workshop.title || "").toLowerCase().includes(keyword);
+      })
+      .map(toCard);
+  }, [workshops, searchTerm]);
 
   // ===== Cards data =====
   const cards = [
@@ -109,7 +190,10 @@ export default function AdvancedSearch() {
 
   const CardItem = ({ item }) => {
     return (
-      <div className="group rounded-2xl overflow-hidden border border-[#fbc4ae]/55 dark:border-white/10 bg-white/70 dark:bg-white/5 shadow-sm hover:shadow-xl hover:shadow-[#f08a78]/15 transition-all duration-300 flex flex-col h-full">
+      <div
+        onClick={() => navigate(`/find-companion/${item.id}`)}
+        className="group cursor-pointer rounded-2xl overflow-hidden border border-[#fbc4ae]/55 dark:border-white/10 bg-white/70 dark:bg-white/5 shadow-sm hover:shadow-xl hover:shadow-[#f08a78]/15 transition-all duration-300 flex flex-col h-full"
+      >
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden">
           <img
@@ -241,10 +325,10 @@ export default function AdvancedSearch() {
                   </div>
                   <input
                     className="block w-full pl-10 pr-3 py-2.5 rounded-xl border border-transparent bg-[#fbc4ae]/25 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f08a78]/45 focus:bg-[#fbc4ae]/35 transition-all"
-                    placeholder="Tìm kiếm hội thảo, giảng viên..."
+                    placeholder="Tìm kiếm workshop..."
                     type="text"
-                    value="gốm sứ"
-                    readOnly
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
@@ -309,7 +393,7 @@ export default function AdvancedSearch() {
               chevron_right
             </span>
             <span className="text-slate-900 dark:text-white font-semibold">
-              Gốm sứ
+              {searchTerm || "Tất cả workshop"}
             </span>
           </div>
 
@@ -451,11 +535,11 @@ export default function AdvancedSearch() {
                 <div>
                   <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
                     Kết quả cho{" "}
-                    <span className="text-[#f08a78]">"Gốm sứ"</span> tại Đà Nẵng
+                    <span className="text-[#f08a78]">"{searchTerm || "Tất cả workshop"}"</span>
                   </h1>
                   <p className="text-slate-500 dark:text-slate-400">
                     <span className="font-black text-[#c3996c]">
-                      12 hội thảo
+                      {resultCards.length} workshop
                     </span>{" "}
                     được tìm thấy phù hợp với tiêu chí của bạn
                   </p>
@@ -490,7 +574,7 @@ export default function AdvancedSearch() {
 
               {/* Active Filters Tags */}
               <div className="flex flex-wrap gap-2">
-                {["Gốm sứ", "$10 - $80", "Người mới"].map((tag) => (
+                {[searchTerm || "Tất cả workshop"].map((tag) => (
                   <div
                     key={tag}
                     className="flex items-center gap-1.5 px-3 py-1 bg-[#fbc4ae]/35 text-[#c3996c] rounded-full text-xs font-black uppercase tracking-wide border border-[#f08a78]/20"
@@ -507,9 +591,23 @@ export default function AdvancedSearch() {
 
               {/* Cards Grid (FULL) */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {cards.map((item) => (
-                  <CardItem key={item.id} item={item} />
-                ))}
+                {loading ? (
+                  <div className="col-span-full rounded-2xl border border-[#fbc4ae]/55 bg-white/70 p-8 text-center text-sm font-semibold text-slate-500">
+                    Đang tải danh sách workshop...
+                  </div>
+                ) : error ? (
+                  <div className="col-span-full rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm font-semibold text-red-600">
+                    {error}
+                  </div>
+                ) : resultCards.length === 0 ? (
+                  <div className="col-span-full rounded-2xl border border-[#fbc4ae]/55 bg-white/70 p-8 text-center text-sm font-semibold text-slate-500">
+                    Không tìm thấy workshop phù hợp với "{searchTerm}".
+                  </div>
+                ) : (
+                  resultCards.map((item) => (
+                    <CardItem key={item.id} item={item} />
+                  ))
+                )}
               </div>
 
               {/* Pagination */}

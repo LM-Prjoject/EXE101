@@ -190,7 +190,7 @@ export default function SelectSessionTime() {
                 }}
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-extrabold">Tháng 10, 2023</h3>
+                  <h3 className="text-lg font-extrabold">Tháng 10, 2025</h3>
                   <div className="flex gap-2">
                     {["chevron_left", "chevron_right"].map((ic) => (
                       <button
@@ -511,7 +511,7 @@ export default function SelectSessionTime() {
 
                 <div className="space-y-4 mb-8">
                   {[
-                    { icon: "calendar_today", label: "Ngày", value: "Thứ 5, 5 thg 10, 2023" },
+                    { icon: "calendar_today", label: "Ngày", value: "Thứ 5, 5 thg 10, 2025" },
                     { icon: "schedule", label: "Thời gian", value: "14:00 - 17:00 (Chiều)" },
                   ].map((x) => (
                     <div key={x.icon} className="flex items-start gap-3">
@@ -658,7 +658,7 @@ export default function SelectSessionTime() {
           }}
         >
           <div className="max-w-[1280px] mx-auto px-6 text-center text-slate-500 text-sm">
-            <p>© 2023 Hands &amp; Hour. Được tạo ra với tất cả tình yêu tại Đà Nẵng.</p>
+            <p>© 2025 Hands &amp; Hour. Được tạo ra với tất cả tình yêu tại Đà Nẵng.</p>
           </div>
         </footer>
       </div>

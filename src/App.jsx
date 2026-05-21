@@ -46,6 +46,7 @@ export default function App() {
           {/* ── User flow ── */}
           <Route path="/home" element={<HomeWithBanner />} />
           <Route path="/advanced-search" element={<AdvancedSearch />} />
+          <Route path="/find-companion/:workshopId" element={<FindCompanion />} />
           <Route path="/find-companion" element={<FindCompanion />} />
           <Route path="/select-session" element={<SelectSessionTime />} />
           <Route path="/participant-info" element={<EnterParticipantInfo />} />

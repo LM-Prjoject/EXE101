@@ -1,5 +1,20 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { getWorkshops } from "../../api";
+
+function getWorkshopList(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.workshops)) return data.workshops;
+  if (Array.isArray(data?.result)) return data.result;
+  return [];
+}
+
+function getWorkshopPrice(workshop) {
+  return workshop.price ?? workshop.priceLower ?? workshop.priceUpper;
+}
 
 export default function HomeWithBanner() {
   const navigate = useNavigate();
@@ -12,6 +27,10 @@ export default function HomeWithBanner() {
   const BORDER = "#e9e2da";
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null); 
+  const { currentUser } = useAuth();
+  const [workshops, setWorkshops] = useState([]);
+  const [loadingWorkshops, setLoadingWorkshops] = useState(true);
+  const [workshopError, setWorkshopError] = useState('');
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -31,6 +50,24 @@ export default function HomeWithBanner() {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEsc);
     };
+  }, []);
+
+  useEffect(() => {
+    async function loadWorkshops() {
+      setLoadingWorkshops(true);
+      setWorkshopError('');
+
+      try {
+        const data = await getWorkshops();
+        setWorkshops(getWorkshopList(data));
+      } catch (err) {
+        setWorkshopError(err?.message || 'Không thể tải danh sách workshop.');
+      } finally {
+        setLoadingWorkshops(false);
+      }
+    }
+
+    loadWorkshops();
   }, []);
 
   return (
@@ -115,7 +152,7 @@ export default function HomeWithBanner() {
                     className="text-sm font-bold"
                     style={{ color: "#C3996C" }}
                   >
-                    Alex Nguyen
+                    {currentUser?.name || currentUser?.email?.split('@')[0] || 'Khách'}
                   </span>
                   <span
                     className="material-symbols-outlined text-[18px]"
@@ -341,157 +378,128 @@ export default function HomeWithBanner() {
 
               {/* Cards */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {[
-                  {
-                    tag: "Pottery",
-                    area: "Hai Chau",
-                    title: "Introduction to Wheel Throwing",
-                    price: "400,000₫",
-                    badge: "Lựa chọn HH",
-                    badgeBg: PRIMARY,
-                    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuACxRnhwZWb5Z6cW22407yx99ivO6wzAziPDsqVKYPgfrVGsCwIMzAu4PqF_6MKWvQxxOshlcJUiukZ7_ZiL5gAiszcQbxXsxXuKjnyVHvLs7t3-nYEBtdg7rmGSQWJoCc2F_Q-rp3vt9Dl50Q_OeEE1s4YsBge_oUMHwHFCvAqmd1d2hycW43pxqbkB3UTyRCdO7qFz505D1X8fsLk09NyKpwTQYWfBcjTnbJgzUTC9xjzLRWF3LqLZqrLCXy5f1adTOtE1KPQCK4f",
-                  },
-                  {
-                    tag: "Painting",
-                    area: "Son Tra",
-                    title: "Canvas & Cocktails: Sunset Beach",
-                    price: "350,000₫",
-                    badge: null,
-                    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAAowF_66-tLmzrvYyPyf58nsoMLOPaYbGY8Dfu2Jm31QjPJ1ZIvr7jUwpZdumL8W5jh5yaMyoM2BNehF8vYSz0c4zZkXW66vRi9j1vlH6bSq5L7Aj4F5AkdhrjeZ-NpydAs8QMf-nnCcEP40b5aVjvAqbs2uB9tiCUblMsIKlEboiluJaI6bouBwkAK9RZdU0BGe8X6E-skNHzfTwnA5B5UcxrZUq6-77Jku4w9RR3zMDJE9UmBbdXIGv_NeNdJgL5lqHTUPs02EnR",
-                  },
-                  {
-                    tag: "Crafts",
-                    area: "Ngu Hanh Son",
-                    title: "Scented Candle Making Workshop",
-                    price: "280,000₫",
-                    badge: "Còn 3 chỗ",
-                    badgeBg: "#ef4444",
-                    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCxePwP_NlKXZOvYX-UJWjBUV5LDKVe7rqu5UKYg_fS1tOy_sTN_yttqjyh5FJl-kuEmQ07ZiNNMaH0De_jpee_IdE3VXHDO6-Nvr5MeWcfzCKzyTIm3jQ0ER5SEd0kgoTFCG0E3Q6DE7IQo1yGiNpquVrFZHZlpS03avJOyxdneW4fLHbghK6FzZEPDrlgvYHKkZeNyvxYo2WuCsjOTt5xJ8E4xsOBsVku7iJrmLiOw0eit2OKTv_TJgcS6tZOhhXILEx_RRCbeD9V",
-                  },
-                  {
-                    tag: "Coffee",
-                    area: "Hai Chau",
-                    title: "Barista Basics: Latte Art 101",
-                    price: "500,000₫",
-                    badge: null,
-                    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBxO5w-0lvKYuICp3DOv1-xZvvCb3JnTAB03nzaWy_6rgaNtMxujRthAeib5sR1HcH59Pz-erQ1lksi868Y4NcNxOj-ITr-SrKjapCFePLy7tAx-2lLp1Ll1YC_TQRQcjBd4aTErW3-UUYXx6Nm3WGCeZLejlB0z2ZgpfunB5aoOoqfS9eTIxijzdiakGV2plIHo7xWk-UtrXROt6NibBQoC4yVE2W_w2qEoM3T5gTSmcU3HOqaUB0_SDQpiPs5j96Y6H-E3eN_NfJT",
-                  },
-                ].map((c, i) => (
-                  <div
-  key={i}
-  onClick={() => {
-    if (c.title === "Canvas & Cocktails: Sunset Beach") {
-      navigate("/find-companion");
-    }
-  }}
-  className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white ring-1 transition-all hover:-translate-y-1 hover:shadow-md"
-  style={{
-    borderColor: "#f3ede5",
-    boxShadow: "0 6px 22px rgba(240,138,120,0.10)",
-  }}
->
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
-                      <img
-                        alt=""
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        src={c.img}
-                      />
+                {loadingWorkshops ? (
+                  <div className="col-span-full rounded-2xl border border-[#f3ede5] bg-white p-8 text-center text-sm text-[#4a6663] shadow-sm">
+                    Đang tải danh sách workshop...
+                  </div>
+                ) : workshopError ? (
+                  <div className="col-span-full rounded-2xl border border-[#fee2e2] bg-[#fff1f0] p-8 text-center text-sm text-[#b91c1c] shadow-sm">
+                    {workshopError}
+                  </div>
+                ) : workshops.length === 0 ? (
+                  <div className="col-span-full rounded-2xl border border-[#f3ede5] bg-white p-8 text-center text-sm text-[#4a6663] shadow-sm">
+                    Hiện không có workshop nào. Vui lòng quay lại sau.
+                  </div>
+                ) : (
+                  workshops.map((workshop, i) => (
+                    <div
+                      key={workshop.id ?? i}
+                      onClick={() => navigate(`/find-companion/${workshop.id}`, { state: { workshop } })}
+                      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white ring-1 transition-all hover:-translate-y-1 hover:shadow-md"
+                      style={{
+                        borderColor: '#f3ede5',
+                        boxShadow: '0 6px 22px rgba(240,138,120,0.10)',
+                      }}
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                        <img
+                          alt={workshop.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          src={workshop.thumbnailLink || '/img/onlyLogo.png'}
+                        />
 
-                      <div
-                        className="absolute right-3 top-3 rounded-lg bg-white/90 px-2 py-1 text-xs font-bold backdrop-blur-sm"
-                        style={{ color: TEXT_MAIN }}
-                      >
-                        <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px] text-yellow-500 fill-1">
-                            star
-                          </span>{" "}
-                          4.9
-                        </span>
-                      </div>
-
-                      {c.badge && (
                         <div
-                          className="absolute left-3 top-3 rounded-lg px-2 py-1 text-xs font-bold text-white shadow-sm"
-                          style={{ background: c.badgeBg }}
+                          className="absolute right-3 top-3 rounded-lg bg-white/90 px-2 py-1 text-xs font-bold backdrop-blur-sm"
+                          style={{ color: TEXT_MAIN }}
                         >
-                          {c.badge}
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] text-yellow-500 fill-1">
+                              star
+                            </span>{' '}
+                            {workshop.rating?.toFixed?.(1) ?? '4.9'}
+                          </span>
                         </div>
-                      )}
-                    </div>
 
-                    <div className="flex flex-1 flex-col gap-2 p-4">
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: PRIMARY }}
-                        >
-                          {c.tag}
-                        </span>
-                        <span
-                          className="text-xs font-medium"
-                          style={{ color: TEXT_MUTED }}
-                        >
-                          {c.area}
-                        </span>
+                        {workshop.status && workshop.status !== 'active' && (
+                          <div
+                            className="absolute left-3 top-3 rounded-lg px-2 py-1 text-xs font-bold text-white shadow-sm"
+                            style={{ background: '#ef4444' }}
+                          >
+                            {workshop.status}
+                          </div>
+                        )}
                       </div>
 
-                      <h3
-                        className="line-clamp-2 text-lg font-bold leading-tight transition-colors"
-                        style={{ color: TEXT_MAIN }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.color = PRIMARY)
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.color = TEXT_MAIN)
-                        }
-                      >
-                        {c.title}
-                      </h3>
-
-                      <div
-                        className="mt-auto flex items-center justify-between border-t pt-3"
-                        style={{ borderColor: BORDER }}
-                      >
-                        <div className="flex flex-col">
+                      <div className="flex flex-1 flex-col gap-2 p-4">
+                        <div className="flex items-center justify-between">
                           <span
-                            className="text-xs"
+                            className="text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: PRIMARY }}
+                          >
+                            {workshop.category || 'Workshop'}
+                          </span>
+                          <span
+                            className="text-xs font-medium"
                             style={{ color: TEXT_MUTED }}
                           >
-                            Giá từ
-                          </span>
-                          <span
-                            className="font-bold"
-                            style={{ color: TEXT_MAIN }}
-                          >
-                            {c.price}
+                            {workshop.location || 'Đà Nẵng'}
                           </span>
                         </div>
 
-                        <button
-                          className="rounded-lg p-2 transition-colors"
-                          style={{
-                            background: "rgba(251,196,174,0.55)",
-                            color: TEXT_MAIN,
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(240,138,120,0.18)";
-                            e.currentTarget.style.color = PRIMARY;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(251,196,174,0.55)";
-                            e.currentTarget.style.color = TEXT_MAIN;
-                          }}
+                        <h3
+                          className="line-clamp-2 text-lg font-bold leading-tight transition-colors"
+                          style={{ color: TEXT_MAIN }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = PRIMARY)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = TEXT_MAIN)
+                          }
                         >
-                          <span className="material-symbols-outlined text-[20px]">
-                            favorite
-                          </span>
-                        </button>
+                          {workshop.title}
+                        </h3>
+
+                        <div
+                          className="mt-auto flex items-center justify-between border-t pt-3"
+                          style={{ borderColor: BORDER }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs" style={{ color: TEXT_MUTED }}>
+                              Giá từ
+                            </span>
+                            <span className="font-bold" style={{ color: TEXT_MAIN }}>
+                              {getWorkshopPrice(workshop) != null
+                                ? `${Number(getWorkshopPrice(workshop)).toLocaleString('vi-VN')}₫`
+                                : 'Liên hệ'}
+                            </span>
+                          </div>
+
+                          <button
+                            className="rounded-lg p-2 transition-colors"
+                            style={{
+                              background: 'rgba(251,196,174,0.55)',
+                              color: TEXT_MAIN,
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background =
+                                'rgba(240,138,120,0.18)';
+                              e.currentTarget.style.color = PRIMARY;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background =
+                                'rgba(251,196,174,0.55)';
+                              e.currentTarget.style.color = TEXT_MAIN;
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-[20px]">
+                              favorite
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Banner */}
@@ -672,7 +680,7 @@ export default function HomeWithBanner() {
                 style={{ borderColor: BORDER }}
               >
                 <p className="text-xs" style={{ color: TEXT_MUTED }}>
-                  © 2023 Hands &amp; Hour. Bảo lưu mọi quyền.
+                  © 2025 Hands &amp; Hour. Bảo lưu mọi quyền.
                 </p>
                 <div className="flex gap-6">
                   {["Chính sách bảo mật", "Điều khoản dịch vụ"].map((t) => (

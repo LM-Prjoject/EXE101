@@ -34,7 +34,7 @@ export default function HostManageParticipants() {
       <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
       <div className="flex items-center gap-1">
       <span className="material-symbols-outlined text-sm">calendar_today</span>
-      <span className="text-sm">Oct 24, 2023</span>
+      <span className="text-sm">Oct 24, 2025</span>
       </div>
       <div className="flex items-center gap-1">
       <span className="material-symbols-outlined text-sm">schedule</span>
@@ -116,7 +116,7 @@ export default function HostManageParticipants() {
       <td className="px-6 py-4">
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Đã xác nhận</span>
       </td>
-      <td className="px-6 py-4 text-sm text-slate-500">Oct 12, 2023</td>
+      <td className="px-6 py-4 text-sm text-slate-500">Oct 12, 2025</td>
       <td className="px-6 py-4">
       <div className="flex items-center gap-2">
       <button className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"><span className="material-symbols-outlined text-lg">mail</span> Gửi email cho tất cả</button>
@@ -144,7 +144,7 @@ export default function HostManageParticipants() {
       <td className="px-6 py-4">
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Đã xác nhận</span>
       </td>
-      <td className="px-6 py-4 text-sm text-slate-500">Oct 14, 2023</td>
+      <td className="px-6 py-4 text-sm text-slate-500">Oct 14, 2025</td>
       <td className="px-6 py-4">
       <div className="flex items-center gap-2">
       <button className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"><span className="material-symbols-outlined text-lg">mail</span> Gửi email cho tất cả</button>
@@ -172,7 +172,7 @@ export default function HostManageParticipants() {
       <td className="px-6 py-4">
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Chờ thanh toán</span>
       </td>
-      <td className="px-6 py-4 text-sm text-slate-500">Oct 15, 2023</td>
+      <td className="px-6 py-4 text-sm text-slate-500">Oct 15, 2025</td>
       <td className="px-6 py-4">
       <div className="flex items-center gap-2">
       <button className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"><span className="material-symbols-outlined text-lg">mail</span> Gửi email cho tất cả</button>
@@ -200,7 +200,7 @@ export default function HostManageParticipants() {
       <td className="px-6 py-4">
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Đã xác nhận</span>
       </td>
-      <td className="px-6 py-4 text-sm text-slate-500">Oct 16, 2023</td>
+      <td className="px-6 py-4 text-sm text-slate-500">Oct 16, 2025</td>
       <td className="px-6 py-4">
       <div className="flex items-center gap-2">
       <button className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"><span className="material-symbols-outlined text-lg">mail</span> Gửi email cho tất cả</button>
