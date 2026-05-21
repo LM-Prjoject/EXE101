@@ -19,7 +19,7 @@ export default function HostMyWorkshops() {
       </div>
       </div>
       <div className="flex items-center gap-4">
-      <h2 className="text-xl font-bold">Xưởng của tôi</h2>
+      <h2 className="text-xl font-bold">Workshopcủa tôi</h2>
       </div>
       <div className="flex items-center gap-4">
       <div className="relative w-64">
@@ -38,7 +38,7 @@ export default function HostMyWorkshops() {
       {/* Dropdown Menu */}
       <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50">
       <Link className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700" to="/home"><span className="material-symbols-outlined text-lg">dashboard</span> Bảng điều khiển</Link>
-      <Link className="flex items-center gap-3 px-4 py-2 text-sm text-primary bg-primary/5 font-medium" to="/home"><span className="material-symbols-outlined text-lg">event_note</span> Xưởng của tôi</Link>
+      <Link className="flex items-center gap-3 px-4 py-2 text-sm text-primary bg-primary/5 font-medium" to="/home"><span className="material-symbols-outlined text-lg">event_note</span> Workshopcủa tôi</Link>
       <hr className="my-1 border-slate-100 dark:border-slate-700"/>
       <Link className="flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" to="/home"><span className="material-symbols-outlined text-lg">logout</span> Đăng xuất</Link>
       </div>
@@ -53,7 +53,7 @@ export default function HostMyWorkshops() {
       <button className="pb-4 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Bản nháp (3)</button>
       <button className="pb-4 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Đã hoàn thành</button>
       <div className="ml-auto pb-4">
-      <button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all shadow-lg shadow-primary/20"><span className="material-symbols-outlined">add</span> Tạo xưởng mới</button>
+      <button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all shadow-lg shadow-primary/20"><span className="material-symbols-outlined">add</span> Tạo Workshopmới</button>
       </div>
       </div>
       {/* Grid of Workshops */}
@@ -176,7 +176,7 @@ export default function HostMyWorkshops() {
       <span className="material-symbols-outlined">add</span>
       </div>
       <div className="text-center">
-      <p className="font-bold text-slate-500 dark:text-slate-400">Thêm xưởng mới</p>
+      <p className="font-bold text-slate-500 dark:text-slate-400">Thêm Workshopmới</p>
       <p className="text-xs text-slate-400">Tạo danh sách mới cho người hâm mộ của bạn</p>
       </div>
       </div>

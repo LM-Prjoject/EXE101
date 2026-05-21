@@ -139,7 +139,7 @@ export default function EnterParticipantInfo() {
                           {
                             icon: "calendar_today",
                             label: "Date",
-                            value: "Oct 24, 2023",
+                            value: "Oct 24, 2025",
                           },
                           {
                             icon: "schedule",
@@ -418,7 +418,7 @@ export default function EnterParticipantInfo() {
                     className="h-6 w-6 object-contain opacity-80"
                   />
                   <p className="text-sm font-medium">
-                    © 2023 Hands &amp; Hour. Bảo lưu mọi quyền.
+                    © 2025 Hands &amp; Hour. Bảo lưu mọi quyền.
                   </p>
                 </div>
 

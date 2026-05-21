@@ -163,7 +163,7 @@ export default function PaymentAndConfirmation() {
                         {[
                           {
                             icon: "calendar_month",
-                            text: "Thứ Bảy, ngày 28 tháng 10 năm 2023",
+                            text: "Thứ Bảy, ngày 28 tháng 10 năm 2025",
                           },
                           { icon: "schedule", text: "10:00 - 12:00 (2 Tiếng)" },
                           { icon: "person", text: "1 Người" },
@@ -442,7 +442,7 @@ export default function PaymentAndConfirmation() {
         >
           <div className="container mx-auto px-6 text-center">
             <p className="text-slate-500 text-sm">
-              © 2023 Hands &amp; Hour. Được tạo ra với sự tận tâm tại Đà Nẵng.
+              © 2025 Hands &amp; Hour. Được tạo ra với sự tận tâm tại Đà Nẵng.
             </p>
           </div>
         </footer>

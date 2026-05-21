@@ -14,8 +14,8 @@ for (const dir of dirs) {
     if (fs.existsSync(p)) {
         let text = fs.readFileSync(p, 'utf8');
 
-        // Replace Xưởng -> Workshop
-        // Replace xưởng -> workshop
+        // Replace Workshop-> Workshop
+        // Replace Workshop-> workshop
         const newText = text
             .replace(/Xưởng/g, 'Workshop')
             .replace(/xưởng/g, 'workshop');

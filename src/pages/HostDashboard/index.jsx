@@ -195,7 +195,7 @@ export default function HostIncomeOverview() {
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-8 py-4 font-mono text-xs text-slate-500">#TRX-9482-L</td>
                         <td className="px-8 py-4 font-medium text-slate-900 dark:text-white">Cơ bản về Gốm: Buổi sáng</td>
-                        <td className="px-8 py-4 text-sm text-slate-500">Oct 24, 2023</td>
+                        <td className="px-8 py-4 text-sm text-slate-500">Oct 24, 2025</td>
                         <td className="px-8 py-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Hoàn thành</span>
                         </td>
@@ -204,7 +204,7 @@ export default function HostIncomeOverview() {
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-8 py-4 font-mono text-xs text-slate-500">#TRX-9479-K</td>
                         <td className="px-8 py-4 font-medium text-slate-900 dark:text-white">Workshop Tráng men Nâng cao</td>
-                        <td className="px-8 py-4 text-sm text-slate-500">Oct 23, 2023</td>
+                        <td className="px-8 py-4 text-sm text-slate-500">Oct 23, 2025</td>
                         <td className="px-8 py-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Đang chờ</span>
                         </td>
@@ -213,7 +213,7 @@ export default function HostIncomeOverview() {
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-8 py-4 font-mono text-xs text-slate-500">#TRX-9475-P</td>
                         <td className="px-8 py-4 font-medium text-slate-900 dark:text-white">Wheel Throwing 101</td>
-                        <td className="px-8 py-4 text-sm text-slate-500">Oct 22, 2023</td>
+                        <td className="px-8 py-4 text-sm text-slate-500">Oct 22, 2025</td>
                         <td className="px-8 py-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Hoàn thành</span>
                         </td>
@@ -222,7 +222,7 @@ export default function HostIncomeOverview() {
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-8 py-4 font-mono text-xs text-slate-500">#TRX-9471-M</td>
                         <td className="px-8 py-4 font-medium text-slate-900 dark:text-white">Buổi học Riêng cho Cặp đôi</td>
-                        <td className="px-8 py-4 text-sm text-slate-500">Oct 21, 2023</td>
+                        <td className="px-8 py-4 text-sm text-slate-500">Oct 21, 2025</td>
                         <td className="px-8 py-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Hoàn thành</span>
                         </td>
@@ -231,7 +231,7 @@ export default function HostIncomeOverview() {
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-8 py-4 font-mono text-xs text-slate-500">#TRX-9468-S</td>
                         <td className="px-8 py-4 font-medium text-slate-900 dark:text-white">Cơ bản về Gốm: Buổi sáng</td>
-                        <td className="px-8 py-4 text-sm text-slate-500">Oct 21, 2023</td>
+                        <td className="px-8 py-4 text-sm text-slate-500">Oct 21, 2025</td>
                         <td className="px-8 py-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Đã hoàn tiền</span>
                         </td>

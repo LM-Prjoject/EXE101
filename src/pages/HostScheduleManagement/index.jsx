@@ -47,7 +47,7 @@ export default function HostScheduleManagement() {
       <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
       <span className="material-symbols-outlined">chevron_left</span>
       </button>
-      <h4 className="font-bold text-lg">Tháng 10 năm 2023</h4>
+      <h4 className="font-bold text-lg">Tháng 10 năm 2025</h4>
       <div className="size-8"></div>
       </div>
       <div className="grid grid-cols-7 gap-px mb-2">
@@ -112,7 +112,7 @@ export default function HostScheduleManagement() {
       <div className="p-6 bg-slate-50/50 dark:bg-slate-800/20">
       <div className="flex items-center justify-between mb-6">
       <div className="size-8"></div>
-      <h4 className="font-bold text-lg">Tháng 11 năm 2023</h4>
+      <h4 className="font-bold text-lg">Tháng 11 năm 2025</h4>
       <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
       <span className="material-symbols-outlined">chevron_right</span>
       </button>
@@ -168,7 +168,7 @@ export default function HostScheduleManagement() {
       {/* Day Slots Detail */}
       <div className="border-t border-slate-200 dark:border-slate-800 p-8">
       <div className="flex items-center justify-between mb-6">
-      <h5 className="text-xl font-bold flex items-center gap-2"><span className="material-symbols-outlined text-primary">event_available</span> Khung giờ ngày 5 tháng 10, 2023</h5>
+      <h5 className="text-xl font-bold flex items-center gap-2"><span className="material-symbols-outlined text-primary">event_available</span> Khung giờ ngày 5 tháng 10, 2025</h5>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* Slot Card */}

@@ -37,7 +37,7 @@ export default function HostInstructorProfile() {
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                           <span>Gốm sứ cho người mới bắt đầu</span>
                           <span>•</span>
-                          <span>12 tháng 10, 2023</span>
+                          <span>12 tháng 10, 2025</span>
                         </div>
                       </div>
                       <div className="flex text-primary">
@@ -73,7 +73,7 @@ export default function HostInstructorProfile() {
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                           <span>Chế tác gỗ nâng cao</span>
                           <span>•</span>
-                          <span>10 tháng 10, 2023</span>
+                          <span>10 tháng 10, 2025</span>
                         </div>
                       </div>
                       <div className="flex text-primary">
@@ -108,7 +108,7 @@ export default function HostInstructorProfile() {
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                           <span>Làm tiểu cảnh Terrarium</span>
                           <span>•</span>
-                          <span>05 tháng 10, 2023</span>
+                          <span>05 tháng 10, 2025</span>
                         </div>
                       </div>
                       <div className="flex text-primary">

@@ -350,7 +350,7 @@ export default function WorkshopChat() {
                     }}
                   >
                     <p className="text-sm leading-relaxed">
-                      Mọi người đã mua đất sét cho ngày mai chưa? Xưởng nói chúng
+                      Mọi người đã mua đất sét cho ngày mai chưa? Workshopnói chúng
                       ta cần ít nhất 5kg cho dự án bình hoa.
                     </p>
                   </div>

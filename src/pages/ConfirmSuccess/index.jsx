@@ -505,7 +505,7 @@ export default function ConfirmSuccess() {
         >
           <div className="max-w-[1200px] mx-auto px-6 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-slate-500 text-sm">
-              © 2023 Hands &amp; Hour. Được làm với sự nhiệt huyết tại Đà Nẵng.
+              © 2025 Hands &amp; Hour. Được làm với sự nhiệt huyết tại Đà Nẵng.
             </p>
             <div className="flex gap-6">
               {["social_leaderboard", "photo_camera", "mail"].map((i) => (

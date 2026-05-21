@@ -6,7 +6,11 @@ export default function HostHeader({ title, children }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { currentUser, logout } = useAuth();
+    const displayName =
+        currentUser?.name ||
+        currentUser?.email?.split('@')[0] ||
+        'Host';
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -48,13 +52,18 @@ export default function HostHeader({ title, children }) {
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className="size-10 rounded-full overflow-hidden border-2 border-primary focus:outline-none"
-                        data-alt="User avatar menu toggle"
+                        aria-label={displayName}
+                        data-alt={`${displayName} avatar menu toggle`}
                         style={{ backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuCwB4tz0ieppXFnrIVev9IpSWGz-dGSCDN1AYoJKvKxNJoN0z1y0m278AA465wXZAsPBGWk-vwe4xFsBvXxnGMcsYt1hGoandOA0HxSoCsE989bhNiHT_dEXERtCTtEmWnHU_hMKamqRlT8z_nXat__RHmgcp--D2p7a4FdPA7Fe79GKwN11ALE0qM0pTpVEY4mTCAcEZw1OYzYbvzDu0KziFP7GR8GyEAJpjKLghoiRcKsMXuti2VaOrpLJh6FfStocb660SMiTl93")`, backgroundSize: "cover" }}
                     ></button>
 
                     {/* Popover Menu - conditionally rendered based on isMenuOpen */}
                     {isMenuOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-fade-in-up">
+                            <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{displayName}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser?.email || 'Host'}</p>
+                            </div>
                             <Link className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700" to="/host/dashboard" onClick={() => setIsMenuOpen(false)}>
                                 <span className="material-symbols-outlined text-slate-500 text-xl">dashboard</span>
                                 <span className="text-sm font-medium">Bảng điều khiển</span>
