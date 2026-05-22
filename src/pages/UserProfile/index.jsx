@@ -201,7 +201,7 @@ export default function UserProfile() {
 
                   <div className="flex flex-col gap-3 pt-4 md:pt-12 w-full md:w-auto min-w-[200px]">
                     {/* Primary action: accent */}
-                    <button className="flex items-center justify-center gap-2 w-full rounded-xl h-11 px-4 bg-[#f08a78] text-white text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-lg shadow-[#f08a78]/25">
+                    <button onClick={() => navigate('/profile/edit')} className="flex items-center justify-center gap-2 w-full rounded-xl h-11 px-4 bg-[#f08a78] text-white text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-lg shadow-[#f08a78]/25">
                       <span className="material-symbols-outlined text-lg">
                         settings
                       </span>
