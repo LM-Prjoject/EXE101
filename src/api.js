@@ -40,6 +40,7 @@ function buildError(response, body) {
   if (body.error) return new Error(body.error);
   return new Error(defaultMessage);
 }
+export { fetchWithFallback, parseJsonResponse, buildError };
 
 export async function loginUser(email, password) {
   const response = await fetchWithFallback('/api/auth/login', {
