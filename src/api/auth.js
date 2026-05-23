@@ -68,3 +68,34 @@ export function parseJwt(token) {
     return null;
   }
 }
+
+export async function requestPasswordReset(email) {
+  const response = await fetchWithFallback(`/api/auth/reset-password?email=${encodeURIComponent(email)}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function confirmPasswordReset(email, otp, newPassword) {
+  const response = await fetchWithFallback('/api/auth/reset-password/confirm', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, otp, newPassword }),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+

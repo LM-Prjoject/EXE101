@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function CommunityMomentsFeed() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   // ===== Brand palette =====
   const ACCENT = "#f08a78"; // salmon (main)
@@ -64,18 +64,19 @@ export default function CommunityMomentsFeed() {
               </h2>
             </Link>
 
-            <div className="hidden lg:flex w-full max-w-sm">
-              <div className="flex w-full flex-1 items-stretch rounded-xl h-10 shadow-sm">
-                <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
-                  <span className="material-symbols-outlined text-xl">search</span>
+              <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+                <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
+                  <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
+                    <span className="material-symbols-outlined text-xl">search</span>
+                  </div>
+                  <input
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] dark:bg-slate-800 h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all"
+                    placeholder="Tìm kiếm workshop..."
+                    readOnly
+                    onClick={() => navigate("/advanced-search")}
+                  />
                 </div>
-                <input
-                  className="w-full bg-[#fffaf5] dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#f08a78]/40 focus:outline-none rounded-r-xl py-2.5 px-3 text-sm text-[#c3996c] placeholder:text-[#c3996c]/55"
-                  placeholder="Tìm kiếm workshop, người sáng tạo..."
-                  type="text"
-                />
-              </div>
-            </div>
+              </label>
           </div>
 
           <div className="flex flex-1 justify-end gap-8 items-center">
@@ -100,7 +101,7 @@ export default function CommunityMomentsFeed() {
               {currentUser ? (
                 <div className="flex items-center gap-2">
                   <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
-                    Xin chào, <span className="font-black">{currentUser.name || currentUser.email?.split("@")[0]}</span>
+                    Xin chào, <span className="font-black">{userProfile?.name || currentUser?.name || currentUser?.email?.split("@")[0] || "Khách"}</span>
                   </span>
                   <Link to="/user-profile">
                     <div

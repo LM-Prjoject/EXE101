@@ -33,7 +33,10 @@ import HostVerifyStep2 from './pages/HostVerifyStep2';
 
 function RootRedirect() {
   const { currentUser } = useAuth();
-  return currentUser ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (currentUser.role === 'host') return <Navigate to="/host/dashboard" replace />;
+  if (currentUser.role === 'staff' || currentUser.role === 'admin') return <Navigate to="/staff" replace />;
+  return <Navigate to="/home" replace />;
 }
 
 export default function App() {
@@ -56,6 +59,8 @@ export default function App() {
           <Route path="/find-companion" element={<FindCompanion />} />
           <Route path="/payment" element={<PaymentAndConfirmation />} />
           <Route path="/confirm-success" element={<ConfirmSuccess />} />
+          <Route path="/payment/error" element={<ConfirmSuccess />} />
+          <Route path="/payment/cancel" element={<ConfirmSuccess />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/my-schedule" element={<MySchedule />} />
           <Route path="/community" element={<CommunityMomentsFeed />} />

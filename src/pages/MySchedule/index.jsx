@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function MySchedule() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   const DEFAULT_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE";
 
@@ -67,7 +67,7 @@ export default function MySchedule() {
 
                 <div className="flex items-center gap-2">
                   <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
-                    Xin chào, <span className="font-black">{currentUser?.name || currentUser?.email?.split("@")[0] || "Khách"}</span>
+                    Xin chào, <span className="font-black">{userProfile?.name || currentUser?.name || currentUser?.email?.split("@")[0] || "Khách"}</span>
                   </span>
                   <Link to="/user-profile">
                     <div
