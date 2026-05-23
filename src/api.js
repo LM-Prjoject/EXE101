@@ -1,22 +1,17 @@
 const PRIMARY_BASE = import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party';
-const FALLBACK_BASE = 'http://127.0.0.1:5000';
 
-// Thử primary trước, nếu network error hoặc 5xx thì fallback sang localhost
 async function fetchWithFallback(path, options = {}) {
-  const primaryUrl = `${PRIMARY_BASE}${path}`;
-  const fallbackUrl = `${FALLBACK_BASE}${path}`;
+  const url = `${PRIMARY_BASE}${path}`;
+  const authToken = localStorage.getItem('authToken');
+  const requestOptions = {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    },
+  };
 
-  try {
-    const response = await fetch(primaryUrl, options);
-    // Nếu server trả về lỗi server-side (5xx) thì thử fallback
-    if (response.status >= 500) {
-      throw new Error(`Primary returned ${response.status}`);
-    }
-    return response;
-  } catch {
-    // Primary fail (network error, timeout, 404, 5xx) → dùng fallback
-    return fetch(fallbackUrl, options);
-  }
+  return fetch(url, requestOptions);
 }
 
 async function parseJsonResponse(response) {
@@ -84,10 +79,8 @@ export async function getWorkshops(page = 1, pageSize = 12, search = '') {
   });
 
   if (search.trim()) {
-    params.set('search', search.trim());
-    params.set('keyword', search.trim());
-    params.set('title', search.trim());
-  }
+  params.set('query', search.trim());
+}
 
   let response = await fetchWithFallback(`/api/workshop/search?${params}`, {
     method: 'GET',
@@ -118,6 +111,96 @@ export async function getWorkshopById(id) {
   }
 
   return { id: Number(id), ...body };
+}
+
+export async function getMyWorkshops(page = 1, pageSize = 12) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/workshop/my?${params}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function createWorkshop(workshop) {
+  const response = await fetchWithFallback('/api/workshop', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(workshop),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function uploadImage(file) {
+  const form = new FormData();
+  form.append('file', file);
+
+  const response = await fetchWithFallback('/api/image', {
+    method: 'POST',
+    body: form,
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body; 
+}
+
+export async function deleteWorkshop(id) {
+  if (!id) {
+    throw new Error('Không tìm thấy ID workshop để xóa.');
+  }
+
+  const response = await fetchWithFallback(`/api/workshop/${id}`, {
+    method: 'DELETE',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function updateWorkshop(id, payload) {
+  if (!id) {
+    throw new Error('Không tìm thấy ID workshop để cập nhật.');
+  }
+
+  const response = await fetchWithFallback(`/api/workshop/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
 }
 
 export async function getUserById(id) {
