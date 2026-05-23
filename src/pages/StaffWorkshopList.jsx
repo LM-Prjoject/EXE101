@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAllWorkshops } from '../api';
+import { fetchAllWorkshops } from '../api/workshop';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 

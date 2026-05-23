@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getWorkshops } from "../../api";
+import { getWorkshops } from "../../api/workshop";
 
 function getWorkshopList(data) {
   if (Array.isArray(data)) return data;
@@ -91,165 +91,76 @@ export default function HomeWithBanner() {
   }}
 >
           {/* Header */}
-          <header
-            className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-white/90 px-6 backdrop-blur-md lg:px-10"
-            style={{ borderColor: BORDER }}
-          >
-            {/* Logo */}
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center overflow-visible">
-                <img
-                  src="/img/onlyLogo.png"
-                  alt="Hands & Hour Logo"
-                  className="h-8 w-8 object-contain scale-150 origin-center"
-                />
-              </div>
-
-              <h2 className="text-xl font-black tracking-tight">
+          <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
+            <div className="flex items-center gap-8">
+              <Link to="/home" className="flex items-center gap-4">
+                <div className="flex size-10 items-center justify-center overflow-visible">
+                  <img src="/img/onlyLogo.png" alt="Hands & Hour Logo" className="h-8 w-8 object-contain scale-150 origin-center" />
+                </div>
+                <h2 className="text-xl font-black tracking-tight">
                   <span className="text-[#c3996c]">Hands</span>{" "}
                   <span className="text-[#f08a78]">&amp;</span>{" "}
                   <span className="text-[#c3996c]">Hour</span>
                 </h2>
+              </Link>
+
+              <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+                <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
+                  <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] items-center justify-center pl-4 rounded-l-xl border-r-0">
+                    <span className="material-symbols-outlined text-xl">search</span>
+                  </div>
+                  <input
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all cursor-pointer"
+                    placeholder="Tìm kiếm workshop..."
+                    readOnly
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    onClick={handleSearch}
+                  />
+                </div>
+              </label>
             </div>
 
-            {/* Right side */}
-            <div className="hidden flex-1 justify-end gap-8 md:flex">
-              {/* Menu links */}
-              <div className="flex items-center gap-8">
-                {[
-                  { to: "/home", label: "Workshop" },
-                  { to: "/login", label: "Người hướng dẫn" },
-                  { to: "/login", label: "Blog" },
-                ].map((x) => (
-                  <Link
-                    key={x.label}
-                    className="text-sm font-medium transition-colors"
-                    style={{ color: TEXT_MAIN }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = PRIMARY)
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = TEXT_MAIN)
-                    }
-                    to={x.to}
-                  >
-                    {x.label}
-                  </Link>
-                ))}
+            <div className="flex flex-1 justify-end gap-8 items-center">
+              <div className="hidden lg:flex items-center gap-9">
+                <Link className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/home">Workshops</Link>
+                <Link className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/advanced-search">Khám phá</Link>
+                <Link className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/community">Cộng đồng</Link>
               </div>
 
-              {/* Avatar + Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setOpen((prev) => !prev)}
-                  className="flex items-center gap-2 rounded-full border p-1 pr-3 transition-all hover:shadow-sm"
-                  style={{
-                    borderColor: "rgba(195,153,108,0.35)",
-                    background: "rgba(246,242,233,0.75)",
-                  }}
-                >
-                  <img
-                    alt="User Avatar"
-                    className="size-8 rounded-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"
-                    style={{ border: "2px solid rgba(240,138,120,0.55)" }}
-                  />
-                  <span
-                    className="text-sm font-bold"
-                    style={{ color: "#C3996C" }}
-                  >
-                    {currentUser?.name || currentUser?.email?.split('@')[0] || 'Khách'}
-                  </span>
-                  <span
-                    className="material-symbols-outlined text-[18px]"
-                    style={{ color: "#6F8B6F" }}
-                  >
-                    expand_more
-                  </span>
+              {currentUser?.role !== "host" && (
+                <button onClick={() => navigate("/host/verification")} className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25">
+                  <span className="truncate">Trở thành Host</span>
+                </button>
+              )}
+
+              <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
+                <button className="relative group">
+                  <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">notifications</span>
+                  <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </button>
 
-                {/* Dropdown */}
-                {open && (
-                  <div
-                    className="absolute right-0 top-full mt-2 w-60 rounded-2xl p-2 shadow-xl animate-in fade-in zoom-in-95 duration-150"
-                    style={{
-                      background: "#F6F2E9",
-                      border: "1px solid rgba(195,153,108,0.20)",
-                    }}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <Link
-                        to="/user-profile"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-[#FBC4AE]"
-                        style={{ color: "#C3996C" }}
-                      >
-                        <span
-                          className="material-symbols-outlined text-[20px]"
-                          style={{ color: "#6F8B6F" }}
-                        >
-                          person
-                        </span>
-                        Hồ sơ của tôi
-                      </Link>
-
-                      <a
-                        href="#"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-bold text-white shadow-sm"
-                        style={{
-                          background: "#F08A78",
-                          boxShadow: "0 10px 24px rgba(240,138,120,0.22)",
-                        }}
-                      >
-                        Người hướng dẫn
-                        <span className="material-symbols-outlined text-[18px]">
-                          arrow_forward
-                        </span>
-                      </a>
-
-                      <Link
-                        to="/home"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-[#D5DDCE]"
-                        style={{ color: "#C3996C" }}
-                      >
-                        <span
-                          className="material-symbols-outlined text-[20px]"
-                          style={{ color: "#6F8B6F" }}
-                        >
-                          settings
-                        </span>
-                        Cài đặt
-                      </Link>
-
+                {currentUser ? (
+                  <div className="flex items-center gap-2">
+                    <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
+                      Xin chào, <span className="font-black">{currentUser.name || currentUser.email?.split("@")[0] || "Khách"}</span>
+                    </span>
+                    <Link to="/user-profile">
                       <div
-                        className="my-1 h-px"
-                        style={{ background: "rgba(195,153,108,0.25)" }}
+                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{ backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE")` }}
                       />
-
-                      <Link
-                        to="/login"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-red-50"
-                        style={{ color: "#F08A78" }}
-                      >
-                        <span className="material-symbols-outlined text-[20px]">
-                          logout
-                        </span>
-                        Đăng xuất
-                      </Link>
-                    </div>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <Link className="text-sm font-semibold text-[#c3996c] hover:text-[#f08a78] transition-colors hidden sm:block" to="/login">Đăng nhập</Link>
+                    <Link to="/register" className="bg-[#f08a78] hover:bg-[#ee7a66] text-white font-extrabold py-2 px-5 rounded-xl transition-colors shadow-sm shadow-[#f08a78]/25 text-sm">Đăng ký</Link>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Mobile menu button */}
-            <button className="flex md:hidden" style={{ color: TEXT_MAIN }}>
-              <span className="material-symbols-outlined">menu</span>
-            </button>
           </header>
 
           {/* Main */}

@@ -1,6 +1,17 @@
-// User API Helper Functions
+import { fetchWithFallback, parseJsonResponse, buildError } from './client';
 
-import { fetchWithFallback, parseJsonResponse, buildError } from '../api'; // Assuming internal helpers are exported
+export async function getUserById(id) {
+  const response = await fetchWithFallback(`/api/User/${id}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return { id: Number(id), ...body };
+}
 
 export async function fetchAllUsers(page = 1, pageSize = 20) {
   const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { confirmOtp } from '../../api';
+import { confirmOtp } from '../../api/auth';
 
 export default function RegisterAccount() {
   const navigate = useNavigate();

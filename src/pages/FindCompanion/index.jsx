@@ -1,6 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, Link, useParams } from "react-router-dom";
-import { getWorkshopById } from "../../api";
+import { getWorkshopById, getWorkshopReviews, getScheduleDetails } from "../../api/workshop";
+import { proceedPayment } from "../../api/payment";
+import { useAuth } from "../../context/AuthContext";
+
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} ngày trước`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks} tuần trước`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} tháng trước`;
+  return `${Math.floor(months / 12)} năm trước`;
+}
 
 function formatCurrency(value) {
   if (value == null) return "Liên hệ";
@@ -32,6 +50,13 @@ function formatLanguage(language) {
   return language;
 }
 
+function formatTimeOnly(timeStr) {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+  return timeStr;
+}
+
 export default function FindCompanion() {
   const navigate = useNavigate();
   const { workshopId } = useParams();
@@ -39,6 +64,23 @@ export default function FindCompanion() {
   const [workshop, setWorkshop] = useState(location.state?.workshop || null);
   const [loading, setLoading] = useState(Boolean(workshopId));
   const [error, setError] = useState("");
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
+  const PAGE_SIZE = 5;
+
+  // Auth and Payment states
+  const { currentUser } = useAuth();
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [tickets, setTickets] = useState([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [selectedTicketId, setSelectedTicketId] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   const BRAND = {
     primary: "#c3996c", // warm gold (text/brand)
@@ -90,6 +132,103 @@ export default function FindCompanion() {
       ignore = true;
     };
   }, [workshopId]);
+
+  // Load reviews when workshopId changes
+  useEffect(() => {
+    if (!workshopId) return;
+    let ignore = false;
+    async function loadReviews() {
+      setReviewsLoading(true);
+      try {
+        const data = await getWorkshopReviews(workshopId, 1, PAGE_SIZE);
+        if (!ignore) {
+          const items = Array.isArray(data) ? data : (data?.items ?? data?.reviews ?? data?.data ?? []);
+          const total = Array.isArray(data) ? items.length : (data?.totalCount ?? data?.total ?? items.length);
+          setReviews(items);
+          setReviewsTotal(total);
+          setReviewsPage(1);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        if (!ignore) setReviewsLoading(false);
+      }
+    }
+    loadReviews();
+    return () => { ignore = true; };
+  }, [workshopId]);
+
+  async function loadMoreReviews() {
+    const nextPage = reviewsPage + 1;
+    setReviewsLoadingMore(true);
+    try {
+      const data = await getWorkshopReviews(workshopId, nextPage, PAGE_SIZE);
+      const items = Array.isArray(data) ? data : (data?.items ?? data?.reviews ?? data?.data ?? []);
+      const total = Array.isArray(data) ? items.length + reviews.length : (data?.totalCount ?? data?.total ?? reviewsTotal);
+      setReviews((prev) => [...prev, ...items]);
+      setReviewsTotal(total);
+      setReviewsPage(nextPage);
+    } catch {
+      // silently fail
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  }
+
+  // Set initial selected schedule
+  useEffect(() => {
+    if (workshop?.schedules?.length > 0) {
+      setSelectedScheduleId(workshop.schedules[0].id);
+    }
+  }, [workshop]);
+
+  // Fetch tickets for selected schedule
+  useEffect(() => {
+    if (!selectedScheduleId) return;
+    let ignore = false;
+    async function fetchTickets() {
+      setTicketsLoading(true);
+      try {
+        const data = await getScheduleDetails(selectedScheduleId);
+        if (!ignore) {
+          const ticketList = data?.tickets ?? [];
+          setTickets(ticketList);
+          if (ticketList.length > 0) {
+            setSelectedTicketId(ticketList[0].id);
+          } else {
+            setSelectedTicketId("");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching tickets:", err);
+      } finally {
+        if (!ignore) setTicketsLoading(false);
+      }
+    }
+    fetchTickets();
+    return () => { ignore = true; };
+  }, [selectedScheduleId]);
+
+  const handleProceedPayment = () => {
+    if (!currentUser) {
+      setPaymentError("Vui lòng đăng nhập để tiến hành đặt vé.");
+      navigate("/login");
+      return;
+    }
+
+    if (!selectedTicketId) {
+      setPaymentError("Vui lòng chọn loại vé.");
+      return;
+    }
+
+    navigate("/payment", {
+      state: {
+        ticketId: selectedTicketId,
+        scheduleId: selectedScheduleId,
+        workshopId: Number(workshopId)
+      }
+    });
+  };
 
   const detail = useMemo(() => {
     const firstSchedule = workshop?.schedules?.[0] || {};
@@ -245,42 +384,50 @@ export default function FindCompanion() {
                 className="flex items-center gap-3 pl-6 border-l"
                 style={{ borderColor: `${BRAND.soft}99` }}
               >
-                <Link
-                  to="/login"
-                  className="hidden sm:flex h-10 px-4 items-center justify-center rounded-xl text-sm font-black transition-colors"
-                  style={{
-                    background: `${BRAND.soft}22`,
-                    border: `1px solid ${BRAND.soft}99`,
-                    color: "#0f172a",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = BRAND.accent;
-                    e.currentTarget.style.boxShadow =
-                      "0 10px 25px rgba(240,138,120,0.12)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = `${BRAND.soft}99`;
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  Đăng nhập
-                </Link>
+                {currentUser ? (
+                  <div className="text-sm font-semibold" style={{ color: "#334155" }}>
+                    Xin chào, <span className="font-black" style={{ color: BRAND.primary }}>{currentUser.name || currentUser.email?.split('@')[0]}</span>
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="hidden sm:flex h-10 px-4 items-center justify-center rounded-xl text-sm font-black transition-colors"
+                      style={{
+                        background: `${BRAND.soft}22`,
+                        border: `1px solid ${BRAND.soft}99`,
+                        color: "#0f172a",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = BRAND.accent;
+                        e.currentTarget.style.boxShadow =
+                          "0 10px 25px rgba(240,138,120,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = `${BRAND.soft}99`;
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      Đăng nhập
+                    </Link>
 
-                <Link
-                  to="/register"
-                  className="font-black py-2.5 px-5 rounded-xl transition-colors"
-                  style={{
-                    background: BRAND.accent,
-                    color: "white",
-                    boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.filter = "brightness(0.96)")
-                  }
-                  onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
-                >
-                  Đăng ký
-                </Link>
+                    <Link
+                      to="/register"
+                      className="font-black py-2.5 px-5 rounded-xl transition-colors"
+                      style={{
+                        background: BRAND.accent,
+                        color: "white",
+                        boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.filter = "brightness(0.96)")
+                      }
+                      onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
+                    >
+                      Đăng ký
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -610,140 +757,186 @@ export default function FindCompanion() {
                     <span
                       className="w-8 h-8 rounded-lg flex items-center justify-center border"
                       style={{
-                        background: `${BRAND.soft}22`,
-                        borderColor: `${BRAND.soft}99`,
-                        color: BRAND.primary,
+                        background: "rgba(251, 196, 174, 0.133)",
+                        borderColor: "rgba(251, 196, 174, 0.6)",
+                        color: "rgb(195, 153, 108)",
                       }}
                     >
-                      <span className="material-symbols-outlined text-xl">
-                        reviews
-                      </span>
+                      <span className="material-symbols-outlined text-xl">reviews</span>
                     </span>
                     Đánh giá
                   </h2>
-                  <a
-                    className="text-sm font-black hover:underline"
-                    href="#"
-                    style={{ color: BRAND.primary }}
-                  >
-                    View all 128 reviews
-                  </a>
+                  {reviewsTotal > 0 && (
+                    <span className="text-sm font-semibold" style={{ color: "#94a3b8" }}>
+                      {reviewsTotal} đánh giá
+                    </span>
+                  )}
                 </div>
 
-                <div className="space-y-6">
-                  {/* Review Item 1 */}
-                  <div
-                    className="border-b pb-6 last:border-0 last:pb-0"
-                    style={{ borderColor: `${BRAND.soft}66` }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="w-10 h-10 rounded-full bg-slate-200 bg-cover bg-center shrink-0"
-                        style={{
-                          backgroundImage:
-                            "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDYykjwKwh16H2OcyB07_nWyYO-gOSQkdLk0FGRTOknlUIwmQbqJdoqmJ0d8fvaPpmcFMxEvWxCXjrWr-y5KpSK2BlGz7uxsBZU6cq_2vko7OMa7NLUIIPIaHQcJWqHgMiJZia5U6op-FJK4gGOPG3i4zzsOxETV96ml3KrQlTX4hIr_13sC5Ox7ugVmqtK3aX_vpZFuA8Xdvm3P2IzFwKL-945IQfW2dO_Fru1gKVqlIvDsbNHf4jXcF_hkipBJ_0SMtnU6yoUgEjz')",
-                        }}
-                      />
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className="font-black"
-                            style={{ color: "#0f172a" }}
-                          >
-                            Sarah Jenkins
-                          </span>
-                          <span
-                            className="text-sm"
-                            style={{ color: "#94a3b8" }}
-                          >
-                            • 2 ngày trước
-                          </span>
-                        </div>
-                        <div
-                          className="flex text-sm mb-2"
-                          style={{ color: BRAND.primary }}
-                        >
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <span
-                              key={i}
-                              className="material-symbols-outlined text-base"
-                            >
-                              star
-                            </span>
-                          ))}
-                        </div>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "#475569" }}
-                        >
-                          Absolutely loved this workshop! Minh was so patient
-                          and the studio atmosphere is incredibly relaxing. I'm
-                          not an artist but I came home with a painting I'm
-                          actually proud of. Highly recommend for a rainy
-                          afternoon in Da Nang.
-                        </p>
-                      </div>
-                    </div>
+                {reviewsLoading ? (
+                  <div className="flex items-center justify-center py-10" style={{ color: "#94a3b8" }}>
+                    <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+                    Đang tải đánh giá...
                   </div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-10">
+                    <span
+                      className="material-symbols-outlined text-4xl mb-3 block"
+                      style={{ color: `${BRAND.soft}99` }}
+                    >
+                      rate_review
+                    </span>
+                    <p className="text-sm font-semibold" style={{ color: "#94a3b8" }}>
+                      Chưa có đánh giá nào cho workshop này.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {reviews.map((review, idx) => {
+                      const rating = review.rating ?? review.star ?? review.stars ?? 0;
+                      const fullStars = Math.round(rating);
+                      const name =
+                        review.userName ??
+                        review.reviewerName ??
+                        review.name ??
+                        review.user?.name ??
+                        "Người dùng";
+                      const avatar =
+                        review.userAvatar ??
+                        review.avatar ??
+                        review.profilePicture ??
+                        review.user?.avatar ??
+                        null;
+                      const comment =
+                        review.comment ??
+                        review.content ??
+                        review.body ??
+                        review.text ??
+                        "";
+                      const createdAt =
+                        review.createdAt ?? review.reviewDate ?? review.date ?? null;
 
-                  {/* Review Item 2 */}
-                  <div className="pb-0">
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="w-10 h-10 rounded-full bg-slate-200 bg-cover bg-center shrink-0"
-                        style={{
-                          backgroundImage:
-                            "url('https://lh3.googleusercontent.com/aida-public/AB6AXuASmhpeMSElhn4r2bJICOuvNA6d1Hz9beCVp7STiPlzxVpccDKRHjTbL_RKzUxeaqcp2dUYX5Kq46MeEofzXBKXDQOZ6lL0ojratageJdQXl-JDFVbTHlAj-g5DB5booXPPoMop5YwMGRaojdbDvTFLLBv7fqvnRdRAVQmQPJFb8OAkf4IAIYsBsfuTtdbD3JVZGxlOMTSwXo_3jAYTP_M4U9AI92veH7u-YfkdGjun1dBrhietkD4CULLhRjBvsX9W8QGpeSWV46aj')",
-                        }}
-                      />
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className="font-black"
-                            style={{ color: "#0f172a" }}
-                          >
-                            David Chen
-                          </span>
-                          <span
-                            className="text-sm"
-                            style={{ color: "#94a3b8" }}
-                          >
-                            • 1 tuần trước
-                          </span>
-                        </div>
+                      return (
                         <div
-                          className="flex text-sm mb-2"
-                          style={{ color: BRAND.primary }}
+                          key={review.id ?? idx}
+                          className="border-b pb-6 last:border-0 last:pb-0"
+                          style={{ borderColor: `${BRAND.soft}66` }}
                         >
-                          {Array.from({ length: 4 }).map((_, i) => (
-                            <span
-                              key={i}
-                              className="material-symbols-outlined text-base"
+                          <div className="flex items-start gap-4">
+                            {/* Avatar */}
+                            <div
+                              className="w-10 h-10 rounded-full bg-slate-200 shrink-0 flex items-center justify-center overflow-hidden"
+                              style={
+                                avatar
+                                  ? {
+                                      backgroundImage: `url('${avatar}')`,
+                                      backgroundSize: "cover",
+                                      backgroundPosition: "center",
+                                    }
+                                  : { background: `${BRAND.soft}44` }
+                              }
                             >
-                              star
-                            </span>
-                          ))}
-                          <span
-                            className="material-symbols-outlined text-base"
-                            style={{ color: `${BRAND.primary}66` }}
-                          >
-                            star
-                          </span>
+                              {!avatar && (
+                                <span
+                                  className="material-symbols-outlined text-xl"
+                                  style={{ color: BRAND.primary }}
+                                >
+                                  person
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-black" style={{ color: "#0f172a" }}>
+                                  {name}
+                                </span>
+                                {createdAt && (
+                                  <span className="text-sm" style={{ color: "#94a3b8" }}>
+                                    • {formatRelativeTime(createdAt)}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Stars */}
+                              <div
+                                className="flex items-center text-sm mb-2"
+                                style={{ color: BRAND.primary }}
+                              >
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className="material-symbols-outlined text-base"
+                                    style={i >= fullStars ? { color: `${BRAND.primary}44` } : {}}
+                                  >
+                                    star
+                                  </span>
+                                ))}
+                                {rating > 0 && (
+                                  <span
+                                    className="ml-1 font-semibold text-xs"
+                                    style={{ color: "#64748b" }}
+                                  >
+                                    {Number(rating).toFixed(1)}
+                                  </span>
+                                )}
+                              </div>
+
+                              {comment && (
+                                <p
+                                  className="text-sm leading-relaxed"
+                                  style={{ color: "#475569" }}
+                                >
+                                  {comment}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "#475569" }}
+                      );
+                    })}
+
+                    {/* Load more */}
+                    {reviews.length < reviewsTotal && (
+                      <div className="pt-2 flex justify-center">
+                        <button
+                          onClick={loadMoreReviews}
+                          disabled={reviewsLoadingMore}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black border transition-colors"
+                          style={{
+                            borderColor: `${BRAND.soft}99`,
+                            color: BRAND.primary,
+                            background: `${BRAND.soft}11`,
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = `${BRAND.soft}30`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = `${BRAND.soft}11`;
+                          }}
                         >
-                          Great experience overall. The materials were high
-                          quality. I wish we had a bit more time towards the end
-                          to dry the paintings properly, but the staff helped
-                          pack them carefully.
-                        </p>
+                          {reviewsLoadingMore ? (
+                            <>
+                              <span className="material-symbols-outlined text-base animate-spin">
+                                progress_activity
+                              </span>
+                              Đang tải...
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-base">
+                                expand_more
+                              </span>
+                              Xem thêm đánh giá ({reviewsTotal - reviews.length})
+                            </>
+                          )}
+                        </button>
                       </div>
-                    </div>
+                    )}
                   </div>
-                </div>
+                )}
               </section>
+
             </div>
 
             {/* Right Column: Booking Card (Sticky) */}
@@ -795,19 +988,21 @@ export default function FindCompanion() {
                     </div>
                   </div>
 
-                  {/* Date Picker Mockup */}
+                  {/* Date Picker */}
                   <div className="space-y-4 mb-6">
                     <div>
                       <label
                         className="block text-sm font-black mb-2"
                         style={{ color: "#334155" }}
                       >
-                        Chọn ngày
+                        Chọn lịch học
                       </label>
 
                       <div className="relative">
                         <select
-                          className="w-full appearance-none rounded-xl px-4 py-3 pr-10 font-semibold outline-none cursor-pointer"
+                          value={selectedScheduleId}
+                          onChange={(e) => setSelectedScheduleId(e.target.value)}
+                          className="w-full appearance-none rounded-xl px-4 py-3 pr-10 font-semibold outline-none cursor-pointer text-sm"
                           style={{
                             background: `${BRAND.soft}18`,
                             border: `1px solid ${BRAND.soft}99`,
@@ -824,12 +1019,12 @@ export default function FindCompanion() {
                         >
                           {detail.schedules.length > 0 ? (
                             detail.schedules.map((schedule) => (
-                              <option key={schedule.id || schedule.startOn}>
-                                {formatDate(schedule.startOn)} - {schedule.remainingTickets ?? 0} chỗ
+                              <option key={schedule.id} value={schedule.id}>
+                                {formatDate(schedule.startOn)}
                               </option>
                             ))
                           ) : (
-                            <option>Đang cập nhật lịch học</option>
+                            <option value="">Đang cập nhật lịch học</option>
                           )}
                         </select>
 
@@ -837,15 +1032,87 @@ export default function FindCompanion() {
                           className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none"
                           style={{ color: BRAND.primary }}
                         >
-                          <span className="material-symbols-outlined">
+                          <span className="material-symbols-outlined text-xl">
                             calendar_month
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Participants */}
-                    <div className="space-y-4">
+                    {/* Tickets list selector */}
+                    <div className="space-y-3">
+                      <label
+                        className="block text-sm font-black"
+                        style={{ color: "#334155" }}
+                      >
+                        Chọn loại vé
+                      </label>
+
+                      {ticketsLoading ? (
+                        <div className="flex items-center justify-center py-6 text-sm font-semibold" style={{ color: "#64748b" }}>
+                          <span className="material-symbols-outlined animate-spin mr-2 text-lg">progress_activity</span>
+                          Đang tải các loại vé...
+                        </div>
+                      ) : tickets.length === 0 ? (
+                        <div className="text-center py-6 text-sm font-semibold rounded-xl border border-dashed p-4" style={{ borderColor: `${BRAND.soft}66`, color: "#94a3b8" }}>
+                          <span className="material-symbols-outlined text-2xl mb-1 block" style={{ color: BRAND.primary }}>confirmation_number</span>
+                          Không có vé khả dụng cho lịch học này
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {tickets.map((ticket) => {
+                            const isSelected = selectedTicketId === ticket.id;
+                            const isSoldOut = ticket.remainingTickets <= 0;
+                            return (
+                              <button
+                                key={ticket.id}
+                                disabled={isSoldOut}
+                                onClick={() => setSelectedTicketId(ticket.id)}
+                                className={`w-full p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 relative ${
+                                  isSelected ? "ring-2 ring-offset-1" : ""
+                                }`}
+                                style={{
+                                  background: isSelected ? `${BRAND.soft}1a` : "rgba(255,255,255,0.7)",
+                                  borderColor: isSelected ? BRAND.accent : `${BRAND.soft}66`,
+                                  boxShadow: isSelected ? "0 4px 12px rgba(240,138,120,0.08)" : "none",
+                                  opacity: isSoldOut ? 0.6 : 1,
+                                  cursor: isSoldOut ? "not-allowed" : "pointer",
+                                  "--ring-color": BRAND.accent,
+                                }}
+                              >
+                                <div className="flex items-start justify-between w-full">
+                                  <div className="min-w-0 flex-1">
+                                    <h5 className="font-black text-sm flex items-center gap-1.5" style={{ color: "#0f172a" }}>
+                                      {ticket.ticketType}
+                                      {isSelected && (
+                                        <span className="material-symbols-outlined text-base shrink-0" style={{ color: BRAND.accent }}>
+                                          check_circle
+                                        </span>
+                                      )}
+                                    </h5>
+                                    <p className="text-xs font-semibold mt-1 flex items-center gap-1" style={{ color: "#64748b" }}>
+                                      <span className="material-symbols-outlined text-sm shrink-0" style={{ color: BRAND.primary }}>schedule</span>
+                                      {formatTimeOnly(ticket.startTime)} - {formatTimeOnly(ticket.endTime)}
+                                    </p>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <div className="text-sm font-black" style={{ color: BRAND.accent }}>
+                                      {formatCurrency(ticket.price)}
+                                    </div>
+                                    <div className="text-[11px] font-semibold mt-1" style={{ color: isSoldOut ? "#ef4444" : "#94a3b8" }}>
+                                      {isSoldOut ? "Hết vé" : `Còn ${ticket.remainingTickets} vé`}
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Buyer user info */}
+                    <div className="space-y-2">
                       <label
                         className="block text-sm font-black"
                         style={{ color: "#334155" }}
@@ -853,118 +1120,148 @@ export default function FindCompanion() {
                         Thông tin người tham gia
                       </label>
 
-                      <div
-                        className="p-4 rounded-xl border space-y-3"
-                        style={{
-                          background: `${BRAND.soft}14`,
-                          borderColor: `${BRAND.soft}66`,
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="text-xs font-black uppercase tracking-wider"
-                            style={{ color: BRAND.primary }}
-                          >
-                            Người tham gia 1
-                          </span>
+                      {currentUser ? (
+                        <div
+                          className="p-4 rounded-xl border flex items-center gap-3"
+                          style={{
+                            background: `${BRAND.soft}14`,
+                            borderColor: `${BRAND.soft}66`,
+                          }}
+                        >
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `${BRAND.soft}44` }}>
+                            <span className="material-symbols-outlined" style={{ color: BRAND.primary }}>
+                              person
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: BRAND.primary }}>
+                              Tài khoản thanh toán
+                            </div>
+                            <div className="text-sm font-black truncate" style={{ color: "#0f172a" }}>
+                              {currentUser?.name || currentUser?.email?.split('@')[0] || "Người dùng"}
+                            </div>
+                            <div className="text-xs truncate font-semibold" style={{ color: "#64748b" }}>
+                              {currentUser?.email || "Chưa cập nhật email"}
+                            </div>
+                          </div>
                         </div>
-
-                        {[
-                          { ph: "Họ và tên", type: "text" },
-                          { ph: "Địa chỉ Email", type: "email" },
-                          { ph: "Số điện thoại", type: "tel" },
-                        ].map((f) => (
-                          <input
-                            key={f.ph}
-                            className="w-full px-3 py-2 text-sm rounded-lg outline-none"
-                            placeholder={f.ph}
-                            type={f.type}
+                      ) : (
+                        <div
+                          className="p-4 rounded-xl border text-center space-y-3"
+                          style={{
+                            background: "rgba(239, 68, 68, 0.05)",
+                            borderColor: "rgba(239, 68, 68, 0.2)",
+                          }}
+                        >
+                          <span className="material-symbols-outlined text-2xl block" style={{ color: "#ef4444" }}>
+                            no_accounts
+                          </span>
+                          <p className="text-xs font-black" style={{ color: "#ef4444" }}>
+                            Bạn chưa đăng nhập. Vui lòng đăng nhập để đặt vé.
+                          </p>
+                          <Link
+                            to="/login"
+                            className="inline-flex h-9 px-4 items-center justify-center rounded-lg text-xs font-black transition-colors text-white"
                             style={{
-                              background: "rgba(255,255,255,0.85)",
-                              border: `1px solid ${BRAND.soft}99`,
-                              color: "#0f172a",
+                              background: "#ef4444",
                             }}
-                            onFocus={(e) => {
-                              e.currentTarget.style.boxShadow = `0 0 0 3px ${BRAND.soft}66`;
-                              e.currentTarget.style.borderColor = BRAND.accent;
-                            }}
-                            onBlur={(e) => {
-                              e.currentTarget.style.boxShadow = "none";
-                              e.currentTarget.style.borderColor = `${BRAND.soft}99`;
-                            }}
-                          />
-                        ))}
-                      </div>
-
-                      <button
-                        className="w-full py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm font-black border-2 border-dashed"
-                        style={{
-                          borderColor: `${BRAND.soft}99`,
-                          color: "#64748b",
-                          background: "transparent",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = BRAND.accent;
-                          e.currentTarget.style.color = BRAND.accent;
-                          e.currentTarget.style.background = `${BRAND.soft}12`;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = `${BRAND.soft}99`;
-                          e.currentTarget.style.color = "#64748b";
-                          e.currentTarget.style.background = "transparent";
-                        }}
-                      >
-                        <span className="material-symbols-outlined text-lg">
-                          add_circle
-                        </span>
-                        Thêm người tham gia
-                      </button>
+                          >
+                            Đăng nhập ngay
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div
-                    className="flex items-center gap-2 text-sm font-semibold mb-6 p-3 rounded-lg border"
-                    style={{
-                      color: BRAND.accent,
-                      background: `${BRAND.soft}18`,
-                      borderColor: `${BRAND.soft}66`,
-                    }}
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      local_fire_department
-                    </span>
-                    <span>
-                      {detail.remainingTickets != null
-                        ? `Còn ${detail.remainingTickets} chỗ cho lịch gần nhất!`
-                        : "Số chỗ trống đang được cập nhật."}
-                    </span>
-                  </div>
+                  {/* Payment Error */}
+                  {paymentError && (
+                    <div
+                      className="flex items-start gap-2 text-xs font-semibold mb-6 p-3 rounded-lg border"
+                      style={{
+                        color: "#ef4444",
+                        background: "rgba(239, 68, 68, 0.05)",
+                        borderColor: "rgba(239, 68, 68, 0.2)",
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-base shrink-0">
+                        error
+                      </span>
+                      <span>{paymentError}</span>
+                    </div>
+                  )}
 
-                  {/* CTA */}
-                  <button
-                    className="w-full py-3.5 px-6 rounded-xl font-black text-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-                    style={{
-                      background: BRAND.accent,
-                      color: "white",
-                      boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation(); 
-                      navigate("/select-session");
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.filter = "brightness(0.96)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.filter = "none")
-                    }
-                  >
-                    Đặt ngay
-                  </button>
+                  {/* Ticket capacity warning */}
+                  {!paymentError && (
+                    <div
+                      className="flex items-center gap-2 text-sm font-semibold mb-6 p-3 rounded-lg border"
+                      style={{
+                        color: BRAND.accent,
+                        background: `${BRAND.soft}18`,
+                        borderColor: `${BRAND.soft}66`,
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-lg shrink-0">
+                        local_fire_department
+                      </span>
+                      <span>
+                        Mỗi tài khoản chỉ được mua tối đa 1 vé cho mỗi workshop!
+                      </span>
+                    </div>
+                  )}
+
+                  {/* CTA Button */}
+                  {currentUser ? (
+                    <button
+                      disabled={!selectedTicketId}
+                      onClick={handleProceedPayment}
+                      className="w-full py-3.5 px-6 rounded-xl font-black text-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                      style={{
+                        background: BRAND.accent,
+                        color: "white",
+                        boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
+                        opacity: !selectedTicketId ? 0.6 : 1,
+                        cursor: !selectedTicketId ? "not-allowed" : "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedTicketId) {
+                          e.currentTarget.style.filter = "brightness(0.96)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.filter = "none";
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-xl">
+                        credit_card
+                      </span>
+                      Đặt vé ngay
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate("/login")}
+                      className="w-full py-3.5 px-6 rounded-xl font-black text-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                      style={{
+                        background: BRAND.accent,
+                        color: "white",
+                        boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.filter = "brightness(0.96)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.filter = "none")
+                      }
+                    >
+                      <span className="material-symbols-outlined text-xl">
+                        login
+                      </span>
+                      Đăng nhập để đặt vé
+                    </button>
+                  )}
 
                   <div className="mt-4 text-center">
                     <span className="text-xs" style={{ color: "#94a3b8" }}>
-                      Chưa cần thanh toán hôm nay
+                      Thanh toán an toàn qua cổng SmartPay Checkout
                     </span>
                   </div>
                 </div>

@@ -1,7 +1,46 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { getWorkshopById, getScheduleDetails } from "../../api/workshop";
+import { proceedPayment } from "../../api/payment";
+import { useAuth } from "../../context/AuthContext";
+
+function formatCurrency(value) {
+  if (value == null) return "Liên hệ";
+  return `${Number(value).toLocaleString("vi-VN")}₫`;
+}
+
+function formatDate(date) {
+  if (!date) return "Đang cập nhật";
+  return new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+function formatTimeOnly(timeStr) {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+  return timeStr;
+}
 
 export default function PaymentAndConfirmation() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser } = useAuth();
+  
+  const { ticketId, scheduleId, workshopId } = location.state || {};
+
+  const [workshop, setWorkshop] = useState(null);
+  const [schedule, setSchedule] = useState(null);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [paymentError, setPaymentError] = useState("");
 
   const BRAND = {
     primary: "#c3996c", // warm gold
@@ -10,6 +49,133 @@ export default function PaymentAndConfirmation() {
     lightBg: "#f6f2e9",
     darkBg: "#0b0f14",
   };
+
+  useEffect(() => {
+    if (!ticketId || !scheduleId || !workshopId) {
+      setError("Không tìm thấy thông tin đặt vé. Vui lòng quay lại trang chi tiết workshop.");
+      setLoading(false);
+      return;
+    }
+
+    let ignore = false;
+    async function loadData() {
+      setLoading(true);
+      setError("");
+      try {
+        const [wsData, schedData, payData] = await Promise.all([
+          getWorkshopById(workshopId),
+          getScheduleDetails(scheduleId),
+          proceedPayment(ticketId)
+        ]);
+
+        if (!ignore) {
+          setWorkshop(wsData);
+          setSchedule(schedData);
+          setPaymentInfo(payData);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err?.message || "Không thể tải thông tin thanh toán.");
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, [ticketId, scheduleId, workshopId]);
+
+  const selectedTicket = useMemo(() => {
+    if (!schedule || !ticketId) return null;
+    const ticketList = schedule.tickets || [];
+    return ticketList.find(t => t.id === ticketId) || null;
+  }, [schedule, ticketId]);
+
+  const pricing = useMemo(() => {
+    if (!selectedTicket || !paymentInfo) return { subtotal: 0, serviceFee: 0, total: 0 };
+    const subtotal = selectedTicket.price;
+    const total = Number(paymentInfo.order_amount || paymentInfo.OrderAmount || 0);
+    const serviceFee = Math.max(0, total - subtotal);
+    return { subtotal, serviceFee, total };
+  }, [selectedTicket, paymentInfo]);
+
+  const handleCheckoutSubmit = () => {
+    if (!paymentInfo) {
+      setPaymentError("Thông tin thanh toán chưa sẵn sàng. Vui lòng thử lại.");
+      return;
+    }
+
+    setPaymentLoading(true);
+    setPaymentError("");
+
+    try {
+      const form = document.createElement("form");
+      form.method = "POST";
+      const merchantId = paymentInfo.merchant ?? paymentInfo.Merchant ?? "";
+      const isSandbox = merchantId.startsWith("SP-TEST-");
+      form.action = isSandbox
+        ? "https://pgapi-sandbox.sepay.vn/v1/checkout/init"
+        : "https://pay.sepay.vn/v1/checkout/init";
+      
+      const fields = {
+        merchant: paymentInfo.merchant ?? paymentInfo.Merchant ?? "",
+        order_amount: paymentInfo.order_amount ?? paymentInfo.OrderAmount ?? "",
+        currency: paymentInfo.currency ?? paymentInfo.Currency ?? "VND",
+        operation: paymentInfo.operation ?? paymentInfo.Operation ?? "PURCHASE",
+        order_description: paymentInfo.order_description ?? paymentInfo.OrderDescription ?? "",
+        order_invoice_number: paymentInfo.order_invoice_number ?? paymentInfo.OrderInvoiceNumber ?? "",
+        success_url: paymentInfo.success_url ?? paymentInfo.SuccessUrl ?? "",
+        error_url: paymentInfo.error_url ?? paymentInfo.ErrorUrl ?? "",
+        cancel_url: paymentInfo.cancel_url ?? paymentInfo.CancelUrl ?? "",
+        signature: paymentInfo.signature ?? paymentInfo.Signature ?? "",
+      };
+
+      console.log("Redirecting to SePay with fields:", fields);
+
+      Object.entries(fields).forEach(([key, val]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = val;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err) {
+      console.error("Redirection failed:", err);
+      setPaymentError("Lỗi chuyển hướng thanh toán. Chi tiết: " + err.message);
+      setPaymentLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-display" style={{ background: BRAND.lightBg }}>
+        <div className="rounded-2xl border bg-white px-6 py-5 text-sm font-semibold" style={{ borderColor: `${BRAND.soft}99`, color: "#475569" }}>
+          Đang tải thông tin đặt vé và chuẩn bị cổng thanh toán...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-display px-4" style={{ background: BRAND.lightBg }}>
+        <div className="max-w-md rounded-2xl border bg-white p-6 text-center" style={{ borderColor: `${BRAND.soft}99` }}>
+          <p className="mb-4 text-sm font-semibold" style={{ color: "#b91c1c" }}>{error}</p>
+          <button className="rounded-xl px-5 py-2 text-sm font-black text-white" style={{ background: BRAND.accent }} onClick={() => navigate("/home")}>
+            Về trang chủ
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const thumbnail = workshop?.thumbnailLink || "/img/onlyLogo.png";
 
   return (
     <>
@@ -33,7 +199,6 @@ export default function PaymentAndConfirmation() {
                   to="/home"
                   className="flex items-center gap-3 text-slate-900 dark:text-slate-100"
                 >
-                  {/* Logo to hơn nhưng không làm header cao */}
                   <div className="relative w-8 h-8 overflow-visible shrink-0">
                     <img
                       src="/img/onlyLogo.png"
@@ -48,48 +213,26 @@ export default function PaymentAndConfirmation() {
                     <span style={{ color: BRAND.primary }}>Hour</span>
                   </h2>
                 </Link>
-
-
               </div>
 
-              {/* Search & Actions */}
+              {/* User details or actions */}
               <div className="flex items-center gap-4">
-                <div className="hidden sm:flex relative items-center">
-                  <span
-                    className="material-symbols-outlined absolute left-3"
-                    style={{ color: "#94a3b8" }}
-                  >
-                    search
-                  </span>
-                  <input
-                    className="pl-10 pr-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 w-64 placeholder-slate-400"
+                {currentUser ? (
+                  <div className="text-sm font-semibold" style={{ color: "#334155" }}>
+                    Xin chào, <span className="font-black" style={{ color: BRAND.primary }}>{currentUser.name || currentUser.email?.split('@')[0]}</span>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="text-sm px-5 py-2 rounded-xl transition-colors font-black"
                     style={{
-                      background: `${BRAND.soft}22`,
-                      borderColor: `${BRAND.soft}99`,
+                      background: BRAND.accent,
+                      color: "white",
                     }}
-                    placeholder="Tìm kiếm lớp học..."
-                    type="text"
-                    onFocus={(e) =>
-                      (e.currentTarget.style.boxShadow = `0 0 0 3px ${BRAND.soft}66`)
-                    }
-                    onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                  />
-                </div>
-
-                <Link
-                  to="/login"
-                  className="text-sm px-5 py-2 rounded-xl transition-colors font-black"
-                  style={{
-                    background: BRAND.accent,
-                    color: "white",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.filter = "brightness(0.95)")
-                  }
-                  onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
-                >
-                  Đăng nhập
-                </Link>
+                  >
+                    Đăng nhập
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -105,8 +248,7 @@ export default function PaymentAndConfirmation() {
                   Thanh toán an toàn
                 </h1>
                 <p className="text-slate-500">
-                  Hoàn tất đặt chỗ cho một chuyến trải nghiệm sáng tạo tại Đà
-                  Nẵng.
+                  Hoàn tất đặt chỗ cho một chuyến trải nghiệm sáng tạo tại Đà Nẵng.
                 </p>
               </div>
 
@@ -134,8 +276,7 @@ export default function PaymentAndConfirmation() {
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                       style={{
-                        backgroundImage:
-                          "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCAtFqC8B6fN1RQPNch--25CDDS09j0u4M3l8hzPZ62twvAF3241_rQUigW9NJQZO_oSTY5WILKub-FWgspUPYYh3ALyFPqz9kQxTXP6zHWfbC0IzJa4iLXiWzHr6GFabS3PKqcO1nyLyCScqW1IJ0rda3XtgkX6AoihIs5AlFQR37qEgaZkRJcmLWGV5fd7y0LLIDd39SgvqrsKHVSO0MN7RhbGEjHRfr7sYfgiphFdnFYh1PcWRWsOaRWNaTD4Dm6349u__5IRP0M')",
+                        backgroundImage: `url('${thumbnail}')`,
                       }}
                     />
                   </div>
@@ -143,43 +284,48 @@ export default function PaymentAndConfirmation() {
                   <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
                       <div className="flex justify-between items-start mb-1">
-                        <h3 className="text-lg font-extrabold">
-                          Workshop Làm Cốc Gốm
+                        <h3 className="text-lg font-extrabold line-clamp-1">
+                          {workshop?.title}
                         </h3>
                         <span
                           className="font-black text-lg"
                           style={{ color: BRAND.primary }}
                         >
-                          750k ₫
+                          {formatCurrency(selectedTicket?.price)}
                         </span>
                       </div>
 
-                      <p className="text-slate-500 text-sm mb-4">
-                        Hoàn tất đặt chỗ cho một chuyến trải nghiệm sáng tạo tại
-                        Đà Nẵng.
+                      <p className="text-slate-500 text-sm mb-4 line-clamp-2">
+                        {workshop?.description}
                       </p>
 
                       <div className="space-y-2">
                         {[
                           {
                             icon: "calendar_month",
-                            text: "Thứ Bảy, ngày 28 tháng 10 năm 2025",
+                            text: formatDate(schedule?.startOn),
                           },
-                          { icon: "schedule", text: "10:00 - 12:00 (2 Tiếng)" },
-                          { icon: "person", text: "1 Người" },
+                          { 
+                            icon: "schedule", 
+                            text: `${formatTimeOnly(selectedTicket?.startTime)} - {formatTimeOnly(selectedTicket?.endTime)}` 
+                          },
+                          { 
+                            icon: "person", 
+                            text: `1 Người (Tài khoản: ${currentUser?.name || currentUser?.email?.split('@')[0]})` 
+                          },
                           {
                             icon: "location_on",
-                            text: "Khu vực bãi biển Mỹ Khê, Đà Nẵng",
+                            text: workshop?.location,
                           },
-                        ].map((x) => (
+                        ].map((x, idx) => (
                           <div
-                            key={x.icon}
+                            key={idx}
                             className="flex items-center gap-2 text-slate-600 text-sm"
                           >
                             <span className="material-symbols-outlined text-[18px]">
                               {x.icon}
                             </span>
-                            <span>{x.text}</span>
+                            <span className="truncate">{x.text}</span>
                           </div>
                         ))}
                       </div>
@@ -192,16 +338,16 @@ export default function PaymentAndConfirmation() {
                   style={{ borderColor: `${BRAND.soft}99` }}
                 >
                   <div className="flex justify-between items-center text-slate-600 text-sm mb-2">
-                    <span>Tạm tính</span>
-                    <span>750,000 ₫</span>
+                    <span>Giá vé ({selectedTicket?.ticketType})</span>
+                    <span>{formatCurrency(pricing.subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 text-sm mb-2">
                     <span>Phí dịch vụ</span>
-                    <span>25,000 ₫</span>
+                    <span>{formatCurrency(pricing.serviceFee)}</span>
                   </div>
                   <div className="flex justify-between items-center font-black text-lg mt-4">
                     <span>Tổng thanh toán</span>
-                    <span style={{ color: BRAND.accent }}>775,000 ₫</span>
+                    <span style={{ color: BRAND.accent }}>{formatCurrency(pricing.total)}</span>
                   </div>
                 </div>
               </section>
@@ -233,199 +379,135 @@ export default function PaymentAndConfirmation() {
             {/* Right Column */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               <section
-                className="rounded-2xl p-6 shadow-sm border h-full"
+                className="rounded-2xl p-6 shadow-sm border h-full flex flex-col justify-between"
                 style={{
                   background: "rgba(255,255,255,0.80)",
                   borderColor: `${BRAND.soft}99`,
                 }}
               >
-                <div className="flex items-center gap-2 mb-6">
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ color: BRAND.accent }}
-                  >
-                    payments
-                  </span>
-                  <h2 className="text-xl font-extrabold">
-                    Phương thức thanh toán
-                  </h2>
-                </div>
-
-                {/* Payment Tabs */}
-                <div
-                  className="flex gap-2 p-1 rounded-lg mb-6 border"
-                  style={{
-                    background: `${BRAND.soft}22`,
-                    borderColor: `${BRAND.soft}99`,
-                  }}
-                >
-                  <button
-                    className="flex-1 py-2 text-sm font-extrabold rounded shadow-sm transition-all"
-                    style={{
-                      background: "rgba(255,255,255,0.9)",
-                      color: "#0f172a",
-                      border: `1px solid ${BRAND.soft}99`,
-                    }}
-                    type="button"
-                  >
-                    Chuyển khoản
-                  </button>
-                  {["Thẻ tín dụng", "Ví điện tử"].map((t) => (
-                    <button
-                      key={t}
-                      className="flex-1 py-2 text-sm font-semibold transition-all rounded"
-                      style={{ color: "#64748b" }}
-                      type="button"
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = BRAND.accent)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = "#64748b")
-                      }
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ color: BRAND.accent }}
                     >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-
-                {/* QR Payment Active State */}
-                <div className="flex flex-col items-center">
-                  <div className="text-center mb-4">
-                    <p className="text-sm font-semibold">
-                      Quét mã qua VietQR hoặc Ứng dụng Ngân hàng
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Hoàn tất đặt chỗ cho một chuyến trải nghiệm sáng tạo tại
-                      Đà Nẵng.
-                    </p>
+                      payments
+                    </span>
+                    <h2 className="text-xl font-extrabold">
+                      Phương thức thanh toán
+                    </h2>
                   </div>
 
+                  {/* Payment Tabs */}
                   <div
-                    className="relative w-56 h-56 bg-white border-2 rounded-2xl p-2 mb-4 shadow-lg"
-                    style={{ borderColor: `${BRAND.soft}cc` }}
-                  >
-                    <div className="w-full h-full rounded-xl flex items-center justify-center overflow-hidden relative">
-                      <div className="absolute inset-0 bg-white p-2">
-                        <img
-                          alt="QR Code for payment"
-                          className="w-full h-full object-contain"
-                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCv1fZtm74XkdoFuB0LmB4oxImJlQ4dZtyQRpDnJjCvAgbIZI56nMAcAiHf7geTojLS-tmUbCnGdV1aLLaTOfgsXOix8JdkDhmQ0BqIEpD3C4MERfJpwUjqqJZxBSAu5HoY1W4ylmJifj7Xzf9Y2sHsewt2lIENsCZ9BNaQMp_CeUWvmLzJ9yg7kFqnEXCvdkiJKLHmdICpsAQeC3_DlxINEMo_nzhbpJ3ZO15-l8FNgAqnNscjhbWD0vMNBoERrI2BFtXeGP9YwrHU"
-                        />
-                      </div>
-
-                      {/* Center Logo Overlay */}
-                      <div className="absolute bg-white p-1.5 rounded-full shadow-md z-10">
-                        <img
-                          src="/img/onlyLogo.png"
-                          alt="Hands & Hour logo"
-                          className="h-6 w-6 object-contain"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className="w-full rounded-xl p-3 mb-6 border"
+                    className="flex gap-2 p-1 rounded-lg mb-6 border"
                     style={{
-                      background: `${BRAND.soft}18`,
+                      background: `${BRAND.soft}22`,
                       borderColor: `${BRAND.soft}99`,
                     }}
                   >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-black">
-                        Tên tài khoản
-                      </span>
-                      <span className="text-sm font-extrabold">
-                        HANDS AND HOUR LLC
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-black">
-                        Ngân hàng
-                      </span>
-                      <span className="text-sm font-extrabold">Vietcombank</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-black">
-                        Số tài khoản
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-mono">
-                          0071 0000 8293
-                        </span>
-                        <button
-                          type="button"
-                          style={{ color: BRAND.accent }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.filter = "brightness(0.95)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.filter = "none")
-                          }
-                        >
-                          <span className="material-symbols-outlined text-[16px]">
-                            content_copy
-                          </span>
-                        </button>
-                      </div>
-                    </div>
+                    <button
+                      className="flex-1 py-2 text-sm font-extrabold rounded shadow-sm transition-all"
+                      style={{
+                        background: "rgba(255,255,255,0.9)",
+                        color: "#0f172a",
+                        border: `1px solid ${BRAND.soft}99`,
+                      }}
+                      type="button"
+                    >
+                      Cổng SmartPay
+                    </button>
                   </div>
 
-                  <div className="w-full space-y-3">
-                    <div className="flex items-start gap-2">
-                      <input
-                        className="rounded mt-1"
-                        id="terms"
-                        type="checkbox"
-                        style={{ accentColor: BRAND.accent }}
-                      />
-                      <label className="text-xs text-slate-600" htmlFor="terms">
-                        Tôi đồng ý với{" "}
-                        <a
-                          className="font-bold hover:underline"
-                          style={{ color: BRAND.accent }}
-                          href="#"
-                        >
-                          Điều khoản dịch vụ
-                        </a>{" "}
-                        và{" "}
-                        <a
-                          className="font-bold hover:underline"
-                          style={{ color: BRAND.accent }}
-                          href="#"
-                        >
-                          Chính sách hủy
-                        </a>
-                        .
-                      </label>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="w-full font-black text-base py-3.5 rounded-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0"
-                      style={{
-                        background: BRAND.accent,
-                        color: "white",
-                        boxShadow: "0 14px 30px rgba(240,138,120,0.22)",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.filter = "brightness(0.95)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.filter = "none")
-                      }
-                      onClick={() => navigate("/confirm-success")}
+                  {/* SmartPay Redirection Details */}
+                  <div className="flex flex-col items-center py-6 text-center border rounded-2xl p-4 bg-white/50 mb-6" style={{ borderColor: `${BRAND.soft}44` }}>
+                    <span
+                      className="material-symbols-outlined text-5xl mb-4 animate-bounce"
+                      style={{ color: BRAND.accent }}
                     >
-                      Xác nhận thanh toán
-                    </button>
-
-                    <p className="text-center text-xs text-slate-400 mt-2 flex items-center justify-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">
-                        lock
-                      </span>{" "}
-                      Thanh toán bảo mật SSL
+                      payment
+                    </span>
+                    <h3 className="font-black text-base text-slate-800 mb-2">SmartPay Checkout</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
+                      Hệ thống sẽ chuyển hướng bạn đến cổng thanh toán trực tuyến bảo mật của SmartPay. Bạn có thể thanh toán nhanh chóng bằng quét mã VietQR hoặc Thẻ nội địa/quốc tế.
                     </p>
                   </div>
+                </div>
+
+                <div className="w-full space-y-3">
+                  {paymentError && (
+                    <div
+                      className="p-3 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 animate-fade-in"
+                    >
+                      <span className="material-symbols-outlined text-base shrink-0">error</span>
+                      <span>{paymentError}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-2">
+                    <input
+                      className="rounded mt-1 cursor-pointer"
+                      id="terms"
+                      type="checkbox"
+                      defaultChecked
+                      style={{ accentColor: BRAND.accent }}
+                    />
+                    <label className="text-[11px] text-slate-500 cursor-pointer font-semibold" htmlFor="terms">
+                      Tôi đồng ý với các điều khoản dịch vụ và chính sách hoàn trả của Hands &amp; Hour.
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={paymentLoading || !paymentInfo}
+                    onClick={handleCheckoutSubmit}
+                    className="w-full font-black text-base py-3.5 rounded-xl transition-all transform active:translate-y-0 flex items-center justify-center gap-2"
+                    style={{
+                      background: BRAND.accent,
+                      color: "white",
+                      boxShadow: "0 14px 30px rgba(240,138,120,0.22)",
+                      opacity: (paymentLoading || !paymentInfo) ? 0.6 : 1,
+                      cursor: (paymentLoading || !paymentInfo) ? "not-allowed" : "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!paymentLoading && paymentInfo) {
+                        e.currentTarget.style.filter = "brightness(0.96)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = "none";
+                    }}
+                  >
+                    {paymentLoading ? (
+                      <>
+                        <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                        Đang chuyển hướng...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-lg">lock</span>
+                        Thanh toán qua SmartPay
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="w-full text-center text-xs font-bold transition-colors py-2"
+                    style={{ color: "#64748b" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = BRAND.primary)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+                  >
+                    Quay lại chỉnh sửa đặt vé
+                  </button>
+
+                  <p className="text-center text-[10px] text-slate-400 mt-2 flex items-center justify-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">
+                      verified
+                    </span>{" "}
+                    Giao dịch bảo mật chuẩn PCI-DSS
+                  </p>
                 </div>
               </section>
             </div>
@@ -442,7 +524,7 @@ export default function PaymentAndConfirmation() {
         >
           <div className="container mx-auto px-6 text-center">
             <p className="text-slate-500 text-sm">
-              © 2025 Hands &amp; Hour. Được tạo ra với sự tận tâm tại Đà Nẵng.
+              © 2025 Hands &amp; Hour. Bảo lưu mọi quyền.
             </p>
           </div>
         </footer>
