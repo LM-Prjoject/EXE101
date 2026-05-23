@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getUserById, fetchWithFallback, parseJsonResponse, buildError } from "../../api";
-import { changeName, changePhone, changeAvatar } from "../../api/user";
+import { fetchWithFallback, parseJsonResponse, buildError } from "../../api/client";
+import { getUserById, changeName, changePhone, changeAvatar } from "../../api/user";
+import { getUpcomingSchedules } from "../../api/workshop";
 import { useAuth } from "../../context/AuthContext";
 
 const DEFAULT_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE";
@@ -12,12 +13,38 @@ function getJoinedYear(user) {
   return Number.isNaN(year) ? null : year;
 }
 
+function formatCurrency(value) {
+  if (value == null) return "Liên hệ";
+  return `${Number(value).toLocaleString("vi-VN")}₫`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "Đang cập nhật";
+  return new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(dateStr));
+}
+
+function formatTimeOnly(timeStr) {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+  return timeStr;
+}
+
 export default function UserProfile() {
   const navigate = useNavigate();
   const { currentUser, authToken } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState("");
+
+  const [schedules, setSchedules] = useState([]);
+  const [loadingSchedules, setLoadingSchedules] = useState(true);
+  const [schedulesError, setSchedulesError] = useState("");
 
   // States for Pop-up Edit Modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -147,6 +174,38 @@ export default function UserProfile() {
     };
   }, [currentUser?.id]);
 
+  useEffect(() => {
+    if (!authToken) {
+      setLoadingSchedules(false);
+      return;
+    }
+
+    let ignore = false;
+    async function loadSchedules() {
+      setLoadingSchedules(true);
+      setSchedulesError("");
+      try {
+        const response = await getUpcomingSchedules(authToken, 1, 10);
+        if (!ignore) {
+          setSchedules(response?.data || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setSchedulesError(err?.message || "Không thể tải danh sách workshop sắp tới.");
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingSchedules(false);
+        }
+      }
+    }
+
+    loadSchedules();
+    return () => {
+      ignore = true;
+    };
+  }, [authToken]);
+
   const user = useMemo(() => {
     const name = profile?.name || currentUser?.name || currentUser?.email?.split("@")[0] || "Người dùng";
     return {
@@ -244,13 +303,18 @@ export default function UserProfile() {
                   <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#151822]"></span>
                 </button>
 
-                <div
-                  className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
-                  data-alt={`${user.name} avatar`}
-                  style={{
-                    backgroundImage: `url("${user.avatarUrl}")`,
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
+                    Xin chào, <span className="font-black">{user.name}</span>
+                  </span>
+                  <div
+                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
+                    data-alt={`${user.name} avatar`}
+                    style={{
+                      backgroundImage: `url("${user.avatarUrl}")`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </header>
@@ -369,194 +433,113 @@ export default function UserProfile() {
                 </a>
               </div>
 
-              <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
-                <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
-                  event_busy
-                </span>
-                <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
-                  Chưa có workshop sắp tới
-                </h4>
-                <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mt-2">
-                  API profile hiện chưa trả danh sách booking, nên khu vực này không hiển thị dữ liệu mẫu.
-                </p>
-              </div>
-
-              {/* Cards giữ nguyên layout, chỉ đổi accent/soft/border */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12" style={{ display: "none" }}>
-                {/* Card 1 */}
-                <div className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col h-full">
-                  <div className="relative h-48 overflow-hidden">
-                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-[#c3996c] dark:text-white shadow-sm z-10">
-                      Ngày mai, 14:00
-                    </div>
-                    <button className="absolute top-3 right-3 bg-black/20 hover:bg-black/40 text-white rounded-full p-1.5 backdrop-blur-sm transition-colors z-10">
-                      <span className="material-symbols-outlined text-[20px]">
-                        favorite
-                      </span>
-                    </button>
-                    <div
-                      className="bg-center bg-cover h-full w-full group-hover:scale-105 transition-transform duration-500"
-                      data-alt="Pottery wheel with clay hands"
-                      style={{
-                        backgroundImage:
-                          'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDvNj2dKCDD7m_I4BpTxsjwD9FhctgiyIOaTVu5qqo0rBffnihj8DHFgBixXw6FeLhXdPG--GdTbdEHYi0-sxWIZHWkWtz4jlcaGDPEhRw5y2eb8-y8fIU0n85d0Gx1OSPz0Jo_e_VscQIISC5ivROj4B2uNARTOXElCgz6HGV673IqSgS2d0hzV6gBLjJYZ0We8YvGTdvsX4b1XbK3_KtfDrl5HbkG8OH08oNnAyr2v9pHdRTSOdmWUD58iDhPv-jM3Mgc4KwA1cKW")',
-                      }}
-                    />
-                  </div>
-
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[#f08a78] text-xs font-bold uppercase tracking-wider">
-                        Làm gốm
-                      </span>
-                      <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
-                        <span className="material-symbols-outlined text-[16px] fill-current">
-                          star
-                        </span>
-                        <span>4.9</span>
-                      </div>
-                    </div>
-
-                    <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg mb-2 line-clamp-2">
-                      Nhập môn xoay gốm với đất sét địa phương
-                    </h4>
-                    <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-4 line-clamp-2 flex-1">
-                      Học các kỹ thuật cơ bản để định hình đất sét trên bàn xoay
-                      trong không gian studio thư giãn.
-                    </p>
-
-                    <div className="flex items-center gap-3 mb-4">
-                      <div
-                        className="bg-center bg-cover rounded-full size-8 border border-white dark:border-slate-700"
-                        data-alt="Host portrait female"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCJeEMvRSBgYk4yIc0K-7XKks7EGd2eq-LEb0V9QpfTyypDby2YqEDDpSNJMSi9DOiVdp2StCaAz_t-mRlb77hVXYx8z9uyspY1ihC8bjQ7Gh1do7uVh-z5wcgPa4IQikmZ-kkWqIApi9RqtEjW8KD-VRZEUW2ucNmSQO30Ihsw7LFYM7KakMPs1tyeMYbzwNMLLWijEt_hJVjKnVwdPp48DpCeHh6W6y09H8y-RYYJ0IKUZUNIpXndw6RPM9FdEH1PSXr_KtGLMv8L")',
-                        }}
-                      />
-                      <div className="text-xs">
-                        <p className="text-[#c3996c]/60 dark:text-[#d5ddc3]">
-                          Tổ chức bởi
-                        </p>
-                        <p className="font-bold text-[#c3996c] dark:text-slate-200">
-                          Mai Arts Studio
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-[#fbc4ae]/40 dark:border-slate-800 flex items-center justify-between mt-auto">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-[#c3996c]/60 dark:text-[#d5ddc3]">
-                          Tổng thanh toán
-                        </span>
-                        <span className="text-[#c3996c] dark:text-slate-100 font-bold">
-                          450k VND
-                        </span>
-                      </div>
-                      <button className="bg-white dark:bg-slate-700 hover:bg-[#fbc4ae]/25 dark:hover:bg-slate-600 text-[#c3996c] dark:text-slate-200 text-xs font-bold py-2 px-4 rounded-lg border border-[#fbc4ae]/60 dark:border-slate-600 transition-colors">
-                        Chi tiết vé
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 2 (tương tự, giữ nguyên nội dung, đã đổi màu chính) */}
-                <div className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col h-full">
-                  <div className="relative h-48 overflow-hidden">
-                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-[#c3996c] dark:text-white shadow-sm z-10">
-                      Thứ 7, 28 thg 10
-                    </div>
-                    <button className="absolute top-3 right-3 bg-black/20 hover:bg-black/40 text-white rounded-full p-1.5 backdrop-blur-sm transition-colors z-10">
-                      <span className="material-symbols-outlined text-[20px]">
-                        favorite
-                      </span>
-                    </button>
-
-                    <div
-                      className="bg-center bg-cover h-full w-full group-hover:scale-105 transition-transform duration-500"
-                      data-alt="Watercolor painting supplies"
-                      style={{
-                        backgroundImage:
-                          'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDpen0juWHPSdkBVbHH5xztv97vtUZ61AwGN_gwB1o6M4ygApTUoMWEVUatH2IsHy2XIxYhZGaeCxksx_2nLudq-OjhPYBdSWXLHFj1x9U_r2pb99AoQvhNsSzmIL6zv4JmZqiYQul7ZtQYvZ4TuMPrwhRGh1YuuxfW2CJiwj-znUryMyR5ULPlyTHdWl7pUrnQ8HCPDrhvp6XOwiaJU68Rwrue3Yy0UDuIP5fg6PxINwTSscF3yFbHgi47HJzAPgU4YTJxDxP-vqc1")',
-                      }}
-                    />
-                  </div>
-
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[#f08a78] text-xs font-bold uppercase tracking-wider">
-                        Hội họa
-                      </span>
-                      <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
-                        <span className="material-symbols-outlined text-[16px] fill-current">
-                          star
-                        </span>
-                        <span>5.0</span>
-                      </div>
-                    </div>
-
-                    <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg mb-2 line-clamp-2">
-                      Vẽ màu nước hoàng hôn bên biển Mỹ Khê
-                    </h4>
-                    <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-4 line-clamp-2 flex-1">
-                      Ghi lại những sắc màu rực rỡ của hoàng hôn Đà Nẵng bằng kỹ
-                      thuật vẽ màu nước loang.
-                    </p>
-
-                    <div className="flex items-center gap-3 mb-4">
-                      <div
-                        className="bg-center bg-cover rounded-full size-8 border border-white dark:border-slate-700"
-                        data-alt="Host portrait male"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB53huTVqyEYEux9NSxJ6lMBEIPeHtdTqGCJqzkWn2aSgyRSB5IpZQgvgt5fTJ-XbDYtXS5v5bDAKi2z-pelMVHH_8MLu5pnUz3D5Mopmy2fz0tcUHIdXGigAe53Bu3lTxEx1hNFXa_9H3l4Nc8EOsB1Bb8MJFSqiuEl7KYPzHbCNOwyy6efW5XEo7CFo6RqGXGDeJJ7iobRNuxstYolCsu2wVikvdgwv9gCwz4i-86YmUe8Hp46Uph0do2dkiwhUoukZaTClED-THo")',
-                        }}
-                      />
-                      <div className="text-xs">
-                        <p className="text-[#c3996c]/60 dark:text-[#d5ddc3]">
-                          Tổ chức bởi
-                        </p>
-                        <p className="font-bold text-[#c3996c] dark:text-slate-200">
-                          Tuan Colors
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-[#fbc4ae]/40 dark:border-slate-800 flex items-center justify-between mt-auto">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-[#c3996c]/60 dark:text-[#d5ddc3]">
-                          Tổng thanh toán
-                        </span>
-                        <span className="text-[#c3996c] dark:text-slate-100 font-bold">
-                          300k VND
-                        </span>
-                      </div>
-                      <button className="bg-white dark:bg-slate-700 hover:bg-[#fbc4ae]/25 dark:hover:bg-slate-600 text-[#c3996c] dark:text-slate-200 text-xs font-bold py-2 px-4 rounded-lg border border-[#fbc4ae]/60 dark:border-slate-600 transition-colors">
-                        Chi tiết vé
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Explore card: accent + soft */}
-                <div className="group bg-gradient-to-br from-[#f08a78]/15 to-transparent dark:from-[#f08a78]/20 dark:to-[#151822] rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-[#f08a78]/35 flex flex-col items-center justify-center p-8 text-center h-full min-h-[350px]">
-                  <div className="bg-white dark:bg-[#151822] p-4 rounded-full shadow-md mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <span className="material-symbols-outlined text-[#f08a78] text-4xl">
-                      add
-                    </span>
-                  </div>
-                  <h4 className="text-[#c3996c] dark:text-slate-100 font-bold text-lg mb-2">
-                    Khám phá thêm
+              {loadingSchedules ? (
+                <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
+                  <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3 animate-spin">
+                    progress_activity
+                  </span>
+                  <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                    Đang tải danh sách...
                   </h4>
-                  <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-6 max-w-[200px]">
-                    Tìm kiếm cuộc phiêu lưu sáng tạo tiếp theo của bạn tại Đà
-                    Nẵng.
-                  </p>
-                  <button className="bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all">
-                    Xem tất cả workshop
-                  </button>
                 </div>
-              </div>
+              ) : schedulesError ? (
+                <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
+                  <span className="material-symbols-outlined text-rose-500 text-4xl mb-3">
+                    error
+                  </span>
+                  <h4 className="text-rose-600 font-bold text-lg">
+                    Lỗi tải dữ liệu
+                  </h4>
+                  <p className="text-slate-500 text-sm mt-2">{schedulesError}</p>
+                </div>
+              ) : schedules.length === 0 ? (
+                <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
+                  <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
+                    event_busy
+                  </span>
+                  <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                    Chưa có workshop sắp tới
+                  </h4>
+                  <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mt-2">
+                    Bạn chưa có lịch hẹn workshop sắp tới nào. Hãy đăng ký ngay nhé!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                  {schedules.map((item) => {
+                    const ticketList = item.tickets || [];
+                    const firstTicket = ticketList[0];
+                    const priceText = firstTicket ? formatCurrency(firstTicket.price) : "Liên hệ";
+                    const ticketTypeLabel = firstTicket ? firstTicket.ticketType : "";
+                    const timeRange = firstTicket ? `${formatTimeOnly(firstTicket.startTime)} - ${formatTimeOnly(firstTicket.endTime)}` : "";
+                    const img = item.workshopThumbnailLink || "/img/onlyLogo.png";
+
+                    return (
+                      <div key={item.id} className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col h-full">
+                        <div className="relative h-48 overflow-hidden">
+                          <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-[#c3996c] dark:text-white shadow-sm z-10">
+                            {formatDate(item.startOn)} {timeRange && `• ${timeRange}`}
+                          </div>
+                          <div
+                            className="bg-center bg-cover h-full w-full group-hover:scale-105 transition-transform duration-500"
+                            style={{
+                              backgroundImage: `url("${img}")`,
+                            }}
+                          />
+                        </div>
+
+                        <div className="p-5 flex flex-col flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-[#f08a78] text-xs font-bold uppercase tracking-wider">
+                              Vé {ticketTypeLabel || "Đã đặt"}
+                            </span>
+                          </div>
+
+                          <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg mb-2 line-clamp-2">
+                            {item.workshopTitle}
+                          </h4>
+                          
+                          <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-4 line-clamp-2 flex-1">
+                            Địa điểm: {item.workshopLocation}
+                          </p>
+
+                          <div className="pt-4 border-t border-[#fbc4ae]/40 dark:border-slate-800 flex items-center justify-between mt-auto">
+                            <div className="flex flex-col">
+                              <span className="text-xs text-[#c3996c]/60 dark:text-[#d5ddc3]">
+                                Tổng thanh toán
+                              </span>
+                              <span className="text-[#c3996c] dark:text-slate-100 font-bold">
+                                {priceText}
+                              </span>
+                            </div>
+                            <Link to={`/find-companion/${item.id}`} className="bg-white dark:bg-slate-700 hover:bg-[#fbc4ae]/25 dark:hover:bg-slate-600 text-[#c3996c] dark:text-slate-200 text-xs font-bold py-2 px-4 rounded-lg border border-[#fbc4ae]/60 dark:border-slate-600 transition-colors">
+                              Chi tiết
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Explore card */}
+                  <div className="group bg-gradient-to-br from-[#f08a78]/15 to-transparent dark:from-[#f08a78]/20 dark:to-[#151822] rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-[#f08a78]/35 flex flex-col items-center justify-center p-8 text-center h-full min-h-[350px]">
+                    <div className="bg-white dark:bg-[#151822] p-4 rounded-full shadow-md mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="material-symbols-outlined text-[#f08a78] text-4xl">
+                        add
+                      </span>
+                    </div>
+                    <h4 className="text-[#c3996c] dark:text-slate-100 font-bold text-lg mb-2">
+                      Khám phá thêm
+                    </h4>
+                    <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-6 max-w-[200px]">
+                      Tìm kiếm cuộc phiêu lưu sáng tạo tiếp theo của bạn tại Đà Nẵng.
+                    </p>
+                    <button onClick={() => navigate("/advanced-search")} className="bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all">
+                      Xem tất cả workshop
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-between items-end mb-6">
                 <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">

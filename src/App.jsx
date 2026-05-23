@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import FloatingNav from './components/FloatingNav';
 import StaffLayout from './components/StaffLayout';
 import AdminUserList from './pages/AdminUserList';
@@ -13,8 +13,6 @@ import RegisterAccount from './pages/RegisterAccount';
 import HomeWithBanner from './pages/HomeWithBanner';
 import AdvancedSearch from './pages/AdvancedSearch';
 import FindCompanion from './pages/FindCompanion';
-import SelectSessionTime from './pages/SelectSessionTime';
-import EnterParticipantInfo from './pages/EnterParticipantInfo';
 import PaymentAndConfirmation from './pages/PaymentAndConfirmation';
 import ConfirmSuccess from './pages/ConfirmSuccess';
 import UserProfile from './pages/UserProfile';
@@ -33,14 +31,19 @@ import HostInstructorProfile from './pages/HostInstructorProfile';
 import HostVerification from './pages/HostVerification';
 import HostVerifyStep2 from './pages/HostVerifyStep2';
 
+function RootRedirect() {
+  const { currentUser } = useAuth();
+  return currentUser ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <div style={{ paddingBottom: "var(--floating-nav-h, 0px)" }}>
           <Routes>
-          {/* Default: redirect to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Default: redirect based on auth */}
+          <Route path="/" element={<RootRedirect />} />
 
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
@@ -51,8 +54,6 @@ export default function App() {
           <Route path="/advanced-search" element={<AdvancedSearch />} />
           <Route path="/find-companion/:workshopId" element={<FindCompanion />} />
           <Route path="/find-companion" element={<FindCompanion />} />
-          <Route path="/select-session" element={<SelectSessionTime />} />
-          <Route path="/participant-info" element={<EnterParticipantInfo />} />
           <Route path="/payment" element={<PaymentAndConfirmation />} />
           <Route path="/confirm-success" element={<ConfirmSuccess />} />
           <Route path="/user-profile" element={<UserProfile />} />
@@ -83,7 +84,7 @@ export default function App() {
 
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
         </div>
 
