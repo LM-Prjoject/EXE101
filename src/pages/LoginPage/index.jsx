@@ -26,7 +26,13 @@ export default function LoginPage() {
     try {
       const user = await login(email, password);
       if (user) {
-        navigate(user.role === 'host' ? '/host/dashboard' : '/home');
+        if (user.role === 'host') {
+          navigate('/host/dashboard');
+        } else if (user.role === 'staff' || user.role === 'admin') {
+          navigate('/staff/users');
+        } else {
+          navigate('/home');
+        }
       } else {
         setError('Email hoặc mật khẩu không đúng.');
       }

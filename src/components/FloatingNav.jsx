@@ -18,6 +18,10 @@ const hostLinks = [
   { to: "/host/income", label: "Thu nhập", icon: "payments" },
 ];
 
+const staffLinks = [
+  { to: "/staff/users", label: "Quản lý Users", icon: "people" },
+];
+
 const AUTH_PAGES = ["/login", "/register"];
 
 // helper: set CSS var on :root
@@ -32,23 +36,28 @@ export default function FloatingNav() {
 
   const navRef = useRef(null);
 
-  const shouldHide = AUTH_PAGES.includes(location.pathname) || !currentUser;
-
   const isHost = !!currentUser && currentUser.role === "host";
+  const isStaff = !!currentUser && (currentUser.role === "staff" || currentUser.role === "admin");
+
+  const shouldHide = AUTH_PAGES.includes(location.pathname) || !currentUser || isStaff || location.pathname.startsWith('/staff');
   const displayName =
     currentUser?.name ||
     currentUser?.email?.split("@")[0] ||
-    (isHost ? "Host" : "User");
-  const links = useMemo(() => (isHost ? hostLinks : userLinks), [isHost]);
+    (isHost ? "Host" : isStaff ? "Staff" : "User");
+  const links = useMemo(() => {
+    if (isHost) return hostLinks;
+    if (isStaff) return staffLinks;
+    return userLinks;
+  }, [isHost, isStaff]);
 
   // ✅ BRAND COLORS
-  const accentColor = isHost ? "#6F8B6F" : "#F08A78";
-  const supportColor = isHost ? "#D5DDCE" : "#FBC4AE";
+  const accentColor = isHost ? "#6F8B6F" : (isStaff ? "#3b82f6" : "#F08A78");
+  const supportColor = isHost ? "#D5DDCE" : (isStaff ? "#dbeafe" : "#FBC4AE");
   const bgColor = "#F6F2E9";
   const textMuted = "rgba(195,153,108,0.78)";
   const dividerColor = isHost
     ? "rgba(111,139,111,0.25)"
-    : "rgba(240,138,120,0.25)";
+    : (isStaff ? "rgba(59, 130, 246, 0.25)" : "rgba(240,138,120,0.25)");
 
   function handleLogout() {
     logout();

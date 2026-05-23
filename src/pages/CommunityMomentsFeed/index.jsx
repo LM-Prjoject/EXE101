@@ -1,7 +1,9 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function CommunityMomentsFeed() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   // ===== Brand palette =====
   const ACCENT = "#f08a78"; // salmon (main)
@@ -49,99 +51,70 @@ export default function CommunityMomentsFeed() {
         }}
       >
         {/* Navbar */}
-        <header
-          className="sticky top-0 z-50 w-full backdrop-blur-md border-b"
-          style={{
-            background: "rgba(254,254,253,0.85)",
-            borderColor: BORDER,
-          }}
-        >
-          <div className="px-6 md:px-10 lg:px-40 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link to="/home" className="flex items-center gap-4">
-                {/* Logo */}
-                <div className="flex size-10 items-center justify-center overflow-visible">
-                  <img
-                    src="/img/onlyLogo.png"
-                    alt="Hands & Hour Logo"
-                    className="h-8 w-8 object-contain scale-150 origin-center"
-                  />
-                </div>
+        <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
+          <div className="flex items-center gap-8">
+            <Link to="/home" className="flex items-center gap-4">
+              <div className="flex size-10 items-center justify-center overflow-visible">
+                <img src="/img/onlyLogo.png" alt="Hands & Hour Logo" className="h-8 w-8 object-contain scale-150 origin-center" />
+              </div>
+              <h2 className="text-xl font-black tracking-tight">
+                <span className="text-[#c3996c]">Hands</span>{" "}
+                <span className="text-[#f08a78]">&amp;</span>{" "}
+                <span className="text-[#c3996c]">Hour</span>
+              </h2>
+            </Link>
 
-                <h2 className="flex text-xl font-black tracking-tight">
-                  <span className="text-[#c3996c]">Hands</span>{" "}
-                  <span className="text-[#f08a78]">&amp;</span>{" "}
-                  <span className="text-[#c3996c]">Hour</span>
-                </h2>
-              </Link>
-
-              <div
-                className="hidden lg:flex w-full max-w-sm items-center rounded-xl border transition-colors"
-                style={{
-                  background: "rgba(251,196,174,0.25)",
-                  borderColor: "transparent",
-                }}
-              >
-                <div className="pl-4" style={{ color: "rgba(43,43,43,0.55)" }}>
-                  <span className="material-symbols-outlined text-[20px]">
-                    search
-                  </span>
+            <div className="hidden lg:flex w-full max-w-sm">
+              <div className="flex w-full flex-1 items-stretch rounded-xl h-10 shadow-sm">
+                <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
+                  <span className="material-symbols-outlined text-xl">search</span>
                 </div>
                 <input
-                  className="w-full bg-transparent border-none focus:ring-0 py-2.5 px-3 text-sm"
-                  style={{ color: TEXT }}
+                  className="w-full bg-[#fffaf5] dark:bg-slate-800 border-none focus:ring-2 focus:ring-[#f08a78]/40 focus:outline-none rounded-r-xl py-2.5 px-3 text-sm text-[#c3996c] placeholder:text-[#c3996c]/55"
                   placeholder="Tìm kiếm workshop, người sáng tạo..."
                   type="text"
                 />
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-6">
-              <nav className="hidden md:flex items-center gap-6">
-                <Link
-                  className="text-sm font-semibold transition-colors hover:text-[#f08a78]"
-                  to="/home"
-                >
-                  Workshop
-                </Link>
-                <Link
-                  className="text-sm font-semibold transition-colors hover:text-[#f08a78]"
-                  to="/community"
-                >
-                  Cộng đồng
-                </Link>
-                <a
-                  className="text-sm font-semibold transition-colors hover:text-[#f08a78]"
-                  href="#"
-                >
-                  Giảng viên
-                </a>
-              </nav>
+          <div className="flex flex-1 justify-end gap-8 items-center">
+            <div className="hidden lg:flex items-center gap-9">
+              <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/home">Workshops</Link>
+              <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/advanced-search">Khám phá</Link>
+              <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/community">Cộng đồng</Link>
+            </div>
 
-              <div
-                className="h-6 w-px hidden md:block"
-                style={{ background: BORDER }}
-              />
+            {currentUser?.role !== "host" && (
+              <button onClick={() => navigate("/host/verification")} className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25">
+                <span className="truncate">Trở thành Host</span>
+              </button>
+            )}
 
-              <div className="flex gap-3">
-                <Link
-                  to="/login"
-                  className="hidden sm:flex h-10 px-5 items-center justify-center rounded-xl text-sm font-bold transition-colors"
-                  style={{ background: "rgba(251,196,174,0.25)", color: TEXT }}
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  to="/register"
-                  className="h-10 px-5 flex items-center justify-center rounded-xl text-sm font-extrabold text-white transition-colors"
-                  style={{
-                    background: ACCENT,
-                    boxShadow: "0 10px 24px rgba(240,138,120,0.22)",
-                  }}
-                >
-                  Đăng ký
-                </Link>
-              </div>
+            <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
+              <button className="relative group">
+                <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">notifications</span>
+                <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#151822]"></span>
+              </button>
+
+              {currentUser ? (
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
+                    Xin chào, <span className="font-black">{currentUser.name || currentUser.email?.split("@")[0]}</span>
+                  </span>
+                  <Link to="/user-profile">
+                    <div
+                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
+                      style={{ backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE")` }}
+                    />
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <Link to="/login" className="hidden sm:flex h-10 px-5 items-center justify-center rounded-xl text-sm font-bold transition-colors" style={{ background: "rgba(251,196,174,0.25)", color: TEXT }}>Đăng nhập</Link>
+                  <Link to="/register" className="h-10 px-5 flex items-center justify-center rounded-xl text-sm font-extrabold text-white transition-colors" style={{ background: ACCENT, boxShadow: "0 10px 24px rgba(240,138,120,0.22)" }}>Đăng ký</Link>
+                </div>
+              )}
             </div>
           </div>
         </header>
