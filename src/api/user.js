@@ -19,7 +19,7 @@ export async function changeName(newName, token) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ name: newName }),
+    body: JSON.stringify({ newName, NewName: newName }),
   });
   const body = await parseJsonResponse(response);
   if (!response.ok) {
@@ -35,7 +35,7 @@ export async function changePhone(newPhone, token) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ phoneNumber: newPhone }),
+    body: JSON.stringify({ newPhoneNumber: newPhone, NewPhoneNumber: newPhone }),
   });
   const body = await parseJsonResponse(response);
   if (!response.ok) {
@@ -44,15 +44,14 @@ export async function changePhone(newPhone, token) {
   return body;
 }
 
-export async function changeAvatar(avatarFile, token) {
-  const form = new FormData();
-  form.append('avatar', avatarFile);
+export async function changeAvatar(newAvatarUrl, token) {
   const response = await fetchWithFallback('/api/User/change-avatar', {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: form,
+    body: JSON.stringify({ newAvatarUrl, NewAvatarUrl: newAvatarUrl }),
   });
   const body = await parseJsonResponse(response);
   if (!response.ok) {

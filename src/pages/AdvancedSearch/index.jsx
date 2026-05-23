@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { getWorkshops } from "../../api";
 
 function getWorkshopList(data) {
@@ -46,10 +46,26 @@ function toCard(workshop) {
 
 export default function AdvancedSearch() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") || "");
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Đồng bộ từ khóa tìm kiếm lên URL query parameter ?q=...
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        if (searchTerm) {
+          prev.set("q", searchTerm);
+        } else {
+          prev.delete("q");
+        }
+        return prev;
+      },
+      { replace: true }
+    );
+  }, [searchTerm, setSearchParams]);
 
   useEffect(() => {
     let ignore = false;
