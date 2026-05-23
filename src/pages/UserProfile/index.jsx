@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getUserById } from "../../api";
+import { getUserById, fetchWithFallback, parseJsonResponse, buildError } from "../../api";
+import { changeName, changePhone, changeAvatar } from "../../api/user";
 import { useAuth } from "../../context/AuthContext";
+
+const DEFAULT_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE";
 
 function getJoinedYear(user) {
   if (!user?.createdOn) return null;
@@ -11,10 +14,110 @@ function getJoinedYear(user) {
 
 export default function UserProfile() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, authToken } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState("");
+
+  // States for Pop-up Edit Modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editAvatarUrl, setEditAvatarUrl] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+
+  const handleOpenEditModal = () => {
+    setEditName(profile?.name || currentUser?.name || "");
+    setEditPhone(profile?.phoneNumber || "");
+    setEditAvatarUrl(profile?.avatarLink || profile?.avatar || profile?.avatarUrl || "");
+    setEditError("");
+    setEditSuccess("");
+    setShowEditModal(true);
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setEditError("");
+    setEditSuccess("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Call primary backend to upload the image file
+      const response = await fetchWithFallback("/api/Image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const body = await parseJsonResponse(response);
+      if (!response.ok) {
+        throw buildError(response, body);
+      }
+
+      if (body && body.url) {
+        setEditAvatarUrl(body.url);
+        setEditSuccess("Tải ảnh đại diện lên thành công!");
+      } else {
+        throw new Error("Không nhận được URL ảnh từ máy chủ.");
+      }
+    } catch (err) {
+      setEditError(err?.message || "Lỗi khi tải ảnh lên. Vui lòng thử lại.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveEditProfile = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+    setEditSuccess("");
+
+    try {
+      const currentName = profile?.name || currentUser?.name || "";
+      const currentPhone = profile?.phoneNumber || "";
+      const currentAvatar = profile?.avatarLink || profile?.avatar || profile?.avatarUrl || "";
+
+      // 1. change-name if changed
+      if (editName && editName !== currentName) {
+        await changeName(editName, authToken);
+      }
+
+      // 2. change-phone if changed
+      if (editPhone !== currentPhone) {
+        await changePhone(editPhone, authToken);
+      }
+
+      // 3. change-avatar if changed
+      if (editAvatarUrl !== currentAvatar) {
+        await changeAvatar(editAvatarUrl, authToken);
+      }
+
+      setEditSuccess("Cập nhật hồ sơ thành công!");
+      
+      // Reload profile data
+      if (currentUser?.id) {
+        const updatedData = await getUserById(currentUser.id);
+        setProfile(updatedData);
+      }
+
+      // Close modal after 1s
+      setTimeout(() => {
+        setShowEditModal(false);
+      }, 1000);
+    } catch (err) {
+      setEditError(err?.message || "Lỗi khi cập nhật hồ sơ. Vui lòng thử lại.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!currentUser?.id) {
@@ -55,6 +158,7 @@ export default function UserProfile() {
       verified: profile?.verified,
       isActive: profile?.isActive,
       joinedYear: getJoinedYear(profile),
+      avatarUrl: profile?.avatarUrl || profile?.avatar || profile?.avatarLink || DEFAULT_AVATAR,
     };
   }, [profile, currentUser]);
 
@@ -144,8 +248,7 @@ export default function UserProfile() {
                   className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
                   data-alt={`${user.name} avatar`}
                   style={{
-                    backgroundImage:
-                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE")',
+                    backgroundImage: `url("${user.avatarUrl}")`,
                   }}
                 />
               </div>
@@ -166,11 +269,10 @@ export default function UserProfile() {
                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-32 border-4 border-white dark:border-[#151822] shadow-md"
                       data-alt={`${user.name} avatar`}
                       style={{
-                        backgroundImage:
-                          'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE")',
+                        backgroundImage: `url("${user.avatarUrl}")`,
                       }}
                     />
-                    <button className="absolute bottom-1 right-1 bg-white/90 dark:bg-slate-700 p-2 rounded-full shadow-md text-[#c3996c]/80 hover:text-[#f08a78] transition-colors border border-[#fbc4ae]/60 dark:border-slate-600">
+                    <button onClick={handleOpenEditModal} className="absolute bottom-1 right-1 bg-white/90 dark:bg-slate-700 p-2 rounded-full shadow-md text-[#c3996c]/80 hover:text-[#f08a78] transition-colors border border-[#fbc4ae]/60 dark:border-slate-600">
                       <span className="material-symbols-outlined text-lg block">
                         edit
                       </span>
@@ -201,7 +303,7 @@ export default function UserProfile() {
 
                   <div className="flex flex-col gap-3 pt-4 md:pt-12 w-full md:w-auto min-w-[200px]">
                     {/* Primary action: accent */}
-                    <button onClick={() => navigate('/profile/edit')} className="flex items-center justify-center gap-2 w-full rounded-xl h-11 px-4 bg-[#f08a78] text-white text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-lg shadow-[#f08a78]/25">
+                    <button onClick={handleOpenEditModal} className="flex items-center justify-center gap-2 w-full rounded-xl h-11 px-4 bg-[#f08a78] text-white text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-lg shadow-[#f08a78]/25">
                       <span className="material-symbols-outlined text-lg">
                         settings
                       </span>
@@ -580,6 +682,118 @@ export default function UserProfile() {
           </footer>
         </div>
       </div>
+      {showEditModal && (
+        <div className="fixed inset-0 bg-[#2b2b2b]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#FEFEFD] dark:bg-[#151822] rounded-3xl p-8 max-w-md w-full shadow-2xl border border-[#fbc4ae]/45 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#fbc4ae]/30 pb-4">
+              <h3 className="text-xl font-bold text-[#c3996c]">Chỉnh sửa hồ sơ</h3>
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="text-[#c3996c]/70 hover:text-[#f08a78] transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {/* Status alerts */}
+            {editError && (
+              <div className="bg-rose-50 text-rose-600 border border-rose-100 p-3 rounded-xl text-sm font-semibold">
+                {editError}
+              </div>
+            )}
+            {editSuccess && (
+              <div className="bg-emerald-50 text-emerald-700 border border-emerald-100 p-3 rounded-xl text-sm font-semibold">
+                {editSuccess}
+              </div>
+            )}
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveEditProfile} className="flex flex-col gap-4">
+              {/* Avatar Preview & Upload */}
+              <div className="flex flex-col items-center gap-4 mb-2">
+                <div className="relative group cursor-pointer">
+                  <div 
+                    className="size-24 rounded-full bg-cover bg-center border-4 border-[#fbc4ae]/40 dark:border-slate-700 shadow-md group-hover:opacity-85 transition-opacity"
+                    style={{ backgroundImage: `url("${editAvatarUrl || DEFAULT_AVATAR}")` }}
+                  />
+                  <label htmlFor="avatar-file-input" className="absolute bottom-0 right-0 bg-[#f08a78] hover:bg-[#ee7a66] text-white p-2 rounded-full shadow-lg cursor-pointer transition-colors border border-white dark:border-[#151822]">
+                    <span className="material-symbols-outlined text-sm block">
+                      photo_camera
+                    </span>
+                  </label>
+                  <input
+                    type="file"
+                    id="avatar-file-input"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                  />
+                </div>
+                {uploadingAvatar && (
+                  <span className="text-xs text-[#c3996c] animate-pulse">Đang tải ảnh lên...</span>
+                )}
+                <div className="w-full">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Hoặc nhập URL ảnh đại diện</label>
+                  <input
+                    type="text"
+                    value={editAvatarUrl}
+                    onChange={(e) => setEditAvatarUrl(e.target.value)}
+                    className="w-full px-4 py-2 border border-[#fbc4ae]/30 rounded-xl bg-[#fffaf5] dark:bg-slate-800 text-[#2B2B2B] dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#f08a78]/40 focus:outline-none"
+                    placeholder="https://example.com/avatar.jpg"
+                    disabled={uploadingAvatar}
+                  />
+                </div>
+              </div>
+
+              {/* Display Name */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tên hiển thị</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-2 border border-[#fbc4ae]/30 rounded-xl bg-[#fffaf5] dark:bg-slate-800 text-[#2B2B2B] dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#f08a78]/40 focus:outline-none"
+                  placeholder="Nhập tên mới"
+                  required
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Số điện thoại</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full px-4 py-2 border border-[#fbc4ae]/30 rounded-xl bg-[#fffaf5] dark:bg-slate-800 text-[#2B2B2B] dark:text-slate-100 text-sm focus:ring-2 focus:ring-[#f08a78]/40 focus:outline-none"
+                  placeholder="Nhập số điện thoại"
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={editLoading}
+                  className="flex-1 py-2.5 rounded-xl border border-[#fbc4ae]/60 dark:border-slate-700 text-[#c3996c] hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-bold text-sm"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 py-2.5 rounded-xl bg-[#f08a78] hover:bg-[#ee7a66] text-white transition-colors font-bold text-sm shadow-md shadow-[#f08a78]/25 disabled:opacity-50"
+                >
+                  {editLoading ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,22 +1,17 @@
 const PRIMARY_BASE = import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party';
-const FALLBACK_BASE = 'http://127.0.0.1:5000';
-
-// Thử primary trước, nếu network error hoặc 5xx thì fallback sang localhost
+// Thực hiện gọi API trực tiếp đến server chính với tùy chọn đính kèm Authorization header tự động
 async function fetchWithFallback(path, options = {}) {
-  const primaryUrl = `${PRIMARY_BASE}${path}`;
-  const fallbackUrl = `${FALLBACK_BASE}${path}`;
+  const url = `${PRIMARY_BASE}${path}`;
 
-  try {
-    const response = await fetch(primaryUrl, options);
-    // Nếu server trả về lỗi server-side (5xx) thì thử fallback
-    if (response.status >= 500) {
-      throw new Error(`Primary returned ${response.status}`);
-    }
-    return response;
-  } catch {
-    // Primary fail (network error, timeout, 404, 5xx) → dùng fallback
-    return fetch(fallbackUrl, options);
+  // Tự động đính kèm Authorization header nếu có token trong localStorage
+  const token = localStorage.getItem('authToken');
+  const headers = { ...options.headers };
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
+  const mergedOptions = { ...options, headers };
+
+  return fetch(url, mergedOptions);
 }
 
 async function parseJsonResponse(response) {
@@ -99,6 +94,27 @@ export async function getWorkshops(page = 1, pageSize = 12, search = '') {
       method: 'GET',
     });
   }
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function fetchAllWorkshops(status = '', page = 1, pageSize = 10) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+  if (status) {
+    params.set('status', status);
+  }
+
+  const response = await fetchWithFallback(`/api/Workshop/all?${params}`, {
+    method: 'GET',
+  });
 
   const body = await parseJsonResponse(response);
   if (!response.ok) {

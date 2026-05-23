@@ -31,6 +31,7 @@ export default function HomeWithBanner() {
   const [workshops, setWorkshops] = useState([]);
   const [loadingWorkshops, setLoadingWorkshops] = useState(true);
   const [workshopError, setWorkshopError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -56,7 +57,6 @@ export default function HomeWithBanner() {
     async function loadWorkshops() {
       setLoadingWorkshops(true);
       setWorkshopError('');
-
       try {
         const data = await getWorkshops();
         setWorkshops(getWorkshopList(data));
@@ -66,9 +66,16 @@ export default function HomeWithBanner() {
         setLoadingWorkshops(false);
       }
     }
-
     loadWorkshops();
   }, []);
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/advanced-search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate(`/advanced-search`);
+    }
+  };
 
   return (
     <>
@@ -276,9 +283,16 @@ export default function HomeWithBanner() {
                       className="h-full flex-1 border-none bg-transparent px-4 text-base focus:ring-0"
                       style={{ color: TEXT_MAIN }}
                       placeholder="Tìm kiếm gốm sứ, hội họa, cà phê..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSearch();
+                        }
+                      }}
                     />
                     <button
-                      onClick={() => navigate("/advanced-search")}
+                      onClick={handleSearch}
                       className="mr-2 rounded-xl px-6 py-2 text-sm font-bold text-white transition-colors"
                       style={{ background: PRIMARY }}
                       onMouseEnter={(e) =>
@@ -334,6 +348,9 @@ export default function HomeWithBanner() {
                   ))}
 
                   <button
+                    onClick={() => {
+                      setSearchQuery('');
+                    }}
                     className="flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors"
                     style={{
                       background: "rgba(251,196,174,0.55)",

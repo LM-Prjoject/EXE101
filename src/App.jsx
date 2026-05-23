@@ -3,7 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import FloatingNav from './components/FloatingNav';
 import StaffLayout from './components/StaffLayout';
 import AdminUserList from './pages/AdminUserList';
-import EditProfile from './pages/EditProfile';
+import StaffWorkshopList from './pages/StaffWorkshopList';
 
 // ── Pages ─────────────────────────────────────────────────────────────────
 import LoginPage from './pages/LoginPage';
@@ -75,12 +75,12 @@ export default function App() {
           <Route element={<StaffLayout />}>
             <Route path="/staff/users" element={<AdminUserList />} />
             <Route path="/staff" element={<Navigate to="/staff/users" replace />} />
-            <Route path="/staff/workshops" element={<div className="p-6 text-slate-800"><h1 className="text-2xl font-bold mb-4 text-[#3b82f6]">Quản lý Workshops</h1><p>Tính năng đang phát triển...</p></div>} />
+            <Route path="/staff/workshops" element={<StaffWorkshopList />} />
             <Route path="/staff/bookings" element={<div className="p-6 text-slate-800"><h1 className="text-2xl font-bold mb-4 text-[#3b82f6]">Quản lý Đặt chỗ</h1><p>Tính năng đang phát triển...</p></div>} />
             <Route path="/staff/settings" element={<div className="p-6 text-slate-800"><h1 className="text-2xl font-bold mb-4 text-[#3b82f6]">Cài đặt hệ thống</h1><p>Tính năng đang phát triển...</p></div>} />
           </Route>
 
-          <Route path="/profile/edit" element={<EditProfile />} />
+
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/login" replace />} />
