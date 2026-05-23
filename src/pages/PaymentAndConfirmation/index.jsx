@@ -114,15 +114,11 @@ export default function PaymentAndConfirmation() {
     try {
       const form = document.createElement("form");
       form.method = "POST";
-      const merchantId = paymentInfo.merchant ?? paymentInfo.Merchant ?? "";
-      const isSandbox = merchantId.startsWith("SP-TEST-");
-      form.action = isSandbox
-        ? "https://pgapi-sandbox.sepay.vn/v1/checkout/init"
-        : "https://pay.sepay.vn/v1/checkout/init";
+      form.action = "https://pay.sepay.vn/v1/checkout/init";
       
       const fields = {
-        merchant: paymentInfo.merchant ?? paymentInfo.Merchant ?? "",
         order_amount: paymentInfo.order_amount ?? paymentInfo.OrderAmount ?? "",
+        merchant: paymentInfo.merchant ?? paymentInfo.Merchant ?? "",
         currency: paymentInfo.currency ?? paymentInfo.Currency ?? "VND",
         operation: paymentInfo.operation ?? paymentInfo.Operation ?? "PURCHASE",
         order_description: paymentInfo.order_description ?? paymentInfo.OrderDescription ?? "",

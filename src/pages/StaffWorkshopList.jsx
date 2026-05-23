@@ -36,11 +36,11 @@ export default function StaffWorkshopList() {
   // Status list for tabs
   const statuses = [
     { label: 'Tất cả', value: '' },
-    { label: 'Chờ duyệt', value: 'pending' },
-    { label: 'Đang hoạt động', value: 'active' },
+    { label: 'Chờ duyệt', value: 'awaiting' },
+    { label: 'Đang hoạt động', value: 'verified' },
     { label: 'Bản nháp', value: 'draft' },
-    { label: 'Từ chối', value: 'rejected' },
-    { label: 'Hoàn thành', value: 'completed' },
+    { label: 'Từ chối', value: 'removed' },
+    { label: 'Hoàn thành', value: 'ended' },
   ];
 
   useEffect(() => {
@@ -78,14 +78,18 @@ export default function StaffWorkshopList() {
     const val = statusVal?.toLowerCase() || '';
     switch (val) {
       case 'active':
+      case 'verified':
         return 'bg-emerald-50 text-emerald-700 border-emerald-100';
       case 'pending':
+      case 'awaiting':
         return 'bg-amber-50 text-amber-700 border-amber-100';
       case 'rejected':
+      case 'removed':
         return 'bg-rose-50 text-rose-700 border-rose-100';
       case 'draft':
         return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'completed':
+      case 'ended':
         return 'bg-blue-50 text-blue-700 border-blue-100';
       default:
         return 'bg-slate-50 text-slate-600 border-slate-200';
@@ -96,14 +100,18 @@ export default function StaffWorkshopList() {
     const val = statusVal?.toLowerCase() || '';
     switch (val) {
       case 'active':
+      case 'verified':
         return 'Hoạt động';
       case 'pending':
+      case 'awaiting':
         return 'Chờ duyệt';
       case 'rejected':
+      case 'removed':
         return 'Từ chối';
       case 'draft':
         return 'Bản nháp';
       case 'completed':
+      case 'ended':
         return 'Hoàn thành';
       default:
         return statusVal || 'Không rõ';

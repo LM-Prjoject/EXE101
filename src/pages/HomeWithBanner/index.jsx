@@ -27,7 +27,7 @@ export default function HomeWithBanner() {
   const BORDER = "#e9e2da";
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null); 
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const [workshops, setWorkshops] = useState([]);
   const [loadingWorkshops, setLoadingWorkshops] = useState(true);
   const [workshopError, setWorkshopError] = useState('');
@@ -144,7 +144,7 @@ export default function HomeWithBanner() {
                 {currentUser ? (
                   <div className="flex items-center gap-2">
                     <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
-                      Xin chào, <span className="font-black">{currentUser.name || currentUser.email?.split("@")[0] || "Khách"}</span>
+                      Xin chào, <span className="font-black">{userProfile?.name || currentUser?.name || currentUser?.email?.split("@")[0] || "Khách"}</span>
                     </span>
                     <Link to="/user-profile">
                       <div

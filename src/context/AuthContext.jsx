@@ -36,7 +36,9 @@ export function AuthProvider({ children }) {
 
         localStorage.setItem('authToken', data.token);
         setAuthToken(data.token);
-        return parseJwt(data.token);
+        const parsed = parseJwt(data.token);
+        setCurrentUser(parsed);
+        return parsed;
     }
 
     async function register(name, email, password) {
