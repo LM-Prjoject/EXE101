@@ -1,7 +1,7 @@
 import { fetchWithFallback, parseJsonResponse, buildError } from './client';
 
 export async function proceedPayment(ticketId) {
-  const response = await fetchWithFallback(`/api/Payment/proceed/${ticketId}`, {
+  const response = await fetchWithFallback(`/api/IPN/proceed/${ticketId}`, {
     method: 'GET',
   });
 
@@ -14,7 +14,7 @@ export async function proceedPayment(ticketId) {
 }
 
 export async function getPaymentStatus(invoiceNumber) {
-  const response = await fetchWithFallback(`/api/Payment/status/${invoiceNumber}`, {
+  const response = await fetchWithFallback(`/api/IPN/status/${invoiceNumber}`, {
     method: 'GET',
   });
 
