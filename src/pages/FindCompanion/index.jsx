@@ -301,7 +301,7 @@ export default function FindCompanion() {
               {/* Bigger logo but not increasing header height */}
               <div className="relative w-10 h-10 shrink-0 overflow-visible">
                 <img
-                  src="/public/img/onlyLogo.png"
+                  src="/img/onlyLogo.png"
                   alt="Hands & Hour logo"
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 object-contain"
                 />
