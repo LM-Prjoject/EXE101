@@ -1,12 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
 
-export default function HostSidebar() {
+export default function HostSidebar({ onNavigateRequest }) {
   const location = useLocation();
   const path = location.pathname;
 
+  function handleNavigate(event, to) {
+    if (!onNavigateRequest) return;
+
+    event.preventDefault();
+    onNavigateRequest(to);
+  }
+
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 sticky top-0 h-screen z-20">
-      <Link to="/" className="p-6 flex items-center gap-3">
+      <Link
+        to="/"
+        onClick={(event) => handleNavigate(event, "/")}
+        className="p-6 flex items-center gap-3"
+      >
         <img
           src="/img/logo.png"
           alt="Hands & Hour logo"
@@ -18,10 +29,16 @@ export default function HostSidebar() {
           <span className="text-[#c3996c]">Hour</span>
         </h2>
       </Link>
+
       <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
         <Link
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${path === "/host/dashboard" ? "bg-primary/10 text-primary font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"}`}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            path === "/host/dashboard"
+              ? "bg-primary/10 text-primary font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+          }`}
           to="/host/dashboard"
+          onClick={(event) => handleNavigate(event, "/host/dashboard")}
         >
           <span
             className="material-symbols-outlined"
@@ -37,8 +54,35 @@ export default function HostSidebar() {
         </Link>
 
         <Link
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${path === "/host/schedule" ? "bg-primary/10 text-primary font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"}`}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            path === "/host/workshops"
+              ? "bg-primary/10 text-primary font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+          }`}
+          to="/host/workshops"
+          onClick={(event) => handleNavigate(event, "/host/workshops")}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={
+              path === "/host/workshops"
+                ? { fontVariationSettings: `'FILL' 1` }
+                : {}
+            }
+          >
+            event_note
+          </span>
+          <span>Workshop của tôi</span>
+        </Link>
+
+        <Link
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            path === "/host/schedule"
+              ? "bg-primary/10 text-primary font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+          }`}
           to="/host/schedule"
+          onClick={(event) => handleNavigate(event, "/host/schedule")}
         >
           <span
             className="material-symbols-outlined"
@@ -52,9 +96,15 @@ export default function HostSidebar() {
           </span>
           <span>Lịch trình</span>
         </Link>
+
         <Link
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${path === "/host/profile" ? "bg-primary/10 text-primary font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"}`}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            path === "/host/profile"
+              ? "bg-primary/10 text-primary font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+          }`}
           to="/host/profile"
+          onClick={(event) => handleNavigate(event, "/host/profile")}
         >
           <span
             className="material-symbols-outlined"
@@ -68,9 +118,15 @@ export default function HostSidebar() {
           </span>
           <span>Review</span>
         </Link>
+
         <Link
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${path === "/host/income" ? "bg-primary/10 text-primary font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"}`}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            path === "/host/income"
+              ? "bg-primary/10 text-primary font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+          }`}
           to="/host/income"
+          onClick={(event) => handleNavigate(event, "/host/income")}
         >
           <span
             className="material-symbols-outlined"
@@ -84,8 +140,10 @@ export default function HostSidebar() {
           </span>
           <span>Thu nhập</span>
         </Link>
+
         <Link
           to="/host/create-workshop"
+          onClick={(event) => handleNavigate(event, "/host/create-workshop")}
           className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary-dark text-white py-2.5 px-4 rounded-xl shadow-lg shadow-primary/30 transition-all font-bold text-sm"
         >
           <span className="material-symbols-outlined text-[20px]">add</span>
