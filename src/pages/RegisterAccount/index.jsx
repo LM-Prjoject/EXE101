@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { confirmOtp } from '../../api/auth';
 
 export default function RegisterAccount() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const autoSubmitRef = useRef(false);
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -38,14 +40,13 @@ export default function RegisterAccount() {
     }
   }
 
-  async function handleConfirm(event) {
-    event.preventDefault();
+  async function confirmAccount(submitEmail = email, submitOtp = otp) {
     setError('');
     setMessage('');
     setLoading(true);
 
     try {
-      await confirmOtp(email, otp);
+      await confirmOtp(submitEmail, submitOtp);
       setMessage('Xác thực OTP thành công. Bạn có thể đăng nhập ngay bây giờ.');
       setTimeout(() => navigate('/login'), 1400);
     } catch (err) {
@@ -54,6 +55,33 @@ export default function RegisterAccount() {
       setLoading(false);
     }
   }
+
+  async function handleConfirm(event) {
+    event.preventDefault();
+    await confirmAccount();
+  }
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailParam = params.get('email')?.trim();
+    const otpParam = params.get('otp')?.trim();
+
+    if (location.pathname === '/register/confirm' && emailParam && otpParam) {
+      setEmail(emailParam);
+      setOtp(otpParam);
+      setStep('confirm');
+      setError('');
+      setMessage('');
+      autoSubmitRef.current = true;
+    }
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (autoSubmitRef.current && step === 'confirm' && email && otp && !loading) {
+      autoSubmitRef.current = false;
+      confirmAccount();
+    }
+  }, [step, email, otp, loading]);
 
   return (
     <>

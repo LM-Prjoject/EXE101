@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { requestPasswordReset, confirmPasswordReset } from '../../api/auth';
 
@@ -18,6 +18,21 @@ export default function LoginPage() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailParam = params.get('email')?.trim();
+    const otpParam = params.get('otp')?.trim();
+
+    if (location.pathname === '/reset-password/confirm' && emailParam && otpParam) {
+      setForgotEmail(emailParam);
+      setOtp(otpParam);
+      setMode('reset');
+      setError('');
+      setSuccessMsg('');
+    }
+  }, [location.search, location.pathname]);
 
   // Palette:
   // primary: #c3996c (warm gold)

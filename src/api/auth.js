@@ -99,3 +99,20 @@ export async function confirmPasswordReset(email, otp, newPassword) {
   return body;
 }
 
+export async function changePassword(token, currentPassword, newPassword) {
+  const response = await fetchWithFallback('/api/auth/reset-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import FloatingNav from './components/FloatingNav';
 import StaffLayout from './components/StaffLayout';
@@ -39,6 +39,18 @@ function RootRedirect() {
   return <Navigate to="/home" replace />;
 }
 
+function RequireQueryParams({ required, children }) {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const missingParams = required.filter(param => !searchParams.has(param));
+
+  if (missingParams.length > 0) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -50,7 +62,9 @@ export default function App() {
 
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/reset-password/confirm" element={<RequireQueryParams required={["email", "otp"]}> <LoginPage /> </RequireQueryParams>} />
           <Route path="/register" element={<RegisterAccount />} />
+          <Route path="/register/confirm" element={<RequireQueryParams required={["email", "otp"]}> <RegisterAccount /> </RequireQueryParams>} />
 
           {/* ── User flow ── */}
           <Route path="/home" element={<HomeWithBanner />} />
