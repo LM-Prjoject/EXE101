@@ -37,9 +37,17 @@ export default function FloatingNav() {
   const navRef = useRef(null);
 
   const isHost = !!currentUser && currentUser.role === "host";
-  const isStaff = !!currentUser && (currentUser.role === "staff" || currentUser.role === "admin");
+  const isStaff =
+    !!currentUser &&
+    (currentUser.role === "staff" || currentUser.role === "admin");
 
-  const shouldHide = AUTH_PAGES.includes(location.pathname) || !currentUser || isStaff || location.pathname.startsWith('/staff');
+  const shouldHide =
+    AUTH_PAGES.includes(location.pathname) ||
+    !currentUser ||
+    isHost ||
+    isStaff ||
+    location.pathname.startsWith("/host") ||
+    location.pathname.startsWith("/staff");
   const displayName =
     currentUser?.name ||
     currentUser?.email?.split("@")[0] ||
@@ -51,13 +59,15 @@ export default function FloatingNav() {
   }, [isHost, isStaff]);
 
   // ✅ BRAND COLORS
-  const accentColor = isHost ? "#6F8B6F" : (isStaff ? "#3b82f6" : "#F08A78");
-  const supportColor = isHost ? "#D5DDCE" : (isStaff ? "#dbeafe" : "#FBC4AE");
+  const accentColor = isHost ? "#6F8B6F" : isStaff ? "#3b82f6" : "#F08A78";
+  const supportColor = isHost ? "#D5DDCE" : isStaff ? "#dbeafe" : "#FBC4AE";
   const bgColor = "#F6F2E9";
   const textMuted = "rgba(195,153,108,0.78)";
   const dividerColor = isHost
     ? "rgba(111,139,111,0.25)"
-    : (isStaff ? "rgba(59, 130, 246, 0.25)" : "rgba(240,138,120,0.25)");
+    : isStaff
+      ? "rgba(59, 130, 246, 0.25)"
+      : "rgba(240,138,120,0.25)";
 
   function handleLogout() {
     logout();
@@ -66,7 +76,7 @@ export default function FloatingNav() {
 
   // đo height nav và set CSS var (kể cả khi resize)
   useLayoutEffect(() => {
-    if (shouldHide) return;            // ✅ tránh chạy khi nav không render
+    if (shouldHide) return; // ✅ tránh chạy khi nav không render
     if (!navRef.current) return;
 
     const update = () => {
@@ -136,7 +146,9 @@ export default function FloatingNav() {
         }}
       >
         <img
-          src={"https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"}
+          src={
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"
+          }
           alt={displayName}
           style={{
             width: 22,
@@ -196,7 +208,10 @@ export default function FloatingNav() {
               transition: "all 0.15s",
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 20 }}
+            >
               {icon}
             </span>
             <span style={{ color: active ? bgColor : textMuted }}>{label}</span>
