@@ -4,6 +4,7 @@ import FloatingNav from './components/FloatingNav';
 import StaffLayout from './components/StaffLayout';
 import AdminUserList from './pages/AdminUserList';
 import StaffWorkshopList from './pages/StaffWorkshopList';
+import StaffSystemConfig from './pages/WebsiteManagement';
 
 // ── Pages ─────────────────────────────────────────────────────────────────
 import LoginPage from './pages/LoginPage';
@@ -97,7 +98,7 @@ export default function App() {
             <Route path="/staff" element={<Navigate to="/staff/users" replace />} />
             <Route path="/staff/workshops" element={<StaffWorkshopList />} />
             <Route path="/staff/bookings" element={<div className="p-6 text-slate-800"><h1 className="text-2xl font-bold mb-4 text-[#3b82f6]">Quản lý Đặt chỗ</h1><p>Tính năng đang phát triển...</p></div>} />
-            <Route path="/staff/settings" element={<div className="p-6 text-slate-800"><h1 className="text-2xl font-bold mb-4 text-[#3b82f6]">Cài đặt hệ thống</h1><p>Tính năng đang phát triển...</p></div>} />
+            <Route path="/staff/settings" element={<StaffSystemConfig />} />
           </Route>
 
 
