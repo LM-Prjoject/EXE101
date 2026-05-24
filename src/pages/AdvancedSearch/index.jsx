@@ -308,12 +308,8 @@ export default function AdvancedSearch() {
   return (
     <>
       <div
-  className="min-h-screen flex flex-col overflow-x-hidden w-full font-display bg-[#f6f2e9] text-slate-900 dark:bg-[#0b0f14] dark:text-slate-100"
-  style={{
-    paddingBottom:
-      "calc(var(--floating-nav-h, 72px) + env(safe-area-inset-bottom))",
-  }}
->
+        className="min-h-screen flex flex-col overflow-x-hidden w-full font-display bg-[#f6f2e9] text-slate-900 dark:bg-[#0b0f14] dark:text-slate-100"
+      >
         {/* Header */}
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
           <div className="flex items-center gap-8">

@@ -57,6 +57,35 @@ function formatTimeOnly(timeStr) {
   return timeStr;
 }
 
+function isPastSchedule(startOnStr) {
+  if (!startOnStr) return false;
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return startOnStr < todayStr;
+}
+
+function isPastSlot(dateStr, timeStr) {
+  if (!dateStr) return false;
+  if (!timeStr) {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return dateStr < todayStr;
+  }
+  let formattedTime = timeStr;
+  if (formattedTime.split(':').length === 2) {
+    formattedTime += ':00';
+  }
+  try {
+    const slotDate = new Date(`${dateStr}T${formattedTime}`);
+    const now = new Date();
+    return slotDate < now;
+  } catch (e) {
+    console.error("Error parsing slot date:", e);
+    return false;
+  }
+}
+
+
 export default function FindCompanion() {
   const navigate = useNavigate();
   const { workshopId } = useParams();
@@ -175,10 +204,17 @@ export default function FindCompanion() {
     }
   }
 
-  // Set initial selected schedule
+  // Set initial selected schedule (prefer the first future/upcoming schedule)
   useEffect(() => {
     if (workshop?.schedules?.length > 0) {
-      setSelectedScheduleId(workshop.schedules[0].id);
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const firstFuture = workshop.schedules.find(s => s.startOn >= todayStr);
+      if (firstFuture) {
+        setSelectedScheduleId(firstFuture.id);
+      } else {
+        setSelectedScheduleId(workshop.schedules[0].id);
+      }
     }
   }, [workshop]);
 
@@ -193,7 +229,17 @@ export default function FindCompanion() {
         if (!ignore) {
           const ticketList = data?.tickets ?? [];
           setTickets(ticketList);
-          if (ticketList.length > 0) {
+          
+          const scheduleObj = workshop?.schedules?.find(s => s.id.toString() === selectedScheduleId.toString());
+          const firstAvailableTicket = ticketList.find(t => {
+            const isTicketPast = scheduleObj ? isPastSlot(scheduleObj.startOn, t.startTime) : false;
+            const isSoldOut = t.remainingTickets <= 0;
+            return !isTicketPast && !isSoldOut;
+          });
+          
+          if (firstAvailableTicket) {
+            setSelectedTicketId(firstAvailableTicket.id);
+          } else if (ticketList.length > 0) {
             setSelectedTicketId(ticketList[0].id);
           } else {
             setSelectedTicketId("");
@@ -207,7 +253,7 @@ export default function FindCompanion() {
     }
     fetchTickets();
     return () => { ignore = true; };
-  }, [selectedScheduleId]);
+  }, [selectedScheduleId, workshop]);
 
   const handleProceedPayment = () => {
     if (!currentUser) {
@@ -257,6 +303,22 @@ export default function FindCompanion() {
       remainingTickets: firstSchedule.remainingTickets,
     };
   }, [workshop]);
+
+  const activeSchedule = useMemo(() => {
+    return workshop?.schedules?.find(s => s.id.toString() === selectedScheduleId.toString());
+  }, [workshop, selectedScheduleId]);
+
+  const isPast = useMemo(() => {
+    return activeSchedule ? isPastSchedule(activeSchedule.startOn) : false;
+  }, [activeSchedule]);
+
+  const activeTicket = useMemo(() => {
+    return tickets.find(t => t.id === selectedTicketId);
+  }, [tickets, selectedTicketId]);
+
+  const isActiveTicketPast = useMemo(() => {
+    return activeSchedule && activeTicket ? isPastSlot(activeSchedule.startOn, activeTicket.startTime) : isPast;
+  }, [activeSchedule, activeTicket, isPast]);
 
   if (loading) {
     return (
@@ -998,44 +1060,65 @@ export default function FindCompanion() {
                         Chọn lịch học
                       </label>
 
-                      <div className="relative">
-                        <select
-                          value={selectedScheduleId}
-                          onChange={(e) => setSelectedScheduleId(e.target.value)}
-                          className="w-full appearance-none rounded-xl px-4 py-3 pr-10 font-semibold outline-none cursor-pointer text-sm"
-                          style={{
-                            background: `${BRAND.soft}18`,
-                            border: `1px solid ${BRAND.soft}99`,
-                            color: "#0f172a",
-                          }}
-                          onFocus={(e) => {
-                            e.currentTarget.style.boxShadow = `0 0 0 3px ${BRAND.soft}66`;
-                            e.currentTarget.style.borderColor = BRAND.accent;
-                          }}
-                          onBlur={(e) => {
-                            e.currentTarget.style.boxShadow = "none";
-                            e.currentTarget.style.borderColor = `${BRAND.soft}99`;
-                          }}
-                        >
-                          {detail.schedules.length > 0 ? (
-                            detail.schedules.map((schedule) => (
-                              <option key={schedule.id} value={schedule.id}>
-                                {formatDate(schedule.startOn)}
-                              </option>
-                            ))
-                          ) : (
-                            <option value="">Đang cập nhật lịch học</option>
-                          )}
-                        </select>
-
-                        <div
-                          className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none"
-                          style={{ color: BRAND.primary }}
-                        >
-                          <span className="material-symbols-outlined text-xl">
-                            calendar_month
-                          </span>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {detail.schedules.length > 0 ? (
+                          detail.schedules.map((schedule) => {
+                            const schedulePast = isPastSchedule(schedule.startOn);
+                            const isSelected = selectedScheduleId.toString() === schedule.id.toString();
+                            return (
+                              <button
+                                key={schedule.id}
+                                disabled={schedulePast}
+                                onClick={() => setSelectedScheduleId(schedule.id)}
+                                className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 relative ${
+                                  isSelected ? "ring-2 ring-offset-1" : ""
+                                }`}
+                                style={{
+                                  background: schedulePast
+                                    ? "#f1f5f9"
+                                    : isSelected
+                                    ? `${BRAND.soft}1a`
+                                    : "rgba(255,255,255,0.7)",
+                                  borderColor: schedulePast
+                                    ? "#cbd5e1"
+                                    : isSelected
+                                    ? BRAND.accent
+                                    : `${BRAND.soft}66`,
+                                  color: schedulePast ? "#94a3b8" : "#0f172a",
+                                  cursor: schedulePast ? "not-allowed" : "pointer",
+                                  opacity: schedulePast ? 0.7 : 1,
+                                  "--ring-color": BRAND.accent,
+                                }}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="font-black text-sm flex items-center gap-1.5">
+                                    <span
+                                      className="material-symbols-outlined text-base shrink-0"
+                                      style={{ color: schedulePast ? "#94a3b8" : BRAND.primary }}
+                                    >
+                                      calendar_month
+                                    </span>
+                                    {formatDate(schedule.startOn)}
+                                  </span>
+                                  {isSelected && !schedulePast && (
+                                    <span className="material-symbols-outlined text-base shrink-0" style={{ color: BRAND.accent }}>
+                                      check_circle
+                                    </span>
+                                  )}
+                                </div>
+                                {schedulePast && (
+                                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mt-1">
+                                    Đã diễn ra
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="col-span-full text-center py-4 text-sm font-semibold text-slate-400">
+                            Đang cập nhật lịch học
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1063,26 +1146,37 @@ export default function FindCompanion() {
                           {tickets.map((ticket) => {
                             const isSelected = selectedTicketId === ticket.id;
                             const isSoldOut = ticket.remainingTickets <= 0;
+                            const isTicketPast = activeSchedule ? isPastSlot(activeSchedule.startOn, ticket.startTime) : false;
+                            const isTicketDisabled = isSoldOut || isTicketPast;
                             return (
                               <button
                                 key={ticket.id}
-                                disabled={isSoldOut}
+                                disabled={isTicketDisabled}
                                 onClick={() => setSelectedTicketId(ticket.id)}
                                 className={`w-full p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 relative ${
                                   isSelected ? "ring-2 ring-offset-1" : ""
                                 }`}
                                 style={{
-                                  background: isSelected ? `${BRAND.soft}1a` : "rgba(255,255,255,0.7)",
-                                  borderColor: isSelected ? BRAND.accent : `${BRAND.soft}66`,
+                                  background: isTicketDisabled
+                                    ? "#f1f5f9"
+                                    : isSelected
+                                    ? `${BRAND.soft}1a`
+                                    : "rgba(255,255,255,0.7)",
+                                  borderColor: isTicketDisabled
+                                    ? "#cbd5e1"
+                                    : isSelected
+                                    ? BRAND.accent
+                                    : `${BRAND.soft}66`,
                                   boxShadow: isSelected ? "0 4px 12px rgba(240,138,120,0.08)" : "none",
-                                  opacity: isSoldOut ? 0.6 : 1,
-                                  cursor: isSoldOut ? "not-allowed" : "pointer",
+                                  color: isTicketDisabled ? "#94a3b8" : "#0f172a",
+                                  opacity: isTicketDisabled ? 0.7 : 1,
+                                  cursor: isTicketDisabled ? "not-allowed" : "pointer",
                                   "--ring-color": BRAND.accent,
                                 }}
                               >
                                 <div className="flex items-start justify-between w-full">
                                   <div className="min-w-0 flex-1">
-                                    <h5 className="font-black text-sm flex items-center gap-1.5" style={{ color: "#0f172a" }}>
+                                    <h5 className="font-black text-sm flex items-center gap-1.5" style={{ color: isTicketDisabled ? "#94a3b8" : "#0f172a" }}>
                                       {ticket.ticketType}
                                       {isSelected && (
                                         <span className="material-symbols-outlined text-base shrink-0" style={{ color: BRAND.accent }}>
@@ -1090,17 +1184,17 @@ export default function FindCompanion() {
                                         </span>
                                       )}
                                     </h5>
-                                    <p className="text-xs font-semibold mt-1 flex items-center gap-1" style={{ color: "#64748b" }}>
-                                      <span className="material-symbols-outlined text-sm shrink-0" style={{ color: BRAND.primary }}>schedule</span>
+                                    <p className="text-xs font-semibold mt-1 flex items-center gap-1" style={{ color: isTicketDisabled ? "#94a3b8" : "#64748b" }}>
+                                      <span className="material-symbols-outlined text-sm shrink-0" style={{ color: isTicketDisabled ? "#94a3b8" : BRAND.primary }}>schedule</span>
                                       {formatTimeOnly(ticket.startTime)} - {formatTimeOnly(ticket.endTime)}
                                     </p>
                                   </div>
                                   <div className="text-right shrink-0">
-                                    <div className="text-sm font-black" style={{ color: BRAND.accent }}>
+                                    <div className="text-sm font-black" style={{ color: isTicketDisabled ? "#94a3b8" : BRAND.accent }}>
                                       {formatCurrency(ticket.price)}
                                     </div>
-                                    <div className="text-[11px] font-semibold mt-1" style={{ color: isSoldOut ? "#ef4444" : "#94a3b8" }}>
-                                      {isSoldOut ? "Hết vé" : `Còn ${ticket.remainingTickets} vé`}
+                                    <div className="text-[11px] font-semibold mt-1" style={{ color: isTicketDisabled ? "#ef4444" : "#94a3b8" }}>
+                                      {isTicketPast ? "Đã diễn ra" : isSoldOut ? "Hết vé" : `Còn ${ticket.remainingTickets} vé`}
                                     </div>
                                   </div>
                                 </div>
@@ -1212,18 +1306,18 @@ export default function FindCompanion() {
                   {/* CTA Button */}
                   {currentUser ? (
                     <button
-                      disabled={!selectedTicketId}
+                      disabled={!selectedTicketId || isActiveTicketPast}
                       onClick={handleProceedPayment}
                       className="w-full py-3.5 px-6 rounded-xl font-black text-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
                       style={{
                         background: BRAND.accent,
                         color: "white",
                         boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
-                        opacity: !selectedTicketId ? 0.6 : 1,
-                        cursor: !selectedTicketId ? "not-allowed" : "pointer",
+                        opacity: (!selectedTicketId || isActiveTicketPast) ? 0.6 : 1,
+                        cursor: (!selectedTicketId || isActiveTicketPast) ? "not-allowed" : "pointer",
                       }}
                       onMouseEnter={(e) => {
-                        if (selectedTicketId) {
+                        if (selectedTicketId && !isActiveTicketPast) {
                           e.currentTarget.style.filter = "brightness(0.96)";
                         }
                       }}
@@ -1234,7 +1328,7 @@ export default function FindCompanion() {
                       <span className="material-symbols-outlined text-xl">
                         credit_card
                       </span>
-                      Đặt vé ngay
+                      {isActiveTicketPast ? "Đã diễn ra" : "Đặt vé ngay"}
                     </button>
                   ) : (
                     <button

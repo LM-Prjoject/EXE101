@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchWithFallback, parseJsonResponse, buildError } from "../../api/client";
 import { getUserById, changeName, changePhone, changeAvatar } from "../../api/user";
-import { getUpcomingSchedules } from "../../api/workshop";
+
 import { useAuth } from "../../context/AuthContext";
 import { changePassword } from "../../api/auth";
 
@@ -43,9 +43,7 @@ export default function UserProfile() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState("");
 
-  const [schedules, setSchedules] = useState([]);
-  const [loadingSchedules, setLoadingSchedules] = useState(true);
-  const [schedulesError, setSchedulesError] = useState("");
+
 
   // States for Pop-up Edit Modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -222,37 +220,7 @@ export default function UserProfile() {
     };
   }, [currentUser?.id]);
 
-  useEffect(() => {
-    if (!authToken) {
-      setLoadingSchedules(false);
-      return;
-    }
 
-    let ignore = false;
-    async function loadSchedules() {
-      setLoadingSchedules(true);
-      setSchedulesError("");
-      try {
-        const response = await getUpcomingSchedules(authToken, 1, 10);
-        if (!ignore) {
-          setSchedules(response?.data || []);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setSchedulesError(err?.message || "Không thể tải danh sách workshop sắp tới.");
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingSchedules(false);
-        }
-      }
-    }
-
-    loadSchedules();
-    return () => {
-      ignore = true;
-    };
-  }, [authToken]);
 
   const user = useMemo(() => {
     const name = profile?.name || currentUser?.name || currentUser?.email?.split("@")[0] || "Người dùng";
@@ -273,10 +241,6 @@ export default function UserProfile() {
     <>
       <div
         className="bg-[#F6F2E9] dark:bg-[#0f1115] font-display antialiased text-[#c3996c] dark:text-slate-100 min-h-screen flex flex-col"
-        style={{
-          paddingBottom:
-            "calc(var(--floating-nav-h, 72px) + env(safe-area-inset-bottom))",
-        }}
       >
         <div className="layout-container flex h-full grow flex-col">
           {/* Header */}
@@ -404,11 +368,24 @@ export default function UserProfile() {
                       <span className="mx-2">•</span>
                       <span>{user.joinedYear ? `Thành viên từ ${user.joinedYear}` : `ID: ${user.id || "N/A"}`}</span>
                     </div>
-                    <p className="mt-4 text-[#2B2B2B] dark:text-slate-300 max-w-lg leading-relaxed">
-                      {profileError
-                        ? profileError
-                        : `Số điện thoại: ${user.phoneNumber}. Trạng thái: ${user.verified == null ? "chưa có dữ liệu xác minh" : user.verified ? "đã xác minh" : "chưa xác minh"}.`}
-                    </p>
+                    {profileError ? (
+                      <p className="mt-4 text-rose-500 font-semibold">{profileError}</p>
+                    ) : (
+                      <div className="mt-4 space-y-2 text-sm text-[#2B2B2B] dark:text-slate-300 w-full max-w-md">
+                        <div className="flex items-center gap-2.5 py-1.5 border-b border-[#fbc4ae]/20 dark:border-slate-800">
+                          <span className="material-symbols-outlined text-[#c3996c] text-lg shrink-0">phone_iphone</span>
+                          <span className="font-semibold text-[#c3996c] min-w-[100px]">Số điện thoại:</span>
+                          <span>{user.phoneNumber || "Chưa cập nhật"}</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 py-1.5 border-b border-[#fbc4ae]/20 dark:border-slate-800">
+                          <span className="material-symbols-outlined text-[#c3996c] text-lg shrink-0">verified</span>
+                          <span className="font-semibold text-[#c3996c] min-w-[100px]">Trạng thái:</span>
+                          <span className={user.verified ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-amber-600 dark:text-amber-400 font-bold"}>
+                            {user.verified == null ? "Chưa có dữ liệu" : user.verified ? "Đã xác minh" : "Chưa xác minh"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-3 pt-4 md:pt-12 w-full md:w-auto min-w-[200px]">
@@ -437,162 +414,6 @@ export default function UserProfile() {
                   </div>
                 </div>
               </div>
-
-              {/* Tabs */}
-              <div className="border-b border-[#fbc4ae]/60 dark:border-slate-800 mb-8 sticky top-[72px] bg-[#fffaf5] dark:bg-[#0f1115] z-40 pt-2">
-                <div className="flex gap-8 overflow-x-auto no-scrollbar">
-                  <Link
-                    className="flex items-center gap-2 border-b-[3px] border-[#f08a78] pb-3 px-1 text-[#f08a78]"
-                    to="/home"
-                  >
-                    <span className="material-symbols-outlined">
-                      calendar_month
-                    </span>
-                    <span className="text-sm font-bold whitespace-nowrap">
-                      Workshop đã đặt
-                    </span>
-                  </Link>
-
-                  {[
-                    { icon: "history", label: "Đã tham gia" },
-                    { icon: "star", label: "Đánh giá của tôi" },
-                    { icon: "favorite", label: "Đã lưu" },
-                  ].map((t) => (
-                    <Link
-                      key={t.icon}
-                      className="flex items-center gap-2 border-b-[3px] border-transparent pb-3 px-1 text-[#c3996c]/70 dark:text-[#d5ddc3] hover:text-[#f08a78] dark:hover:text-[#f08a78] transition-colors"
-                      to="/home"
-                    >
-                      <span className="material-symbols-outlined">
-                        {t.icon}
-                      </span>
-                      <span className="text-sm font-bold whitespace-nowrap">
-                        {t.label}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-between items-end mb-6">
-                <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">
-                  Workshop sắp tới
-                </h3>
-                <a
-                  className="text-[#f08a78] text-sm font-bold hover:underline"
-                  href="/my-schedule"
-                >
-                  Xem lịch
-                </a>
-              </div>
-
-              {loadingSchedules ? (
-                <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
-                  <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3 animate-spin">
-                    progress_activity
-                  </span>
-                  <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
-                    Đang tải danh sách...
-                  </h4>
-                </div>
-              ) : schedulesError ? (
-                <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
-                  <span className="material-symbols-outlined text-rose-500 text-4xl mb-3">
-                    error
-                  </span>
-                  <h4 className="text-rose-600 font-bold text-lg">
-                    Lỗi tải dữ liệu
-                  </h4>
-                  <p className="text-slate-500 text-sm mt-2">{schedulesError}</p>
-                </div>
-              ) : schedules.length === 0 ? (
-                <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 mb-12 text-center">
-                  <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
-                    event_busy
-                  </span>
-                  <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
-                    Chưa có workshop sắp tới
-                  </h4>
-                  <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mt-2">
-                    Bạn chưa có lịch hẹn workshop sắp tới nào. Hãy đăng ký ngay nhé!
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  {schedules.map((item) => {
-                    const ticketList = item.tickets || [];
-                    const firstTicket = ticketList[0];
-                    const priceText = firstTicket ? formatCurrency(firstTicket.price) : "Liên hệ";
-                    const ticketTypeLabel = firstTicket ? firstTicket.ticketType : "";
-                    const timeRange = firstTicket ? `${formatTimeOnly(firstTicket.startTime)} - ${formatTimeOnly(firstTicket.endTime)}` : "";
-                    const img = item.workshopThumbnailLink || "/img/onlyLogo.png";
-
-                    return (
-                      <div key={item.id} className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col h-full">
-                        <div className="relative h-48 overflow-hidden">
-                          <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-[#c3996c] dark:text-white shadow-sm z-10">
-                            {formatDate(item.startOn)} {timeRange && `• ${timeRange}`}
-                          </div>
-                          <div
-                            className="bg-center bg-cover h-full w-full group-hover:scale-105 transition-transform duration-500"
-                            style={{
-                              backgroundImage: `url("${img}")`,
-                            }}
-                          />
-                        </div>
-
-                        <div className="p-5 flex flex-col flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-[#f08a78] text-xs font-bold uppercase tracking-wider">
-                              Vé {ticketTypeLabel || "Đã đặt"}
-                            </span>
-                          </div>
-
-                          <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg mb-2 line-clamp-2">
-                            {item.workshopTitle}
-                          </h4>
-                          
-                          <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-4 line-clamp-2 flex-1">
-                            Địa điểm: {item.workshopLocation}
-                          </p>
-
-                          <div className="pt-4 border-t border-[#fbc4ae]/40 dark:border-slate-800 flex items-center justify-between mt-auto">
-                            <div className="flex flex-col">
-                              <span className="text-xs text-[#c3996c]/60 dark:text-[#d5ddc3]">
-                                Tổng thanh toán
-                              </span>
-                              <span className="text-[#c3996c] dark:text-slate-100 font-bold">
-                                {priceText}
-                              </span>
-                            </div>
-                            <Link to={`/find-companion/${item.id}`} className="bg-white dark:bg-slate-700 hover:bg-[#fbc4ae]/25 dark:hover:bg-slate-600 text-[#c3996c] dark:text-slate-200 text-xs font-bold py-2 px-4 rounded-lg border border-[#fbc4ae]/60 dark:border-slate-600 transition-colors">
-                              Chi tiết
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* Explore card */}
-                  <div className="group bg-gradient-to-br from-[#f08a78]/15 to-transparent dark:from-[#f08a78]/20 dark:to-[#151822] rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-[#f08a78]/35 flex flex-col items-center justify-center p-8 text-center h-full min-h-[350px]">
-                    <div className="bg-white dark:bg-[#151822] p-4 rounded-full shadow-md mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="material-symbols-outlined text-[#f08a78] text-4xl">
-                        add
-                      </span>
-                    </div>
-                    <h4 className="text-[#c3996c] dark:text-slate-100 font-bold text-lg mb-2">
-                      Khám phá thêm
-                    </h4>
-                    <p className="text-[#c3996c]/70 dark:text-[#d5ddc3] text-sm mb-6 max-w-[200px]">
-                      Tìm kiếm cuộc phiêu lưu sáng tạo tiếp theo của bạn tại Đà Nẵng.
-                    </p>
-                    <button onClick={() => navigate("/advanced-search")} className="bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all">
-                      Xem tất cả workshop
-                    </button>
-                  </div>
-                </div>
-              )}
 
               <div className="flex justify-between items-end mb-6">
                 <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">

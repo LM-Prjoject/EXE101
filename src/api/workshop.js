@@ -1,17 +1,75 @@
 import { fetchWithFallback, parseJsonResponse, buildError } from './client';
 
-export async function getWorkshops(page = 1, pageSize = 12, search = '') {
+export async function getWorkshops(filtersOrPage = 1, pageSize = 12, search = '') {
+  let page = 1;
+  let actualPageSize = 12;
+  let queryVal = '';
+  let locations = [];
+  let categories = [];
+  let levels = [];
+  let priceMin = null;
+  let priceMax = null;
+  let durationMin = null;
+  let durationMax = null;
+  let scheduleWithinDays = null;
+  let sortBy = 'Relevance';
+  let sortDesc = 'true';
+
+  if (typeof filtersOrPage === 'object' && filtersOrPage !== null) {
+    page = filtersOrPage.page ?? 1;
+    actualPageSize = filtersOrPage.pageSize ?? 12;
+    queryVal = filtersOrPage.search ?? filtersOrPage.query ?? '';
+    locations = filtersOrPage.locations ?? [];
+    categories = filtersOrPage.categories ?? [];
+    levels = filtersOrPage.levels ?? [];
+    priceMin = filtersOrPage.priceMin ?? null;
+    priceMax = filtersOrPage.priceMax ?? null;
+    durationMin = filtersOrPage.durationMin ?? null;
+    durationMax = filtersOrPage.durationMax ?? null;
+    scheduleWithinDays = filtersOrPage.scheduleWithinDays ?? null;
+    sortBy = filtersOrPage.sortBy ?? 'Relevance';
+    sortDesc = filtersOrPage.sortDesc ?? 'true';
+  } else {
+    page = filtersOrPage;
+    actualPageSize = pageSize;
+    queryVal = search;
+  }
+
   const params = new URLSearchParams({
-    sortBy: 'price',
-    sortDesc: 'true',
     page: page.toString(),
-    pageSize: pageSize.toString(),
+    pageSize: actualPageSize.toString(),
+    sortBy: sortBy.toString(),
+    sortDesc: sortDesc.toString(),
   });
 
-  if (search.trim()) {
-    params.set('search', search.trim());
-    params.set('keyword', search.trim());
-    params.set('title', search.trim());
+  if (queryVal && queryVal.trim()) {
+    params.set('query', queryVal.trim());
+  }
+
+  if (Array.isArray(locations) && locations.length > 0) {
+    locations.forEach((loc) => params.append('locations', loc));
+  }
+  if (Array.isArray(categories) && categories.length > 0) {
+    categories.forEach((cat) => params.append('categories', cat));
+  }
+  if (Array.isArray(levels) && levels.length > 0) {
+    levels.forEach((lvl) => params.append('levels', lvl));
+  }
+
+  if (priceMin !== null && priceMin !== undefined) {
+    params.set('priceMin', priceMin.toString());
+  }
+  if (priceMax !== null && priceMax !== undefined) {
+    params.set('priceMax', priceMax.toString());
+  }
+  if (durationMin !== null && durationMin !== undefined) {
+    params.set('durationMin', durationMin.toString());
+  }
+  if (durationMax !== null && durationMax !== undefined) {
+    params.set('durationMax', durationMax.toString());
+  }
+  if (scheduleWithinDays !== null && scheduleWithinDays !== undefined) {
+    params.set('scheduleWithinDays', scheduleWithinDays.toString());
   }
 
   let response = await fetchWithFallback(`/api/workshop/search?${params}`, {

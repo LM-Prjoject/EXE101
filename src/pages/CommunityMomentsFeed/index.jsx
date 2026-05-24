@@ -46,8 +46,6 @@ export default function CommunityMomentsFeed() {
         style={{
           background: BG,
           color: TEXT,
-          paddingBottom:
-            "calc(var(--floating-nav-h, 72px) + env(safe-area-inset-bottom))",
         }}
       >
         {/* Navbar */}

@@ -25,40 +25,64 @@ export default function HomeWithBanner() {
   const TEXT_MAIN = "#2b2b2b";
   const TEXT_MUTED = "#4a6663";
   const BORDER = "#e9e2da";
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null); 
+  const [selectedDistricts, setSelectedDistricts] = useState([]);
+  const [priceMin, setPriceMin] = useState(null);
+  const [priceMax, setPriceMax] = useState(null);
+  const [scheduleWithinDays, setScheduleWithinDays] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null); // 'district' | 'price' | 'schedule' | null
+  const [dynamicLocations, setDynamicLocations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
+
+  const filterBarRef = useRef(null);
   const { currentUser, userProfile } = useAuth();
   const [workshops, setWorkshops] = useState([]);
   const [loadingWorkshops, setLoadingWorkshops] = useState(true);
   const [workshopError, setWorkshopError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
 
+  // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
+      if (filterBarRef.current && !filterBarRef.current.contains(e.target)) {
+        setOpenDropdown(null);
       }
     }
-
-    function handleEsc(e) {
-      if (e.key === "Escape") setOpen(false);
-    }
-
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
     };
   }, []);
 
+  // Discover all unique locations from database once on mount
   useEffect(() => {
-    async function loadWorkshops() {
+    async function discoverLocations() {
+      try {
+        const data = await getWorkshops({ page: 1, pageSize: 100 });
+        const list = getWorkshopList(data);
+        const unique = Array.from(new Set(list.map((w) => w.location).filter(Boolean)));
+        setDynamicLocations(unique);
+      } catch (err) {
+        console.error("Failed to discover locations:", err);
+      }
+    }
+    discoverLocations();
+  }, []);
+
+  // Fetch filtered workshops whenever filter state changes
+  useEffect(() => {
+    async function loadFilteredWorkshops() {
       setLoadingWorkshops(true);
       setWorkshopError('');
       try {
-        const data = await getWorkshops();
+        const data = await getWorkshops({
+          page: 1,
+          pageSize: 12,
+          search: activeSearchQuery,
+          locations: selectedDistricts,
+          priceMin: priceMin,
+          priceMax: priceMax,
+          scheduleWithinDays: scheduleWithinDays,
+        });
         setWorkshops(getWorkshopList(data));
       } catch (err) {
         setWorkshopError(err?.message || 'Không thể tải danh sách workshop.');
@@ -66,16 +90,87 @@ export default function HomeWithBanner() {
         setLoadingWorkshops(false);
       }
     }
-    loadWorkshops();
-  }, []);
+    loadFilteredWorkshops();
+  }, [selectedDistricts, priceMin, priceMax, scheduleWithinDays, activeSearchQuery]);
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/advanced-search?q=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      navigate(`/advanced-search`);
-    }
+    setActiveSearchQuery(searchQuery.trim());
   };
+
+  const handleSelectDistrict = (loc) => {
+    // Clear other filter categories
+    setPriceMin(null);
+    setPriceMax(null);
+    setScheduleWithinDays(null);
+
+    setSelectedDistricts((prev) => {
+      const isChecked = prev.includes(loc);
+      if (isChecked) {
+        return prev.filter((d) => d !== loc);
+      } else {
+        return [...prev, loc];
+      }
+    });
+  };
+
+  const handleSelectPrice = (min, max) => {
+    // Clear other filter categories
+    setSelectedDistricts([]);
+    setScheduleWithinDays(null);
+
+    setPriceMin(min);
+    setPriceMax(max);
+  };
+
+  const handleCustomPriceMin = (val) => {
+    // Clear other filter categories
+    setSelectedDistricts([]);
+    setScheduleWithinDays(null);
+
+    setPriceMin(val);
+  };
+
+  const handleCustomPriceMax = (val) => {
+    // Clear other filter categories
+    setSelectedDistricts([]);
+    setScheduleWithinDays(null);
+
+    setPriceMax(val);
+  };
+
+  const handleSelectSchedule = (days) => {
+    // Clear other filter categories
+    setSelectedDistricts([]);
+    setPriceMin(null);
+    setPriceMax(null);
+
+    setScheduleWithinDays(days);
+  };
+
+  const handleResetAll = () => {
+    setSelectedDistricts([]);
+    setPriceMin(null);
+    setPriceMax(null);
+    setScheduleWithinDays(null);
+    setSearchQuery('');
+    setActiveSearchQuery('');
+    setOpenDropdown(null);
+  };
+
+  const getPriceLabel = () => {
+    if (priceMin === null && priceMax === null) return "Giá cả";
+    if (priceMin === null && priceMax !== null) return `Dưới ${priceMax.toLocaleString("vi-VN")}₫`;
+    if (priceMin !== null && priceMax === null) return `Trên ${priceMin.toLocaleString("vi-VN")}₫`;
+    return `${priceMin.toLocaleString("vi-VN")}₫ - ${priceMax.toLocaleString("vi-VN")}₫`;
+  };
+
+  const getScheduleLabel = () => {
+    if (scheduleWithinDays === null) return "Khung giờ";
+    return `Trong ${scheduleWithinDays} ngày tới`;
+  };
+
+  const standardDistricts = ["Hải Châu", "Thanh Khê", "Sơn Trà", "Ngũ Hành Sơn", "Liên Chiểu", "Cẩm Lệ", "Hòa Vang"];
+  const allAvailableLocations = Array.from(new Set([...standardDistricts, ...dynamicLocations]));
 
   return (
     <>
@@ -84,12 +179,8 @@ export default function HomeWithBanner() {
         style={{ background: PAGE_BG, color: TEXT_MAIN }}
       >
         <div
-  className="relative flex min-h-screen w-full flex-col overflow-x-hidden"
-  style={{
-    paddingBottom:
-      "calc(var(--floating-nav-h, 72px) + env(safe-area-inset-bottom))",
-  }}
->
+          className="relative flex min-h-screen w-full flex-col overflow-x-hidden"
+        >
           {/* Header */}
           <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
             <div className="flex items-center gap-8">
@@ -219,49 +310,153 @@ export default function HomeWithBanner() {
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  {[
-                    { icon: "location_on", label: "Da Nang" },
-                    { icon: "map", label: "Quận/Huyện" },
-                    { icon: "attach_money", label: "Giá cả" },
-                    { icon: "schedule", label: "Khung giờ" },
-                  ].map((x, idx) => (
+                <div ref={filterBarRef} className="flex flex-wrap items-center justify-center gap-3">
+                  {/* Area Dropdown */}
+                  <div className="relative">
                     <button
-                      key={idx}
+                      onClick={() => setOpenDropdown(openDropdown === "district" ? null : "district")}
                       className="group flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm font-medium transition-all"
-                      style={{ borderColor: BORDER, color: TEXT_MAIN }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = PRIMARY;
-                        e.currentTarget.style.background =
-                          "rgba(251,196,174,0.25)";
-                        e.currentTarget.style.color = PRIMARY;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = BORDER;
-                        e.currentTarget.style.background = "#fff";
-                        e.currentTarget.style.color = TEXT_MAIN;
+                      style={{
+                        borderColor: openDropdown === "district" || selectedDistricts.length > 0 ? PRIMARY : BORDER,
+                        color: openDropdown === "district" || selectedDistricts.length > 0 ? PRIMARY : TEXT_MAIN,
                       }}
                     >
-                      <span
-                        className="material-symbols-outlined text-[18px]"
-                        style={{ color: "#9ca3af" }}
-                      >
-                        {x.icon}
-                      </span>
-                      {x.label}
-                      <span
-                        className="material-symbols-outlined text-[18px]"
-                        style={{ color: "#9ca3af" }}
-                      >
-                        expand_more
-                      </span>
+                      <span className="material-symbols-outlined text-[18px]">map</span>
+                      {selectedDistricts.length === 0
+                        ? "Quận/Huyện"
+                        : selectedDistricts.length === 1
+                        ? selectedDistricts[0]
+                        : `${selectedDistricts.length} khu vực`}
+                      <span className="material-symbols-outlined text-[18px]">expand_more</span>
                     </button>
-                  ))}
+                    {openDropdown === "district" && (
+                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl bg-white border border-[#e9e2da] p-3 shadow-xl z-50 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="text-[11px] font-bold text-[#4a6663] mb-2 px-2 uppercase tracking-wider">Khu vực (Đà Nẵng)</div>
+                        <div className="space-y-1">
+                          {allAvailableLocations.map((loc) => {
+                            const isChecked = selectedDistricts.includes(loc);
+                            return (
+                              <button
+                                key={loc}
+                                onClick={() => handleSelectDistrict(loc)}
+                                className="w-full flex items-center justify-between text-left text-sm font-semibold py-2 px-3 hover:bg-[#fbc4ae]/15 rounded-xl transition-colors"
+                                style={{ color: isChecked ? PRIMARY : TEXT_MAIN }}
+                              >
+                                <span className="truncate pr-2">{loc}</span>
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  readOnly
+                                  className="accent-[#f08a78] pointer-events-none h-4 w-4 rounded border-gray-300"
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setOpenDropdown(openDropdown === "price" ? null : "price")}
+                      className="group flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm font-medium transition-all"
+                      style={{
+                        borderColor: openDropdown === "price" || priceMin !== null || priceMax !== null ? PRIMARY : BORDER,
+                        color: openDropdown === "price" || priceMin !== null || priceMax !== null ? PRIMARY : TEXT_MAIN,
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">attach_money</span>
+                      {getPriceLabel()}
+                      <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                    </button>
+                    {openDropdown === "price" && (
+                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-72 rounded-2xl bg-white border border-[#e9e2da] p-4 shadow-xl z-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="text-[11px] font-bold text-[#4a6663] mb-2 uppercase tracking-wider">Chọn mức giá</div>
+                        <div className="space-y-1">
+                          {[
+                            { label: "Tất cả mức giá", min: null, max: null },
+                            { label: "Dưới 200.000₫", min: null, max: 200000 },
+                            { label: "200.000₫ - 500.000₫", min: 200000, max: 500000 },
+                            { label: "Trên 500.000₫", min: 500000, max: null },
+                          ].map((p, idx) => {
+                            const isSelected = priceMin === p.min && priceMax === p.max;
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => handleSelectPrice(p.min, p.max)}
+                                className="w-full flex items-center justify-between text-left text-sm font-semibold py-2 px-3 hover:bg-[#fbc4ae]/15 rounded-xl transition-colors"
+                                style={{ color: isSelected ? PRIMARY : TEXT_MAIN }}
+                              >
+                                {p.label}
+                                <input
+                                  type="radio"
+                                  checked={isSelected}
+                                  readOnly
+                                  className="accent-[#f08a78] pointer-events-none h-4 w-4"
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Schedule Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setOpenDropdown(openDropdown === "schedule" ? null : "schedule")}
+                      className="group flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm font-medium transition-all"
+                      style={{
+                        borderColor: openDropdown === "schedule" || scheduleWithinDays !== null ? PRIMARY : BORDER,
+                        color: openDropdown === "schedule" || scheduleWithinDays !== null ? PRIMARY : TEXT_MAIN,
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">schedule</span>
+                      {getScheduleLabel()}
+                      <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                    </button>
+                    {openDropdown === "schedule" && (
+                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 rounded-2xl bg-white border border-[#e9e2da] p-3 shadow-xl z-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="text-[11px] font-bold text-[#4a6663] mb-2 px-2 uppercase tracking-wider">Thời gian tổ chức</div>
+                        <div className="space-y-1">
+                          {[
+                            { label: "Tất cả thời gian", days: null },
+                            { label: "Trong 3 ngày tới", days: 3 },
+                            { label: "Trong 7 ngày tới", days: 7 },
+                            { label: "Trong 14 ngày tới", days: 14 },
+                            { label: "Trong 30 ngày tới", days: 30 },
+                          ].map((s, idx) => {
+                            const isSelected = scheduleWithinDays === s.days;
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  handleSelectSchedule(s.days);
+                                  setOpenDropdown(null);
+                                }}
+                                className="w-full flex items-center justify-between text-left text-sm font-semibold py-2 px-3 hover:bg-[#fbc4ae]/15 rounded-xl transition-colors"
+                                style={{ color: isSelected ? PRIMARY : TEXT_MAIN }}
+                              >
+                                {s.label}
+                                <input
+                                  type="radio"
+                                  checked={isSelected}
+                                  readOnly
+                                  className="accent-[#f08a78] pointer-events-none h-4 w-4"
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   <button
-                    onClick={() => {
-                      setSearchQuery('');
-                    }}
+                    onClick={handleResetAll}
                     className="flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors"
                     style={{
                       background: "rgba(251,196,174,0.55)",
@@ -289,10 +484,10 @@ export default function HomeWithBanner() {
                 >
                   Workshop Nổi bật
                 </h2>
-                <a
+                <Link
                   className="flex items-center gap-1 text-sm font-semibold"
                   style={{ color: PRIMARY }}
-                  href="#"
+                  to={activeSearchQuery ? `/advanced-search?q=${encodeURIComponent(activeSearchQuery)}` : "/advanced-search"}
                 >
                   Xem tất cả{" "}
                   <span
@@ -301,7 +496,7 @@ export default function HomeWithBanner() {
                   >
                     arrow_forward
                   </span>
-                </a>
+                </Link>
               </div>
 
               {/* Cards */}

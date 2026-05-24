@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { createWorkshop } from "../../api";
 
 import HostSidebar from "../../components/HostSidebar";
 import useHostWorkshops from "../../hooks/useHostWorkshops";
@@ -130,11 +131,10 @@ export default function HostMyWorkshops() {
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value)}
-                  className={`pb-4 text-sm ${
-                    statusFilter === tab.value
+                  className={`pb-4 text-sm ${statusFilter === tab.value
                       ? "font-bold border-b-2 border-primary text-primary"
                       : "font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
+                    }`}
                   type="button"
                 >
                   {tab.label} ({loading ? "..." : counts[tab.countKey]})
@@ -245,9 +245,9 @@ export default function HostMyWorkshops() {
 
                   const priceText =
                     priceLower !== null &&
-                    priceUpper !== null &&
-                    priceLower > 0 &&
-                    priceUpper > 0
+                      priceUpper !== null &&
+                      priceLower > 0 &&
+                      priceUpper > 0
                       ? priceLower === priceUpper
                         ? `${priceLower.toLocaleString("vi-VN")}đ`
                         : `${priceLower.toLocaleString("vi-VN")}đ - ${priceUpper.toLocaleString("vi-VN")}đ`
