@@ -112,9 +112,15 @@ export default function PaymentAndConfirmation() {
     setPaymentError("");
 
     try {
+      const merchantId = paymentInfo.merchant ?? paymentInfo.Merchant ?? "";
+      const isSandbox = merchantId.toLowerCase().includes("test");
+      const checkoutUrl = isSandbox 
+        ? "https://pay-sandbox.sepay.vn/v1/checkout/init" 
+        : "https://pay.sepay.vn/v1/checkout/init";
+
       const form = document.createElement("form");
       form.method = "POST";
-      form.action = "https://pay.sepay.vn/v1/checkout/init";
+      form.action = checkoutUrl;
       
       const fields = {
         order_amount: paymentInfo.order_amount ?? paymentInfo.OrderAmount ?? "",
