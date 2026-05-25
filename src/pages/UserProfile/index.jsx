@@ -54,7 +54,8 @@ export default function UserProfile() {
   const normalizedRole = String(user?.role || "")
     .trim()
     .toLowerCase();
-  const isHost = normalizedRole === "host";
+  const isUserHost = normalizedRole === "host";
+  const isHost = isUserHost;
 
   const handleLogout = () => {
     logout();
@@ -98,6 +99,15 @@ export default function UserProfile() {
   const softButtonClass = isHost
     ? "flex items-center justify-center gap-2 w-full rounded-xl h-11 px-4 bg-[#eef2ed] dark:bg-slate-800 border border-[#d8e2d6] dark:border-slate-700 text-[#6f8b6f] dark:text-slate-200 text-sm font-bold hover:bg-[#e4ece2] dark:hover:bg-slate-700 transition-colors"
     : "flex items-center justify-center gap-2 w-full rounded-xl h-11 px-4 bg-[#fbc4ae]/25 dark:bg-slate-800 border border-[#fbc4ae]/60 dark:border-slate-700 text-[#c3996c] dark:text-slate-200 text-sm font-bold hover:bg-[#fbc4ae]/35 dark:hover:bg-slate-700 transition-colors";
+
+  const primaryTextColor = isHost ? "text-[#6f8b6f]" : "text-[#c3996c]";
+  const iconColor = isHost ? "text-[#6f8b6f]" : "text-[#f08a78]";
+  const listBorderClass = isHost
+    ? "border-slate-200 dark:border-slate-800"
+    : "border-[#fbc4ae]/20 dark:border-slate-800";
+  const boxBorderClass = isHost
+    ? "border-slate-200 dark:border-slate-800"
+    : "border-[#fbc4ae]/40 dark:border-slate-800";
   return (
     <>
       <div className={pageClass}>
@@ -170,10 +180,18 @@ export default function UserProfile() {
                 </div>
 
                 <button
-                  onClick={() => navigate("/host/verification")}
+                  onClick={() => {
+                    if (isUserHost) {
+                      navigate("/host/dashboard");
+                    } else {
+                      navigate("/host/verification");
+                    }
+                  }}
                   className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"
                 >
-                  <span className="truncate">Trở thành Host</span>
+                  <span className="truncate">
+                    {isUserHost ? "Chế độ Host" : "Trở thành Host"}
+                  </span>
                 </button>
 
                 <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
@@ -240,7 +258,7 @@ export default function UserProfile() {
                       <span className="material-symbols-outlined text-lg">
                         badge
                       </span>
-                      <span>{isHost ? "Host" : "User"}</span>
+                      <span>{isUserHost ? "Host" : "User"}</span>
                       <span className="mx-2">•</span>
                       <span>
                         {user.joinedYear
@@ -255,21 +273,21 @@ export default function UserProfile() {
                       </p>
                     ) : (
                       <div className="mt-4 space-y-2 text-sm text-[#2B2B2B] dark:text-slate-300 w-full max-w-md">
-                        <div className="flex items-center gap-2.5 py-1.5 border-b border-[#fbc4ae]/20 dark:border-slate-800">
-                          <span className="material-symbols-outlined text-[#c3996c] text-lg shrink-0">
+                        <div className={`flex items-center gap-2.5 py-1.5 border-b ${listBorderClass}`}>
+                          <span className={`material-symbols-outlined ${primaryTextColor} text-lg shrink-0`}>
                             phone_iphone
                           </span>
-                          <span className="font-semibold text-[#c3996c] min-w-[100px]">
+                          <span className={`font-semibold ${primaryTextColor} min-w-[100px]`}>
                             Số điện thoại:
                           </span>
                           <span>{user.phoneNumber || "Chưa cập nhật"}</span>
                         </div>
 
-                        <div className="flex items-center gap-2.5 py-1.5 border-b border-[#fbc4ae]/20 dark:border-slate-800">
-                          <span className="material-symbols-outlined text-[#c3996c] text-lg shrink-0">
+                        <div className={`flex items-center gap-2.5 py-1.5 border-b ${listBorderClass}`}>
+                          <span className={`material-symbols-outlined ${primaryTextColor} text-lg shrink-0`}>
                             verified
                           </span>
-                          <span className="font-semibold text-[#c3996c] min-w-[100px]">
+                          <span className={`font-semibold ${primaryTextColor} min-w-[100px]`}>
                             Trạng thái:
                           </span>
                           <span
@@ -327,9 +345,9 @@ export default function UserProfile() {
                 </h3>
               </div>
 
-              <div className="bg-white dark:bg-[#151822] rounded-3xl p-6 shadow-sm border border-[#fbc4ae]/40 dark:border-slate-800">
+              <div className={`bg-white dark:bg-[#151822] rounded-3xl p-6 shadow-sm border ${boxBorderClass}`}>
                 <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
+                  <span className={`material-symbols-outlined ${iconColor} text-4xl mb-3`}>
                     history
                   </span>
                   <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
@@ -340,26 +358,28 @@ export default function UserProfile() {
             </div>
           </main>
 
-          <footer className="bg-[#FEFEFD] dark:bg-[#151822] border-t border-[#fbc4ae]/60 dark:border-slate-800 py-8 px-10 text-center">
-            <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-[#c3996c]/60 dark:text-[#d5ddc3]">
-              <p>
-                © 2025 Hands &amp; Hour. Được tạo nên với tâm hồn nghệ sĩ tại Đà
-                Nẵng.
-              </p>
+          {!isHost && (
+            <footer className="bg-[#FEFEFD] dark:bg-[#151822] border-t border-[#fbc4ae]/60 dark:border-slate-800 py-8 px-10 text-center">
+              <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-[#c3996c]/60 dark:text-[#d5ddc3]">
+                <p>
+                  © 2025 Hands &amp; Hour. Được tạo nên với tâm hồn nghệ sĩ tại Đà
+                  Nẵng.
+                </p>
 
-              <div className="flex gap-6">
-                <a className="hover:text-[#f08a78] transition-colors" href="#">
-                  Quyền riêng tư
-                </a>
-                <a className="hover:text-[#f08a78] transition-colors" href="#">
-                  Điều khoản
-                </a>
-                <a className="hover:text-[#f08a78] transition-colors" href="#">
-                  Hỗ trợ
-                </a>
+                <div className="flex gap-6">
+                  <a className="hover:text-[#f08a78] transition-colors" href="#">
+                    Quyền riêng tư
+                  </a>
+                  <a className="hover:text-[#f08a78] transition-colors" href="#">
+                    Điều khoản
+                  </a>
+                  <a className="hover:text-[#f08a78] transition-colors" href="#">
+                    Hỗ trợ
+                  </a>
+                </div>
               </div>
-            </div>
-          </footer>
+            </footer>
+          )}
         </div>
       </div>
 

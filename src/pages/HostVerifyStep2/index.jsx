@@ -1,141 +1,153 @@
+import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+
 export default function HostVerifyStep2() {
   const navigate = useNavigate();
+  const { currentUser, userProfile } = useAuth();
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      localStorage.setItem(`host_registration_pending_${currentUser.id}`, 'true');
+    }
+  }, [currentUser]);
+
+  const name = userProfile?.name || currentUser?.name || 'Thành viên';
+  const email = currentUser?.email || 'N/A';
+  const phone = userProfile?.phoneNumber || currentUser?.phoneNumber || 'Chưa cập nhật';
+
   return (
     <>
       <div
-        className="bg-background-light dark:bg-background-dark text-[#2B2B2B] dark:text-slate-100"
+        className="bg-background-light dark:bg-background-dark text-[#2B2B2B] dark:text-slate-100 min-h-screen flex flex-col"
         style={{ paddingBottom: "calc(var(--floating-nav-h, 72px) + env(safe-area-inset-bottom))" }}
       >
-        <div className="relative flex min-h-screen flex-col overflow-x-hidden">
-          {/* Header */}
-          <header className="flex items-center justify-between border-b border-[#f08a78]/10 bg-white dark:bg-background-dark px-6 md:px-10 py-4">
-            <Link to="/home" className="flex items-center gap-4">
-              <img
-                src="/img/onlyLogo.png"
-                alt="Hands & Hour logo"
-                className="h-9 w-9 object-contain"
-              />
-              <h2 className="text-xl font-black tracking-tight">
-                <span className="text-[#c3996c]">Hands</span>{" "}
-                <span className="text-[#f08a78]">&amp;</span>{" "}
-                <span className="text-[#c3996c]">Hour</span>
-              </h2>
-            </Link>
-            <div className="flex gap-4">
-              <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-[#f08a78]/10 text-[#f08a78]">
-                <span className="material-symbols-outlined">help</span>
-              </button>
-              <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-[#f08a78]/10 text-[#f08a78]">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
-            </div>
-          </header>
-          <main className="flex-1 flex justify-center p-4 md:p-10">
-            <div className="max-w-[1200px] w-full grid grid-cols-1 lg:grid-cols-12 gap-10">
-              {/* Left Side: Form Content */}
-              <div className="lg:col-span-7 flex flex-col gap-8">
-                {/* Progress Stepper */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between items-end">
-                    <div className="flex flex-col">
-                      <span className="text-[#f08a78] font-bold text-sm uppercase tracking-wider">Bước 2 trên 2</span>
-                      <h1 className="text-3xl font-bold text-[#2B2B2B] dark:text-slate-100">Xác minh danh tính</h1>
-                    </div>
-                    <p className="text-[#f08a78] font-bold">100%</p>
-                  </div>
-                  <div className="h-2.5 w-full bg-[#f08a78]/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#f08a78] rounded-full" style={{ width: "100%" }}></div>
-                  </div>
-                </div>
-                {/* Form Section */}
-                <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-xl border border-[#f08a78]/10 shadow-sm flex flex-col gap-6">
-                  {/* ID Input */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-slate-700 dark:text-slate-300 font-medium">Số CCCD / Hộ chiếu</label>
-                    <input className="w-full px-4 py-3 rounded-lg border border-[#f08a78]/20 bg-background-light dark:bg-slate-900 focus:ring-2 focus:ring-[#f08a78] focus:border-transparent outline-none transition-all" placeholder="Nhập số định danh của bạn" type="text" />
-                  </div>
-                  {/* Photo Upload Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-slate-700 dark:text-slate-300 font-medium text-sm">Ảnh chụp mặt trước CCCD</label>
-                      <div className="border-2 border-dashed border-[#f08a78]/30 rounded-lg p-6 flex flex-col items-center justify-center bg-[#f08a78]/5 hover:bg-[#f08a78]/10 cursor-pointer transition-colors min-h-[160px]">
-                        <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-2">add_a_photo</span>
-                        <span className="text-xs text-[#d5ddc3] text-center">Tải lên hoặc kéo thả tệp tại đây</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-slate-700 dark:text-slate-300 font-medium text-sm">Ảnh chụp mặt sau CCCD</label>
-                      <div className="border-2 border-dashed border-[#f08a78]/30 rounded-lg p-6 flex flex-col items-center justify-center bg-[#f08a78]/5 hover:bg-[#f08a78]/10 cursor-pointer transition-colors min-h-[160px]">
-                        <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-2">add_a_photo</span>
-                        <span className="text-xs text-[#d5ddc3] text-center">Tải lên hoặc kéo thả tệp tại đây</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Supporting Documents */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-slate-700 dark:text-slate-300 font-medium">Chứng chỉ / Tài liệu bổ sung (không bắt buộc)</label>
-                    <div className="border-2 border-dashed border-[#f08a78]/30 rounded-lg p-8 flex flex-col items-center justify-center bg-[#f08a78]/5 hover:bg-[#f08a78]/10 cursor-pointer transition-colors">
-                      <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-2">upload_file</span>
-                      <span className="text-sm text-slate-600 dark:text-[#d5ddc3]">Tải lên chứng chỉ nghề nghiệp hoặc bằng cấp liên quan</span>
-                      <span className="text-xs text-[#d5ddc3] mt-1">Định dạng: PDF, JPG, PNG (Tối đa 5MB)</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 mt-2">
-                    <input className="mt-1 rounded border-[#f08a78]/40 text-[#f08a78] focus:ring-[#f08a78]" id="terms" type="checkbox" />
-                    <label className="text-sm text-slate-600 dark:text-[#d5ddc3] leading-relaxed" htmlFor="terms">
-                      Tôi cam đoan mọi thông tin cung cấp là chính xác và chịu hoàn toàn trách nhiệm trước pháp luật.
-                      <a className="text-[#f08a78] hover:underline" href="#">Điều khoản bảo mật thông tin.</a>
-                    </label>
-                  </div>
-                  <button className="mt-4 bg-[#f08a78] text-white font-bold py-4 rounded-xl hover:bg-[#f08a78]/90 transition-all shadow-lg shadow-[#f08a78]/20 flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined">verified_user</span>
-                    Hoàn tất xác thực
-                  </button>
-                </div>
-                <button className="text-[#d5ddc3] dark:text-[#d5ddc3] font-medium flex items-center gap-2 hover:text-[#f08a78] transition-colors">
-                  <span className="material-symbols-outlined">arrow_back</span>
-                  Quay lại bước trước
-                </button>
+        {/* Top Header */}
+        <header className="flex items-center justify-between border-b border-[#f08a78]/10 bg-white dark:bg-background-dark px-6 md:px-10 py-4 shadow-sm sticky top-0 z-50">
+          <Link to="/home" className="flex items-center gap-4">
+            <img
+              src="/img/onlyLogo.png"
+              alt="Hands & Hour logo"
+              className="h-9 w-9 object-contain"
+            />
+            <h2 className="text-xl font-black tracking-tight">
+              <span className="text-[#c3996c]">Hands</span>{" "}
+              <span className="text-[#f08a78]">&amp;</span>{" "}
+              <span className="text-[#c3996c]">Hour</span>
+            </h2>
+          </Link>
+          <div className="flex gap-4">
+            <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-[#f08a78]/10 text-[#f08a78] hover:bg-[#f08a78]/20 transition-all">
+              <span className="material-symbols-outlined">help</span>
+            </button>
+            <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-[#f08a78]/10 text-[#f08a78] hover:bg-[#f08a78]/20 transition-all">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Main Success Content */}
+        <main className="flex-1 flex justify-center items-center py-10 px-4 md:px-8">
+          <div className="max-w-[800px] w-full bg-white dark:bg-slate-800/40 border border-[#f08a78]/15 rounded-3xl p-8 md:p-12 shadow-xl shadow-[#f08a78]/5 flex flex-col items-center text-center relative overflow-hidden">
+            
+            {/* Background blobs */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-[#f08a78]/5 rounded-full blur-3xl -translate-y-12 translate-x-12 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#fbc4ae]/5 rounded-full blur-3xl translate-y-12 -translate-x-12 pointer-events-none"></div>
+
+            {/* Step indicator */}
+            <div className="flex flex-col gap-2 mb-6 w-full max-w-[200px]">
+              <div className="flex justify-between items-center text-[#f08a78] font-bold text-xs uppercase tracking-wider">
+                <span>BƯỚC 2 TRÊN 2</span>
+                <span>Hoàn tất</span>
               </div>
-              {/* Right Side: Informational Illustration */}
-              <div className="lg:col-span-5 flex flex-col justify-center">
-                <div className="bg-[#f08a78]/5 rounded-xl p-8 border border-[#f08a78]/10">
-                  <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-[#f08a78]/20 to-[#f08a78]/40 mb-8 flex items-center justify-center overflow-hidden">
-                    <img alt="Professional Workshop Host" className="w-full h-full object-cover mix-blend-overlay opacity-80" data-alt="A friendly workshop host showing a handmade ceramic piece" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArsCHjF-qNGu4GZgEL8kIej3vqe7Ls6FshNVwL19o_EN08HXVMtyfkvQzX1Mm9-Qd8NMl3mvfwQdeI_HOAkRz93cpfWKcrRLbEkpuEw35kZ6sLf8bZPSGs2ZYjnhb7zma5_UuaMhmQY7XdIR2gGk9AnIWqeV30NSgZPIMwswAA1kXO-KzFV7sXOrbq_SHiDNDb9lyIgSm24_DCBbUC18ZLCkXSKfdAgU8nG39UpSx9swCD8JEUCjZzrDQjU9gFZLRVBAAaDt0sE3Ad" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-[#2B2B2B] dark:text-slate-100 mb-4">Tại sao cần xác thực?</h3>
-                  <ul className="flex flex-col gap-4">
-                    <li className="flex gap-3">
-                      <span className="material-symbols-outlined text-[#f08a78]">check_circle</span>
-                      <p className="text-slate-600 dark:text-[#d5ddc3]"><span className="font-bold text-slate-800 dark:text-slate-200">Xây dựng lòng tin:</span> Khách hàng tin tưởng hơn vào các Host đã qua xác thực.</p>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="material-symbols-outlined text-[#f08a78]">check_circle</span>
-                      <p className="text-slate-600 dark:text-[#d5ddc3]"><span className="font-bold text-slate-800 dark:text-slate-200">Ưu tiên hiển thị:</span> Workshop của bạn sẽ được ưu tiên xuất hiện trong kết quả tìm kiếm.</p>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="material-symbols-outlined text-[#f08a78]">check_circle</span>
-                      <p className="text-slate-600 dark:text-[#d5ddc3]"><span className="font-bold text-slate-800 dark:text-slate-200">Bảo vệ cộng đồng:</span> Đảm bảo môi trường học tập an toàn cho tất cả mọi người.</p>
-                    </li>
-                  </ul>
-                  <div className="mt-8 p-4 bg-white dark:bg-slate-800 rounded-lg flex items-center gap-4">
-                    <div className="size-12 rounded-full bg-[#f08a78]/20 flex items-center justify-center text-[#f08a78]">
-                      <span className="material-symbols-outlined">support_agent</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold">Cần hỗ trợ?</span>
-                      <span className="text-xs text-[#d5ddc3]">Chúng tôi sẵn sàng giúp đỡ bạn 24/7.</span>
-                    </div>
-                  </div>
+              <div className="h-1.5 w-full bg-emerald-500 rounded-full"></div>
+            </div>
+
+            {/* Animated Check Icon */}
+            <div className="size-24 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 flex items-center justify-center mb-8 border border-emerald-150 animate-pulse" style={{ animationDuration: '3s' }}>
+              <span className="material-symbols-outlined text-6xl">verified</span>
+            </div>
+
+            {/* Main Text */}
+            <h1 className="text-3xl md:text-4xl font-black text-[#2B2B2B] dark:text-white mb-4">Đã gửi đơn đăng ký thành công!</h1>
+            <p className="text-slate-500 dark:text-[#d5ddc3] text-lg max-w-[580px] leading-relaxed mb-10">
+              Cảm ơn bạn đã đăng ký trở thành Host của Hands &amp; Hour. Hệ thống đã ghi nhận đơn đăng ký của bạn. Ban quản trị (Staff) đang tiến hành xem xét và duyệt hồ sơ.
+            </p>
+
+            {/* Information Card */}
+            <div className="w-full max-w-[500px] bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 text-left mb-10">
+              <h3 className="text-base font-bold text-slate-700 dark:text-slate-300 mb-4 pb-2 border-b border-slate-200/50 dark:border-slate-800">Thông tin đăng ký</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Họ &amp; Tên / Thương hiệu:</span>
+                  <span className="text-slate-800 dark:text-white font-bold">{name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Địa chỉ Email:</span>
+                  <span className="text-slate-800 dark:text-white font-bold">{email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Số điện thoại liên hệ:</span>
+                  <span className="text-slate-800 dark:text-white font-bold">{phone}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Trạng thái duyệt:</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200/55">
+                    <span className="size-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                    <span>Đang chờ phê duyệt</span>
+                  </span>
                 </div>
               </div>
             </div>
-          </main>
-          <footer className="p-6 text-center text-[#d5ddc3] text-sm">
-            © 2024 Hands &amp; Hour Workshop Marketplace. All rights reserved.
-          </footer>
-        </div>
+
+            {/* Process Explanation */}
+            <div className="flex flex-col gap-4 text-left max-w-[580px] mb-12">
+              <div className="flex gap-4">
+                <div className="size-8 rounded-full bg-[#f08a78]/10 text-[#f08a78] font-bold flex items-center justify-center shrink-0">1</div>
+                <div>
+                  <h4 className="font-bold text-[#2B2B2B] dark:text-white">Kiểm tra thông tin (1-2 ngày làm việc)</h4>
+                  <p className="text-xs text-[#d5ddc3] dark:text-slate-400 mt-1">Staff sẽ rà soát thông tin liên hệ và lịch sử tài khoản của bạn để đảm bảo tính an toàn cho cộng đồng.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="size-8 rounded-full bg-[#fbc4ae]/20 text-[#fbc4ae] font-bold flex items-center justify-center shrink-0">2</div>
+                <div>
+                  <h4 className="font-bold text-[#2B2B2B] dark:text-white">Nhận thông báo qua email</h4>
+                  <p className="text-xs text-[#d5ddc3] dark:text-slate-400 mt-1">Hệ thống sẽ gửi email tự động thông báo kết quả duyệt (Chấp nhận/Từ chối kèm lý do) đến hộp thư của bạn.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="size-8 rounded-full bg-[#d5ddce] text-[#6f8b6f] font-bold flex items-center justify-center shrink-0">3</div>
+                <div>
+                  <h4 className="font-bold text-[#2B2B2B] dark:text-white">Kích hoạt chế độ Host</h4>
+                  <p className="text-xs text-[#d5ddc3] dark:text-slate-400 mt-1">Ngay khi được duyệt, tài khoản của bạn sẽ tự động chuyển sang chế độ Host. Bạn có thể truy cập dashboard để tạo và đăng ký workshop mới.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+              <button 
+                onClick={() => navigate('/home')} 
+                className="px-8 py-3.5 rounded-xl border border-[#f08a78] text-[#f08a78] hover:bg-[#f08a78]/5 transition-all text-sm font-bold shadow-sm"
+              >
+                Về Trang Chủ
+              </button>
+              <button 
+                onClick={() => navigate('/user-profile')} 
+                className="px-8 py-3.5 rounded-xl bg-[#f08a78] text-white hover:bg-[#ee7a66] transition-all text-sm font-bold shadow-lg shadow-[#f08a78]/20"
+              >
+                Xem Hồ Sơ Của Tôi
+              </button>
+            </div>
+
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="py-6 text-center text-[#d5ddc3] text-xs mt-auto">
+          © 2026 Hands &amp; Hour. Tất cả các quyền được bảo lưu.
+        </footer>
       </div>
     </>
   );

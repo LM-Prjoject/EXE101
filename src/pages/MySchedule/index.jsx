@@ -170,9 +170,20 @@ export default function MySchedule() {
                 <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/community">Cộng đồng</Link>
               </div>
 
-              {currentUser?.role !== "host" && (
-                <button onClick={() => navigate("/host/verification")} className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25">
-                  <span className="truncate">Trở thành Host</span>
+              {currentUser && (
+                <button
+                  onClick={() => {
+                    if (currentUser?.role === "host") {
+                      navigate("/host/dashboard");
+                    } else {
+                      navigate("/host/verification");
+                    }
+                  }}
+                  className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"
+                >
+                  <span className="truncate">
+                    {currentUser?.role === "host" ? "Chế độ Host" : "Trở thành Host"}
+                  </span>
                 </button>
               )}
 

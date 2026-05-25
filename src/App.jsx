@@ -5,6 +5,7 @@ import StaffLayout from './components/StaffLayout';
 import AdminUserList from './pages/AdminUserList';
 import StaffWorkshopList from './pages/StaffWorkshopList';
 import StaffSystemConfig from './pages/WebsiteManagement';
+import StaffHostApprovals from './pages/StaffHostApprovals';
 
 // ── Pages ─────────────────────────────────────────────────────────────────
 import LoginPage from './pages/LoginPage';
@@ -35,7 +36,7 @@ import HostVerifyStep2 from './pages/HostVerifyStep2';
 function RootRedirect() {
   const { currentUser } = useAuth();
   if (!currentUser) return <Navigate to="/login" replace />;
-  if (currentUser.role === 'host') return <Navigate to="/host/dashboard" replace />;
+  if (currentUser.role === 'host') return <Navigate to="/home" replace />;
   if (currentUser.role === 'staff' || currentUser.role === 'admin') return <Navigate to="/staff" replace />;
   return <Navigate to="/home" replace />;
 }
@@ -96,6 +97,7 @@ export default function App() {
           <Route element={<StaffLayout />}>
             <Route path="/staff/users" element={<AdminUserList />} />
             <Route path="/staff" element={<Navigate to="/staff/users" replace />} />
+            <Route path="/staff/hosts" element={<StaffHostApprovals />} />
             <Route path="/staff/workshops" element={<StaffWorkshopList />} />
             <Route path="/staff/bookings" element={<div className="p-6 text-slate-800"><h1 className="text-2xl font-bold mb-4 text-[#3b82f6]">Quản lý Đặt chỗ</h1><p>Tính năng đang phát triển...</p></div>} />
             <Route path="/staff/settings" element={<StaffSystemConfig />} />
