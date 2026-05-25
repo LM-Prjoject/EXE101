@@ -5,6 +5,7 @@ import { createWorkshop } from "../../api";
 
 import HostSidebar from "../../components/HostSidebar";
 import useHostWorkshops from "../../hooks/useHostWorkshops";
+import HostHeader from "../../components/HostHeader";
 
 import {
   getWorkshopId,
@@ -84,46 +85,7 @@ export default function HostMyWorkshops() {
         <HostSidebar />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between shrink-0 relative px-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold">Workshop của tôi</h2>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative w-64">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
-                  search
-                </span>
-
-                <input
-                  className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/50"
-                  placeholder="Tìm kiếm xưởng..."
-                  type="text"
-                />
-              </div>
-
-              <button
-                className="size-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 relative"
-                type="button"
-              >
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-white dark:border-slate-900" />
-              </button>
-
-              <div className="relative">
-                <button
-                  className="size-10 rounded-full overflow-hidden border-2 border-primary ring-2 ring-primary/20"
-                  type="button"
-                >
-                  <img
-                    alt="User Avatar"
-                    className="w-full h-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN1uQVuNYWmUtaHwOCiw8twtNwMEhPO2KqzieFPVMROKhwH_n3Kv-2GCEvxcgEisn5kykdQt8EsXEcc3vhB8IbDPetSjdAEUqkxAznHNcGX13fCgjCsVcvNo-P2u9l6Rw-a7z-B8BTw3-HQak9KWVKOEysFsRZ9abi6MzQvFUsuBVe3P8T8bCD7NQAMnF81iRUJuEGljppJj2V-ut_H2iBgDHDPpYb_qALsQMWSas5oi6CgfFzh-OwKYgzIB6IakISK3JfYu3fJlnW"
-                  />
-                </button>
-              </div>
-            </div>
-          </header>
+          <HostHeader title="Workshop của tôi" />
 
           <main className="flex-1 overflow-y-auto p-8 space-y-8">
             <div className="flex items-center border-b border-slate-200 dark:border-slate-800 gap-8">
@@ -131,10 +93,11 @@ export default function HostMyWorkshops() {
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value)}
-                  className={`pb-4 text-sm ${statusFilter === tab.value
+                  className={`pb-4 text-sm ${
+                    statusFilter === tab.value
                       ? "font-bold border-b-2 border-primary text-primary"
                       : "font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                    }`}
+                  }`}
                   type="button"
                 >
                   {tab.label} ({loading ? "..." : counts[tab.countKey]})
@@ -245,9 +208,9 @@ export default function HostMyWorkshops() {
 
                   const priceText =
                     priceLower !== null &&
-                      priceUpper !== null &&
-                      priceLower > 0 &&
-                      priceUpper > 0
+                    priceUpper !== null &&
+                    priceLower > 0 &&
+                    priceUpper > 0
                       ? priceLower === priceUpper
                         ? `${priceLower.toLocaleString("vi-VN")}đ`
                         : `${priceLower.toLocaleString("vi-VN")}đ - ${priceUpper.toLocaleString("vi-VN")}đ`

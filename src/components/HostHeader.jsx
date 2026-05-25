@@ -1,15 +1,29 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function HostHeader({ title, children }) {
+export default function HostHeader({ title, children, profileOverride }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userProfile, logout } = useAuth();
+  const profile = profileOverride || userProfile || currentUser;
+
   const displayName =
-    currentUser?.name || currentUser?.email?.split("@")[0] || "Host";
+    profile?.name ||
+    currentUser?.name ||
+    currentUser?.email?.split("@")[0] ||
+    "host";
+
+  const displayEmail = profile?.email || currentUser?.email || "host";
+
+  const avatarUrl =
+    profile?.avatarLink ||
+    profile?.avatarUrl ||
+    currentUser?.avatarLink ||
+    currentUser?.avatarUrl ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=6f8b6f&color=fff`;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -43,6 +57,11 @@ export default function HostHeader({ title, children }) {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
+  const handleViewProfile = () => {
+    setIsMenuOpen(false);
+    navigate("/user-profile");
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -54,7 +73,6 @@ export default function HostHeader({ title, children }) {
         <h2 className="text-lg font-bold">{title}</h2>
       </div>
       <div className="flex items-center gap-4">
-        {/* Render optional extra buttons like "Xuất dữ liệu" */}
         {children}
 
         <div className="relative hidden sm:block">
@@ -74,54 +92,43 @@ export default function HostHeader({ title, children }) {
           <span className="material-symbols-outlined">settings</span>
         </button>
 
-        {/* Avatar Menu */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsMenuOpen((prev) => !prev);
             }}
-            className="size-10 rounded-full overflow-hidden border-2 border-primary focus:outline-none"
+            className="size-10 rounded-full overflow-hidden border-2 border-primary focus:outline-none bg-center bg-cover"
             aria-label={displayName}
             data-alt={`${displayName} avatar menu toggle`}
             style={{
-              backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuCwB4tz0ieppXFnrIVev9IpSWGz-dGSCDN1AYoJKvKxNJoN0z1y0m278AA465wXZAsPBGWk-vwe4xFsBvXxnGMcsYt1hGoandOA0HxSoCsE989bhNiHT_dEXERtCTtEmWnHU_hMKamqRlT8z_nXat__RHmgcp--D2p7a4FdPA7Fe79GKwN11ALE0qM0pTpVEY4mTCAcEZw1OYzYbvzDu0KziFP7GR8GyEAJpjKLghoiRcKsMXuti2VaOrpLJh6FfStocb660SMiTl93")`,
-              backgroundSize: "cover",
+              backgroundImage: `url("${avatarUrl}")`,
             }}
           ></button>
 
-          {/* Popover Menu - conditionally rendered based on isMenuOpen */}
           {isMenuOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-fade-in-up">
+            <div className="absolute right-0 top-12 w-30 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-[9999] animate-fade-in-up">
               <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-700">
                 <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                   {displayName}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {currentUser?.email || "Host"}
+                  {displayEmail}
                 </p>
               </div>
-              <Link
-                className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700"
-                to="/host/dashboard"
-                onClick={() => setIsMenuOpen(false)}
+
+              <button
+                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 text-left"
+                onClick={handleViewProfile}
               >
                 <span className="material-symbols-outlined text-slate-500 text-xl">
-                  dashboard
+                  person
                 </span>
-                <span className="text-sm font-medium">Bảng điều khiển</span>
-              </Link>
-              <Link
-                className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700"
-                to="/host/workshops"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="material-symbols-outlined text-slate-500 text-xl">
-                  handyman
-                </span>
-                <span className="text-sm font-medium">Workshop của tôi</span>
-              </Link>
+                <span className="text-sm font-medium">Xem hồ sơ</span>
+              </button>
+
               <div className="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
+
               <button
                 className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 text-red-500 text-left"
                 onClick={handleLogout}
