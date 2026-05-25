@@ -36,36 +36,34 @@ export default function FloatingNav() {
 
   const navRef = useRef(null);
 
-  const isHost = !!currentUser && currentUser.role === "host";
-  const isStaff =
-    !!currentUser &&
-    (currentUser.role === "staff" || currentUser.role === "admin");
+  const isHostRoute = location.pathname.startsWith("/host");
+  const isStaffRoute = location.pathname.startsWith("/staff");
 
   const shouldHide =
     AUTH_PAGES.includes(location.pathname) ||
     !currentUser ||
-    isHost ||
-    isStaff ||
-    location.pathname.startsWith("/host") ||
-    location.pathname.startsWith("/staff");
+    isHostRoute ||
+    isStaffRoute;
+
   const displayName =
     currentUser?.name ||
     currentUser?.email?.split("@")[0] ||
-    (isHost ? "Host" : isStaff ? "Staff" : "User");
+    (currentUser?.role === "host" ? "Host" : (currentUser?.role === "staff" || currentUser?.role === "admin") ? "Staff" : "User");
+
   const links = useMemo(() => {
-    if (isHost) return hostLinks;
-    if (isStaff) return staffLinks;
+    if (isHostRoute) return hostLinks;
+    if (isStaffRoute) return staffLinks;
     return userLinks;
-  }, [isHost, isStaff]);
+  }, [isHostRoute, isStaffRoute]);
 
   // ✅ BRAND COLORS
-  const accentColor = isHost ? "#6F8B6F" : isStaff ? "#3b82f6" : "#F08A78";
-  const supportColor = isHost ? "#D5DDCE" : isStaff ? "#dbeafe" : "#FBC4AE";
+  const accentColor = isHostRoute ? "#6F8B6F" : isStaffRoute ? "#3b82f6" : "#F08A78";
+  const supportColor = isHostRoute ? "#D5DDCE" : isStaffRoute ? "#dbeafe" : "#FBC4AE";
   const bgColor = "#F6F2E9";
   const textMuted = "rgba(195,153,108,0.78)";
-  const dividerColor = isHost
+  const dividerColor = isHostRoute
     ? "rgba(111,139,111,0.25)"
-    : isStaff
+    : isStaffRoute
       ? "rgba(59, 130, 246, 0.25)"
       : "rgba(240,138,120,0.25)";
 
@@ -120,7 +118,7 @@ export default function FloatingNav() {
         background: "rgba(246,242,233,0.92)",
         backdropFilter: "blur(12px)",
         borderTop: `2px solid ${dividerColor}`,
-        boxShadow: isHost
+        boxShadow: isHostRoute
           ? "0 -6px 28px rgba(111,139,111,0.18)"
           : "0 -6px 28px rgba(240,138,120,0.22)",
         display: "flex",
