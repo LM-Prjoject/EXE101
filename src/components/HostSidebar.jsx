@@ -124,6 +124,27 @@ export default function HostSidebar({ onNavigateRequest }) {
         </Link>
 
         <Link
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${path === "/host/participants"
+            ? "bg-primary/10 text-primary font-bold"
+            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+            }`}
+          to="/host/participants"
+          onClick={(event) => handleNavigate(event, "/host/participants")}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={
+              path === "/host/participants"
+                ? { fontVariationSettings: `'FILL' 1` }
+                : {}
+            }
+          >
+            group
+          </span>
+          <span>Quản lí ticket</span>
+        </Link>
+
+        <Link
           className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${path === "/host/income"
             ? "bg-primary/10 text-primary font-bold"
             : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"

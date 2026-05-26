@@ -74,3 +74,135 @@ export async function updateHostRegistration({ hostId, approved, note }) {
 
   return body;
 }
+
+/**
+ * Gets reviews for all workshops managed by the current Host.
+ * Calls GET /api/Community/reviews
+ */
+export async function getHostReviews(page = 1, pageSize = 10) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/Community/reviews?${params}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+/**
+ * Posts host response to a review.
+ * Calls POST /api/Community/reviews/{reviewId}/respond
+ */
+export async function respondToReview(reviewId, responseText) {
+  const response = await fetchWithFallback(`/api/Community/reviews/${reviewId}/respond`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      response: responseText,
+    }),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+/**
+ * Gets sold tickets belonging to the current Host's workshops.
+ * Calls GET /api/Workshop/tickets
+ */
+export async function getHostTickets(page = 1, pageSize = 10) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/Workshop/tickets?${params}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+/**
+ * Gets participants for a specific ticket type.
+ * Calls GET /api/Workshop/tickets/{ticketId}/participants
+ */
+export async function getTicketParticipants(ticketId, page = 1, pageSize = 10) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/Workshop/tickets/${ticketId}/participants?${params}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+/**
+ * Checks in a student for a workshop slot.
+ * Calls POST /api/Workshop/tickets/checkin
+ */
+export async function checkInParticipant(ticketId, participantId) {
+  const params = new URLSearchParams({
+    ticketId: ticketId.toString(),
+    TicketId: ticketId.toString(),
+    participantId: participantId.toString(),
+    ParticipantId: participantId.toString(),
+    userId: participantId.toString(),
+    UserId: participantId.toString(),
+    studentId: participantId.toString(),
+    StudentId: participantId.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/Workshop/tickets/checkin?${params}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      ticketId: Number(ticketId),
+      TicketId: Number(ticketId),
+      participantId: participantId,
+      ParticipantId: participantId,
+      userId: participantId,
+      UserId: participantId,
+      studentId: participantId,
+      StudentId: participantId,
+    }),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+
