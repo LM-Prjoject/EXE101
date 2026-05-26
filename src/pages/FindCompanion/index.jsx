@@ -952,6 +952,23 @@ export default function FindCompanion() {
                                   {comment}
                                 </p>
                               )}
+
+                              {(review.response ?? review.Response) && (
+                                <div 
+                                  className="mt-3 p-3 rounded-lg border-l-4 text-xs sm:text-sm italic"
+                                  style={{
+                                    background: `${BRAND.soft}11`,
+                                    borderColor: BRAND.primary,
+                                    color: "#475569",
+                                  }}
+                                >
+                                  <div className="flex items-center gap-1.5 mb-1 text-[11px] font-black tracking-wider uppercase" style={{ color: BRAND.primary }}>
+                                    <span className="material-symbols-outlined text-sm">reply</span>
+                                    Phản hồi từ Host
+                                  </div>
+                                  <p>{review.response ?? review.Response}</p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

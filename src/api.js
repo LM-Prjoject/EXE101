@@ -1,4 +1,4 @@
-const PRIMARY_BASE = import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party';
+const PRIMARY_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party');
 
 async function fetchWithFallback(path, options = {}) {
   const url = `${PRIMARY_BASE}${path}`;
@@ -281,6 +281,23 @@ export async function confirmOtp(email, otp) {
 
   const response = await fetchWithFallback(`/api/auth/confirm?${params}`, {
     method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function createWithdrawRequest({ amount, bankName, bankAccount }) {
+  const response = await fetchWithFallback('/api/revenue/requests', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount, bankName, bankAccount }),
   });
 
   const body = await parseJsonResponse(response);

@@ -14,7 +14,7 @@ const hostLinks = [
   { to: "/host/dashboard", label: "Dashboard", icon: "dashboard" },
   { to: "/host/workshops", label: "Workshop", icon: "menu_book" },
   { to: "/host/schedule", label: "Lịch", icon: "calendar_today" },
-  { to: "/host/participants", label: "Học viên", icon: "group" },
+  { to: "/host/participants", label: "Quản lí ticket", icon: "group" },
   { to: "/host/income", label: "Thu nhập", icon: "payments" },
 ];
 
@@ -32,7 +32,7 @@ function setNavHeightVar(px) {
 export default function FloatingNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userProfile, logout } = useAuth();
 
   const navRef = useRef(null);
 
@@ -145,7 +145,7 @@ export default function FloatingNav() {
       >
         <img
           src={
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"
+            userProfile?.avatarLink || userProfile?.avatar || userProfile?.avatarUrl || currentUser?.avatarLink || currentUser?.avatar || currentUser?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"
           }
           alt={displayName}
           style={{

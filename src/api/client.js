@@ -1,4 +1,4 @@
-const PRIMARY_BASE = import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party';
+const PRIMARY_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party');
 
 // Thực hiện gọi API trực tiếp đến server chính với tùy chọn đính kèm Authorization header tự động
 async function fetchWithFallback(path, options = {}) {
@@ -34,6 +34,10 @@ function buildError(response, body) {
   if (typeof body === 'string') return new Error(body);
   if (body.message) return new Error(body.message);
   if (body.error) return new Error(body.error);
+  if (typeof body === 'object') {
+    const msg = body.title || body.detail || body.message || body.error || JSON.stringify(body);
+    return new Error(msg);
+  }
   return new Error(defaultMessage);
 }
 
