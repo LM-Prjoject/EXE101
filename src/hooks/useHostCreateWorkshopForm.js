@@ -9,6 +9,15 @@ import {
   normalizeTime,
 } from "../utils/workshopFormatters";
 
+function getUploadedImageUrl(response) {
+  const url = response?.url || "";
+
+  return url.replace(
+    "http://exe.kakgonbri.party",
+    "https://exe.kakgonbri.party"
+  );
+}
+
 export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
   const fileInputRef = useRef(null);
 
@@ -133,27 +142,30 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
       setSubmitting(true);
 
       if (files.length > 0) {
-        const uploaded = [];
+        const uploadedUrls = [];
 
         for (let i = 0; i < files.length && i < 5; i++) {
           const file = files[i];
           const response = await uploadImage(file);
-          uploaded.push(response);
+
+          const imageUrl = getUploadedImageUrl(response);
+
+          if (imageUrl) {
+            uploadedUrls.push(imageUrl);
+          }
         }
 
-        if (uploaded.length > 0) {
-          thumbnailLink = uploaded[0].url;
+        if (uploadedUrls.length > 0) {
+          thumbnailLink = uploadedUrls[0];
+        } else {
+          setError("Upload ảnh thất bại hoặc API không trả về link ảnh.");
+          return;
         }
       } else if (editingWorkshop && !imageTouched) {
         thumbnailLink = keepValue(existingThumbnail, oldValues.thumbnailLink);
       }
-
       const finalTitle = keepValue(title.trim(), oldValues.title, "");
-      const finalDescription = keepValue(
-        description.trim(),
-        oldValues.description,
-        "",
-      );
+      const finalDescription = keepValue(description.trim(),oldValues.description,"",);
       const finalLocation = keepValue(location.trim(), oldValues.location, "");
       const finalCategoryId = Number(
         keepValue(categoryId, oldValues.categoryId, 0),
@@ -201,6 +213,7 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
         categoryId: finalCategoryId,
         levelId: finalLevelId,
         thumbnailLink,
+        imageLinks: thumbnailLink ? [thumbnailLink] : [],
         language: oldValues.language ?? "vi",
         status: "pending",
         schedules: [
@@ -230,6 +243,7 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
           Description: payload.description,
           Location: payload.location,
           ThumbnailLink: payload.thumbnailLink,
+          ImageLinks: payload.imageLinks,
           CategoryId: payload.categoryId,
           LevelId: payload.levelId,
           Language: payload.language,
