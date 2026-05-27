@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, Link, useParams } from "react-router-dom";
-import { getWorkshopById, getWorkshopReviews, getScheduleDetails } from "../../api/workshop";
+import {
+  getWorkshopById,
+  getWorkshopReviews,
+  getScheduleDetails,
+} from "../../api/workshop";
 import { proceedPayment } from "../../api/payment";
 import { useAuth } from "../../context/AuthContext";
 
@@ -57,10 +61,21 @@ function formatTimeOnly(timeStr) {
   return timeStr;
 }
 
+function getNumberValue(...values) {
+  for (const value of values) {
+    if (value !== undefined && value !== null && value !== "") {
+      const number = Number(value);
+      if (!Number.isNaN(number)) return number;
+    }
+  }
+
+  return null;
+}
+
 function isPastSchedule(startOnStr) {
   if (!startOnStr) return false;
   const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   return startOnStr < todayStr;
 }
 
@@ -68,12 +83,12 @@ function isPastSlot(dateStr, timeStr) {
   if (!dateStr) return false;
   if (!timeStr) {
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     return dateStr < todayStr;
   }
   let formattedTime = timeStr;
-  if (formattedTime.split(':').length === 2) {
-    formattedTime += ':00';
+  if (formattedTime.split(":").length === 2) {
+    formattedTime += ":00";
   }
   try {
     const slotDate = new Date(`${dateStr}T${formattedTime}`);
@@ -84,7 +99,6 @@ function isPastSlot(dateStr, timeStr) {
     return false;
   }
 }
-
 
 export default function FindCompanion() {
   const navigate = useNavigate();
@@ -171,8 +185,12 @@ export default function FindCompanion() {
       try {
         const data = await getWorkshopReviews(workshopId, 1, PAGE_SIZE);
         if (!ignore) {
-          const items = Array.isArray(data) ? data : (data?.items ?? data?.reviews ?? data?.data ?? []);
-          const total = Array.isArray(data) ? items.length : (data?.totalCount ?? data?.total ?? items.length);
+          const items = Array.isArray(data)
+            ? data
+            : (data?.items ?? data?.reviews ?? data?.data ?? []);
+          const total = Array.isArray(data)
+            ? items.length
+            : (data?.totalCount ?? data?.total ?? items.length);
           setReviews(items);
           setReviewsTotal(total);
           setReviewsPage(1);
@@ -184,7 +202,9 @@ export default function FindCompanion() {
       }
     }
     loadReviews();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [workshopId]);
 
   async function loadMoreReviews() {
@@ -192,8 +212,12 @@ export default function FindCompanion() {
     setReviewsLoadingMore(true);
     try {
       const data = await getWorkshopReviews(workshopId, nextPage, PAGE_SIZE);
-      const items = Array.isArray(data) ? data : (data?.items ?? data?.reviews ?? data?.data ?? []);
-      const total = Array.isArray(data) ? items.length + reviews.length : (data?.totalCount ?? data?.total ?? reviewsTotal);
+      const items = Array.isArray(data)
+        ? data
+        : (data?.items ?? data?.reviews ?? data?.data ?? []);
+      const total = Array.isArray(data)
+        ? items.length + reviews.length
+        : (data?.totalCount ?? data?.total ?? reviewsTotal);
       setReviews((prev) => [...prev, ...items]);
       setReviewsTotal(total);
       setReviewsPage(nextPage);
@@ -208,8 +232,8 @@ export default function FindCompanion() {
   useEffect(() => {
     if (workshop?.schedules?.length > 0) {
       const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const firstFuture = workshop.schedules.find(s => s.startOn >= todayStr);
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      const firstFuture = workshop.schedules.find((s) => s.startOn >= todayStr);
       if (firstFuture) {
         setSelectedScheduleId(firstFuture.id);
       } else {
@@ -229,14 +253,18 @@ export default function FindCompanion() {
         if (!ignore) {
           const ticketList = data?.tickets ?? [];
           setTickets(ticketList);
-          
-          const scheduleObj = workshop?.schedules?.find(s => s.id.toString() === selectedScheduleId.toString());
-          const firstAvailableTicket = ticketList.find(t => {
-            const isTicketPast = scheduleObj ? isPastSlot(scheduleObj.startOn, t.startTime) : false;
+
+          const scheduleObj = workshop?.schedules?.find(
+            (s) => s.id.toString() === selectedScheduleId.toString(),
+          );
+          const firstAvailableTicket = ticketList.find((t) => {
+            const isTicketPast = scheduleObj
+              ? isPastSlot(scheduleObj.startOn, t.startTime)
+              : false;
             const isSoldOut = t.remainingTickets <= 0;
             return !isTicketPast && !isSoldOut;
           });
-          
+
           if (firstAvailableTicket) {
             setSelectedTicketId(firstAvailableTicket.id);
           } else if (ticketList.length > 0) {
@@ -252,7 +280,9 @@ export default function FindCompanion() {
       }
     }
     fetchTickets();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [selectedScheduleId, workshop]);
 
   const handleProceedPayment = () => {
@@ -271,41 +301,68 @@ export default function FindCompanion() {
       state: {
         ticketId: selectedTicketId,
         scheduleId: selectedScheduleId,
-        workshopId: Number(workshopId)
-      }
+        workshopId: Number(workshopId),
+      },
     });
   };
 
   const detail = useMemo(() => {
     const firstSchedule = workshop?.schedules?.[0] || {};
-    const priceLower = workshop?.priceLower ?? firstSchedule.priceLower ?? workshop?.price;
-    const priceUpper = workshop?.priceUpper ?? firstSchedule.priceUpper ?? priceLower;
+    const priceLower =
+      workshop?.priceLower ?? firstSchedule.priceLower ?? workshop?.price;
+    const priceUpper =
+      workshop?.priceUpper ?? firstSchedule.priceUpper ?? priceLower;
     const thumbnail = workshop?.thumbnailLink || "/img/onlyLogo.png";
+
+    const rawImages = [
+      workshop?.thumbnailLink,
+      ...(workshop?.imageLinks ?? []),
+      ...(workshop?.workshopImages?.map((img) => img.imgLink ?? img.ImgLink) ??
+        []),
+    ];
+
+    const galleryImages = rawImages
+      .filter(Boolean)
+      .map((img) => img.trim())
+      .filter((img, index, arr) => arr.indexOf(img) === index)
+      .slice(0, 5);
+
+    const finalGalleryImages =
+      galleryImages.length > 0 ? galleryImages : [thumbnail];
 
     return {
       title: workshop?.title || "Workshop",
-      thumbnail,
-      galleryImages: [thumbnail],
-      description: workshop?.description || "Thông tin workshop đang được cập nhật.",
+      thumbnail: finalGalleryImages[0],
+      galleryImages: finalGalleryImages,
+      description:
+        workshop?.description || "Thông tin workshop đang được cập nhật.",
       language: formatLanguage(workshop?.language),
       location: workshop?.location || "Đang cập nhật",
       category: workshop?.category || "Workshop",
-      instructorName: workshop?.instructorName || "Người hướng dẫn",
       duration: formatDuration(workshop?.duration),
       level: workshop?.level || "Đang cập nhật",
       rating: workshop?.rating ?? 0,
       reviewCount: workshop?.reviewCount ?? 0,
       priceText:
-        priceLower != null && priceUpper != null && Number(priceLower) !== Number(priceUpper)
+        priceLower != null &&
+        priceUpper != null &&
+        Number(priceLower) !== Number(priceUpper)
           ? `${formatCurrency(priceLower)} - ${formatCurrency(priceUpper)}`
           : formatCurrency(priceLower),
       schedules: workshop?.schedules || [],
-      remainingTickets: firstSchedule.remainingTickets,
+      remainingTickets: getNumberValue(
+        workshop?.remainingTickets,
+        workshop?.RemainingTickets,
+        firstSchedule.remainingTickets,
+        firstSchedule.RemainingTickets,
+      ),
     };
   }, [workshop]);
 
   const activeSchedule = useMemo(() => {
-    return workshop?.schedules?.find(s => s.id.toString() === selectedScheduleId.toString());
+    return workshop?.schedules?.find(
+      (s) => s.id.toString() === selectedScheduleId.toString(),
+    );
   }, [workshop, selectedScheduleId]);
 
   const isPast = useMemo(() => {
@@ -313,17 +370,52 @@ export default function FindCompanion() {
   }, [activeSchedule]);
 
   const activeTicket = useMemo(() => {
-    return tickets.find(t => t.id === selectedTicketId);
+    return tickets.find((t) => t.id === selectedTicketId);
   }, [tickets, selectedTicketId]);
 
+  const activeRemainingTickets = useMemo(() => {
+    if (activeTicket) {
+      return getNumberValue(
+        activeTicket.remainingTickets,
+        activeTicket.RemainingTickets,
+      );
+    }
+
+    if (tickets.length > 0) {
+      return tickets.reduce((total, ticket) => {
+        const value = getNumberValue(
+          ticket.remainingTickets,
+          ticket.RemainingTickets,
+        );
+
+        return total + (value ?? 0);
+      }, 0);
+    }
+
+    return getNumberValue(
+      activeSchedule?.remainingTickets,
+      activeSchedule?.RemainingTickets,
+      workshop?.remainingTickets,
+      workshop?.RemainingTickets,
+    );
+  }, [activeTicket, tickets, activeSchedule, workshop]);
+
   const isActiveTicketPast = useMemo(() => {
-    return activeSchedule && activeTicket ? isPastSlot(activeSchedule.startOn, activeTicket.startTime) : isPast;
+    return activeSchedule && activeTicket
+      ? isPastSlot(activeSchedule.startOn, activeTicket.startTime)
+      : isPast;
   }, [activeSchedule, activeTicket, isPast]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-display" style={{ background: BRAND.lightBg }}>
-        <div className="rounded-2xl border bg-white px-6 py-5 text-sm font-semibold" style={{ borderColor: `${BRAND.soft}99`, color: "#475569" }}>
+      <div
+        className="min-h-screen flex items-center justify-center font-display"
+        style={{ background: BRAND.lightBg }}
+      >
+        <div
+          className="rounded-2xl border bg-white px-6 py-5 text-sm font-semibold"
+          style={{ borderColor: `${BRAND.soft}99`, color: "#475569" }}
+        >
           Đang tải thông tin workshop...
         </div>
       </div>
@@ -332,10 +424,25 @@ export default function FindCompanion() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-display px-4" style={{ background: BRAND.lightBg }}>
-        <div className="max-w-md rounded-2xl border bg-white p-6 text-center" style={{ borderColor: `${BRAND.soft}99` }}>
-          <p className="mb-4 text-sm font-semibold" style={{ color: "#b91c1c" }}>{error}</p>
-          <button className="rounded-xl px-5 py-2 text-sm font-black text-white" style={{ background: BRAND.accent }} onClick={() => navigate("/home")}>
+      <div
+        className="min-h-screen flex items-center justify-center font-display px-4"
+        style={{ background: BRAND.lightBg }}
+      >
+        <div
+          className="max-w-md rounded-2xl border bg-white p-6 text-center"
+          style={{ borderColor: `${BRAND.soft}99` }}
+        >
+          <p
+            className="mb-4 text-sm font-semibold"
+            style={{ color: "#b91c1c" }}
+          >
+            {error}
+          </p>
+          <button
+            className="rounded-xl px-5 py-2 text-sm font-black text-white"
+            style={{ background: BRAND.accent }}
+            onClick={() => navigate("/home")}
+          >
             Về trang chủ
           </button>
         </div>
@@ -447,8 +554,17 @@ export default function FindCompanion() {
                 style={{ borderColor: `${BRAND.soft}99` }}
               >
                 {currentUser ? (
-                  <div className="text-sm font-semibold" style={{ color: "#334155" }}>
-                    Xin chào, <span className="font-black" style={{ color: BRAND.primary }}>{currentUser.name || currentUser.email?.split('@')[0]}</span>
+                  <div
+                    className="text-sm font-semibold"
+                    style={{ color: "#334155" }}
+                  >
+                    Xin chào,{" "}
+                    <span
+                      className="font-black"
+                      style={{ color: BRAND.primary }}
+                    >
+                      {currentUser.name || currentUser.email?.split("@")[0]}
+                    </span>
                   </div>
                 ) : (
                   <>
@@ -484,7 +600,9 @@ export default function FindCompanion() {
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.filter = "brightness(0.96)")
                       }
-                      onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.filter = "none")
+                      }
                     >
                       Đăng ký
                     </Link>
@@ -620,16 +738,15 @@ export default function FindCompanion() {
             </div>
           </div>
 
-          {/* Gallery Grid */}
-          <div
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[500px] mb-12 rounded-2xl overflow-hidden border"
-            style={{ borderColor: `${BRAND.soft}66` }}
-          >
-            <div className="md:col-span-2 md:row-span-2 relative group cursor-pointer">
+          {detail.galleryImages.length === 1 ? (
+            <div
+              className="h-[800px] mb-12 rounded-2xl overflow-hidden border relative group cursor-pointer"
+              style={{ borderColor: `${BRAND.soft}66` }}
+            >
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                 style={{
-                  backgroundImage: `url('${detail.thumbnail}')`,
+                  backgroundImage: `url('${detail.galleryImages[0]}')`,
                 }}
               />
               <div
@@ -637,29 +754,55 @@ export default function FindCompanion() {
                 style={{ background: "rgba(240,138,120,0.06)" }}
               />
             </div>
-
-            {[0, 1, 2, 3].map((_, idx) => (
-              <div
-                key={idx}
-                className="md:col-span-1 relative group cursor-pointer"
-              >
+          ) : (
+            <div
+              className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[500px] mb-12 rounded-2xl overflow-hidden border"
+              style={{ borderColor: `${BRAND.soft}66` }}
+            >
+              <div className="md:col-span-2 md:row-span-2 relative group cursor-pointer">
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: `url('${detail.galleryImages[idx] || detail.thumbnail}')` }}
+                  style={{
+                    backgroundImage: `url('${detail.galleryImages[0]}')`,
+                  }}
                 />
-                {idx === 3 && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="text-white font-black text-lg flex items-center gap-2">
-                      <span className="material-symbols-outlined">
-                        grid_view
-                      </span>{" "}
-                      Xem tất cả ảnh
-                    </span>
-                  </div>
-                )}
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "rgba(240,138,120,0.06)" }}
+                />
               </div>
-            ))}
-          </div>
+
+              {detail.galleryImages.slice(1, 5).map((img, idx) => {
+                const isLastVisible =
+                  idx === 3 && detail.galleryImages.length >= 5;
+
+                return (
+                  <div
+                    key={img + idx}
+                    className="md:col-span-1 relative group cursor-pointer"
+                  >
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                      style={{
+                        backgroundImage: `url('${img}')`,
+                      }}
+                    />
+
+                    {isLastVisible && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="text-white font-black text-lg flex items-center gap-2">
+                          <span className="material-symbols-outlined">
+                            grid_view
+                          </span>
+                          Xem tất cả ảnh
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           <div className="grid lg:grid-cols-3 gap-8 lg:gap-12 relative">
             {/* Left Column: Details */}
@@ -690,9 +833,6 @@ export default function FindCompanion() {
                   style={{ color: "#475569" }}
                 >
                   <p className="mb-4">{detail.description}</p>
-                  <p>
-                    Workshop được hướng dẫn bởi {detail.instructorName}. Thông tin lịch học, giá vé và số chỗ còn lại được cập nhật trực tiếp từ hệ thống.
-                  </p>
                 </div>
 
                 <div
@@ -700,7 +840,11 @@ export default function FindCompanion() {
                   style={{ borderColor: `${BRAND.soft}66` }}
                 >
                   {[
-                    { label: "Thời lượng", icon: "schedule", value: detail.duration },
+                    {
+                      label: "Thời lượng",
+                      icon: "schedule",
+                      value: detail.duration,
+                    },
                     { label: "Cấp độ", icon: "stairs", value: detail.level },
                     {
                       label: "Ngôn ngữ",
@@ -710,7 +854,10 @@ export default function FindCompanion() {
                     {
                       label: "Còn trống",
                       icon: "groups",
-                      value: detail.remainingTickets != null ? `${detail.remainingTickets} chỗ` : "Đang cập nhật",
+                      value:
+                        activeRemainingTickets !== null
+                          ? `${activeRemainingTickets} chỗ`
+                          : "Đang cập nhật",
                     },
                   ].map((it) => (
                     <div key={it.label} className="flex flex-col gap-1">
@@ -824,20 +971,30 @@ export default function FindCompanion() {
                         color: "rgb(195, 153, 108)",
                       }}
                     >
-                      <span className="material-symbols-outlined text-xl">reviews</span>
+                      <span className="material-symbols-outlined text-xl">
+                        reviews
+                      </span>
                     </span>
                     Đánh giá
                   </h2>
                   {reviewsTotal > 0 && (
-                    <span className="text-sm font-semibold" style={{ color: "#94a3b8" }}>
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: "#94a3b8" }}
+                    >
                       {reviewsTotal} đánh giá
                     </span>
                   )}
                 </div>
 
                 {reviewsLoading ? (
-                  <div className="flex items-center justify-center py-10" style={{ color: "#94a3b8" }}>
-                    <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+                  <div
+                    className="flex items-center justify-center py-10"
+                    style={{ color: "#94a3b8" }}
+                  >
+                    <span className="material-symbols-outlined animate-spin mr-2">
+                      progress_activity
+                    </span>
                     Đang tải đánh giá...
                   </div>
                 ) : reviews.length === 0 ? (
@@ -848,14 +1005,18 @@ export default function FindCompanion() {
                     >
                       rate_review
                     </span>
-                    <p className="text-sm font-semibold" style={{ color: "#94a3b8" }}>
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: "#94a3b8" }}
+                    >
                       Chưa có đánh giá nào cho workshop này.
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {reviews.map((review, idx) => {
-                      const rating = review.rating ?? review.star ?? review.stars ?? 0;
+                      const rating =
+                        review.rating ?? review.star ?? review.stars ?? 0;
                       const fullStars = Math.round(rating);
                       const name =
                         review.userName ??
@@ -876,7 +1037,10 @@ export default function FindCompanion() {
                         review.text ??
                         "";
                       const createdAt =
-                        review.createdAt ?? review.reviewDate ?? review.date ?? null;
+                        review.createdAt ??
+                        review.reviewDate ??
+                        review.date ??
+                        null;
 
                       return (
                         <div
@@ -910,11 +1074,17 @@ export default function FindCompanion() {
 
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-black" style={{ color: "#0f172a" }}>
+                                <span
+                                  className="font-black"
+                                  style={{ color: "#0f172a" }}
+                                >
                                   {name}
                                 </span>
                                 {createdAt && (
-                                  <span className="text-sm" style={{ color: "#94a3b8" }}>
+                                  <span
+                                    className="text-sm"
+                                    style={{ color: "#94a3b8" }}
+                                  >
                                     • {formatRelativeTime(createdAt)}
                                   </span>
                                 )}
@@ -929,7 +1099,11 @@ export default function FindCompanion() {
                                   <span
                                     key={i}
                                     className="material-symbols-outlined text-base"
-                                    style={i >= fullStars ? { color: `${BRAND.primary}44` } : {}}
+                                    style={
+                                      i >= fullStars
+                                        ? { color: `${BRAND.primary}44` }
+                                        : {}
+                                    }
                                   >
                                     star
                                   </span>
@@ -954,7 +1128,7 @@ export default function FindCompanion() {
                               )}
 
                               {(review.response ?? review.Response) && (
-                                <div 
+                                <div
                                   className="mt-3 p-3 rounded-lg border-l-4 text-xs sm:text-sm italic"
                                   style={{
                                     background: `${BRAND.soft}11`,
@@ -962,8 +1136,13 @@ export default function FindCompanion() {
                                     color: "#475569",
                                   }}
                                 >
-                                  <div className="flex items-center gap-1.5 mb-1 text-[11px] font-black tracking-wider uppercase" style={{ color: BRAND.primary }}>
-                                    <span className="material-symbols-outlined text-sm">reply</span>
+                                  <div
+                                    className="flex items-center gap-1.5 mb-1 text-[11px] font-black tracking-wider uppercase"
+                                    style={{ color: BRAND.primary }}
+                                  >
+                                    <span className="material-symbols-outlined text-sm">
+                                      reply
+                                    </span>
                                     Phản hồi từ Host
                                   </div>
                                   <p>{review.response ?? review.Response}</p>
@@ -1006,7 +1185,8 @@ export default function FindCompanion() {
                               <span className="material-symbols-outlined text-base">
                                 expand_more
                               </span>
-                              Xem thêm đánh giá ({reviewsTotal - reviews.length})
+                              Xem thêm đánh giá ({reviewsTotal - reviews.length}
+                              )
                             </>
                           )}
                         </button>
@@ -1015,7 +1195,6 @@ export default function FindCompanion() {
                   </div>
                 )}
               </section>
-
             </div>
 
             {/* Right Column: Booking Card (Sticky) */}
@@ -1063,7 +1242,11 @@ export default function FindCompanion() {
                       <span className="material-symbols-outlined text-sm">
                         check_circle
                       </span>{" "}
-                      Còn chỗ
+                      {activeRemainingTickets !== null
+                        ? activeRemainingTickets > 0
+                          ? `Còn ${activeRemainingTickets} vé`
+                          : "Hết vé"
+                        : "Còn chỗ"}
                     </div>
                   </div>
 
@@ -1080,13 +1263,19 @@ export default function FindCompanion() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {detail.schedules.length > 0 ? (
                           detail.schedules.map((schedule) => {
-                            const schedulePast = isPastSchedule(schedule.startOn);
-                            const isSelected = selectedScheduleId.toString() === schedule.id.toString();
+                            const schedulePast = isPastSchedule(
+                              schedule.startOn,
+                            );
+                            const isSelected =
+                              selectedScheduleId.toString() ===
+                              schedule.id.toString();
                             return (
                               <button
                                 key={schedule.id}
                                 disabled={schedulePast}
-                                onClick={() => setSelectedScheduleId(schedule.id)}
+                                onClick={() =>
+                                  setSelectedScheduleId(schedule.id)
+                                }
                                 className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 relative ${
                                   isSelected ? "ring-2 ring-offset-1" : ""
                                 }`}
@@ -1094,15 +1283,17 @@ export default function FindCompanion() {
                                   background: schedulePast
                                     ? "#f1f5f9"
                                     : isSelected
-                                    ? `${BRAND.soft}1a`
-                                    : "rgba(255,255,255,0.7)",
+                                      ? `${BRAND.soft}1a`
+                                      : "rgba(255,255,255,0.7)",
                                   borderColor: schedulePast
                                     ? "#cbd5e1"
                                     : isSelected
-                                    ? BRAND.accent
-                                    : `${BRAND.soft}66`,
+                                      ? BRAND.accent
+                                      : `${BRAND.soft}66`,
                                   color: schedulePast ? "#94a3b8" : "#0f172a",
-                                  cursor: schedulePast ? "not-allowed" : "pointer",
+                                  cursor: schedulePast
+                                    ? "not-allowed"
+                                    : "pointer",
                                   opacity: schedulePast ? 0.7 : 1,
                                   "--ring-color": BRAND.accent,
                                 }}
@@ -1111,14 +1302,21 @@ export default function FindCompanion() {
                                   <span className="font-black text-sm flex items-center gap-1.5">
                                     <span
                                       className="material-symbols-outlined text-base shrink-0"
-                                      style={{ color: schedulePast ? "#94a3b8" : BRAND.primary }}
+                                      style={{
+                                        color: schedulePast
+                                          ? "#94a3b8"
+                                          : BRAND.primary,
+                                      }}
                                     >
                                       calendar_month
                                     </span>
                                     {formatDate(schedule.startOn)}
                                   </span>
                                   {isSelected && !schedulePast && (
-                                    <span className="material-symbols-outlined text-base shrink-0" style={{ color: BRAND.accent }}>
+                                    <span
+                                      className="material-symbols-outlined text-base shrink-0"
+                                      style={{ color: BRAND.accent }}
+                                    >
                                       check_circle
                                     </span>
                                   )}
@@ -1149,13 +1347,29 @@ export default function FindCompanion() {
                       </label>
 
                       {ticketsLoading ? (
-                        <div className="flex items-center justify-center py-6 text-sm font-semibold" style={{ color: "#64748b" }}>
-                          <span className="material-symbols-outlined animate-spin mr-2 text-lg">progress_activity</span>
+                        <div
+                          className="flex items-center justify-center py-6 text-sm font-semibold"
+                          style={{ color: "#64748b" }}
+                        >
+                          <span className="material-symbols-outlined animate-spin mr-2 text-lg">
+                            progress_activity
+                          </span>
                           Đang tải các loại vé...
                         </div>
                       ) : tickets.length === 0 ? (
-                        <div className="text-center py-6 text-sm font-semibold rounded-xl border border-dashed p-4" style={{ borderColor: `${BRAND.soft}66`, color: "#94a3b8" }}>
-                          <span className="material-symbols-outlined text-2xl mb-1 block" style={{ color: BRAND.primary }}>confirmation_number</span>
+                        <div
+                          className="text-center py-6 text-sm font-semibold rounded-xl border border-dashed p-4"
+                          style={{
+                            borderColor: `${BRAND.soft}66`,
+                            color: "#94a3b8",
+                          }}
+                        >
+                          <span
+                            className="material-symbols-outlined text-2xl mb-1 block"
+                            style={{ color: BRAND.primary }}
+                          >
+                            confirmation_number
+                          </span>
                           Không có vé khả dụng cho lịch học này
                         </div>
                       ) : (
@@ -1163,7 +1377,12 @@ export default function FindCompanion() {
                           {tickets.map((ticket) => {
                             const isSelected = selectedTicketId === ticket.id;
                             const isSoldOut = ticket.remainingTickets <= 0;
-                            const isTicketPast = activeSchedule ? isPastSlot(activeSchedule.startOn, ticket.startTime) : false;
+                            const isTicketPast = activeSchedule
+                              ? isPastSlot(
+                                  activeSchedule.startOn,
+                                  ticket.startTime,
+                                )
+                              : false;
                             const isTicketDisabled = isSoldOut || isTicketPast;
                             return (
                               <button
@@ -1177,41 +1396,92 @@ export default function FindCompanion() {
                                   background: isTicketDisabled
                                     ? "#f1f5f9"
                                     : isSelected
-                                    ? `${BRAND.soft}1a`
-                                    : "rgba(255,255,255,0.7)",
+                                      ? `${BRAND.soft}1a`
+                                      : "rgba(255,255,255,0.7)",
                                   borderColor: isTicketDisabled
                                     ? "#cbd5e1"
                                     : isSelected
-                                    ? BRAND.accent
-                                    : `${BRAND.soft}66`,
-                                  boxShadow: isSelected ? "0 4px 12px rgba(240,138,120,0.08)" : "none",
-                                  color: isTicketDisabled ? "#94a3b8" : "#0f172a",
+                                      ? BRAND.accent
+                                      : `${BRAND.soft}66`,
+                                  boxShadow: isSelected
+                                    ? "0 4px 12px rgba(240,138,120,0.08)"
+                                    : "none",
+                                  color: isTicketDisabled
+                                    ? "#94a3b8"
+                                    : "#0f172a",
                                   opacity: isTicketDisabled ? 0.7 : 1,
-                                  cursor: isTicketDisabled ? "not-allowed" : "pointer",
+                                  cursor: isTicketDisabled
+                                    ? "not-allowed"
+                                    : "pointer",
                                   "--ring-color": BRAND.accent,
                                 }}
                               >
                                 <div className="flex items-start justify-between w-full">
                                   <div className="min-w-0 flex-1">
-                                    <h5 className="font-black text-sm flex items-center gap-1.5" style={{ color: isTicketDisabled ? "#94a3b8" : "#0f172a" }}>
+                                    <h5
+                                      className="font-black text-sm flex items-center gap-1.5"
+                                      style={{
+                                        color: isTicketDisabled
+                                          ? "#94a3b8"
+                                          : "#0f172a",
+                                      }}
+                                    >
                                       {ticket.ticketType}
                                       {isSelected && (
-                                        <span className="material-symbols-outlined text-base shrink-0" style={{ color: BRAND.accent }}>
+                                        <span
+                                          className="material-symbols-outlined text-base shrink-0"
+                                          style={{ color: BRAND.accent }}
+                                        >
                                           check_circle
                                         </span>
                                       )}
                                     </h5>
-                                    <p className="text-xs font-semibold mt-1 flex items-center gap-1" style={{ color: isTicketDisabled ? "#94a3b8" : "#64748b" }}>
-                                      <span className="material-symbols-outlined text-sm shrink-0" style={{ color: isTicketDisabled ? "#94a3b8" : BRAND.primary }}>schedule</span>
-                                      {formatTimeOnly(ticket.startTime)} - {formatTimeOnly(ticket.endTime)}
+                                    <p
+                                      className="text-xs font-semibold mt-1 flex items-center gap-1"
+                                      style={{
+                                        color: isTicketDisabled
+                                          ? "#94a3b8"
+                                          : "#64748b",
+                                      }}
+                                    >
+                                      <span
+                                        className="material-symbols-outlined text-sm shrink-0"
+                                        style={{
+                                          color: isTicketDisabled
+                                            ? "#94a3b8"
+                                            : BRAND.primary,
+                                        }}
+                                      >
+                                        schedule
+                                      </span>
+                                      {formatTimeOnly(ticket.startTime)} -{" "}
+                                      {formatTimeOnly(ticket.endTime)}
                                     </p>
                                   </div>
                                   <div className="text-right shrink-0">
-                                    <div className="text-sm font-black" style={{ color: isTicketDisabled ? "#94a3b8" : BRAND.accent }}>
+                                    <div
+                                      className="text-sm font-black"
+                                      style={{
+                                        color: isTicketDisabled
+                                          ? "#94a3b8"
+                                          : BRAND.accent,
+                                      }}
+                                    >
                                       {formatCurrency(ticket.price)}
                                     </div>
-                                    <div className="text-[11px] font-semibold mt-1" style={{ color: isTicketDisabled ? "#ef4444" : "#94a3b8" }}>
-                                      {isTicketPast ? "Đã diễn ra" : isSoldOut ? "Hết vé" : `Còn ${ticket.remainingTickets} vé`}
+                                    <div
+                                      className="text-[11px] font-semibold mt-1"
+                                      style={{
+                                        color: isTicketDisabled
+                                          ? "#ef4444"
+                                          : "#94a3b8",
+                                      }}
+                                    >
+                                      {isTicketPast
+                                        ? "Đã diễn ra"
+                                        : isSoldOut
+                                          ? "Hết vé"
+                                          : `Còn ${ticket.remainingTickets} vé`}
                                     </div>
                                   </div>
                                 </div>
@@ -1239,19 +1509,36 @@ export default function FindCompanion() {
                             borderColor: `${BRAND.soft}66`,
                           }}
                         >
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `${BRAND.soft}44` }}>
-                            <span className="material-symbols-outlined" style={{ color: BRAND.primary }}>
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: `${BRAND.soft}44` }}
+                          >
+                            <span
+                              className="material-symbols-outlined"
+                              style={{ color: BRAND.primary }}
+                            >
                               person
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: BRAND.primary }}>
+                            <div
+                              className="text-[10px] font-black uppercase tracking-wider"
+                              style={{ color: BRAND.primary }}
+                            >
                               Tài khoản thanh toán
                             </div>
-                            <div className="text-sm font-black truncate" style={{ color: "#0f172a" }}>
-                              {currentUser?.name || currentUser?.email?.split('@')[0] || "Người dùng"}
+                            <div
+                              className="text-sm font-black truncate"
+                              style={{ color: "#0f172a" }}
+                            >
+                              {currentUser?.name ||
+                                currentUser?.email?.split("@")[0] ||
+                                "Người dùng"}
                             </div>
-                            <div className="text-xs truncate font-semibold" style={{ color: "#64748b" }}>
+                            <div
+                              className="text-xs truncate font-semibold"
+                              style={{ color: "#64748b" }}
+                            >
                               {currentUser?.email || "Chưa cập nhật email"}
                             </div>
                           </div>
@@ -1264,10 +1551,16 @@ export default function FindCompanion() {
                             borderColor: "rgba(239, 68, 68, 0.2)",
                           }}
                         >
-                          <span className="material-symbols-outlined text-2xl block" style={{ color: "#ef4444" }}>
+                          <span
+                            className="material-symbols-outlined text-2xl block"
+                            style={{ color: "#ef4444" }}
+                          >
                             no_accounts
                           </span>
-                          <p className="text-xs font-black" style={{ color: "#ef4444" }}>
+                          <p
+                            className="text-xs font-black"
+                            style={{ color: "#ef4444" }}
+                          >
                             Bạn chưa đăng nhập. Vui lòng đăng nhập để đặt vé.
                           </p>
                           <Link
@@ -1323,15 +1616,29 @@ export default function FindCompanion() {
                   {/* CTA Button */}
                   {currentUser ? (
                     <button
-                      disabled={!selectedTicketId || isActiveTicketPast}
+                      disabled={
+                        !selectedTicketId ||
+                        isActiveTicketPast ||
+                        activeRemainingTickets === 0
+                      }
                       onClick={handleProceedPayment}
                       className="w-full py-3.5 px-6 rounded-xl font-black text-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
                       style={{
                         background: BRAND.accent,
                         color: "white",
                         boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
-                        opacity: (!selectedTicketId || isActiveTicketPast) ? 0.6 : 1,
-                        cursor: (!selectedTicketId || isActiveTicketPast) ? "not-allowed" : "pointer",
+                        opacity:
+                          !selectedTicketId ||
+                          isActiveTicketPast ||
+                          activeRemainingTickets === 0
+                            ? 0.6
+                            : 1,
+                        cursor:
+                          !selectedTicketId ||
+                          isActiveTicketPast ||
+                          activeRemainingTickets === 0
+                            ? "not-allowed"
+                            : "pointer",
                       }}
                       onMouseEnter={(e) => {
                         if (selectedTicketId && !isActiveTicketPast) {
@@ -1345,7 +1652,11 @@ export default function FindCompanion() {
                       <span className="material-symbols-outlined text-xl">
                         credit_card
                       </span>
-                      {isActiveTicketPast ? "Đã diễn ra" : "Đặt vé ngay"}
+                      {isActiveTicketPast
+                        ? "Đã diễn ra"
+                        : activeRemainingTickets === 0
+                          ? "Hết vé"
+                          : "Đặt vé ngay"}
                     </button>
                   ) : (
                     <button
