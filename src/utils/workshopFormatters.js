@@ -134,7 +134,17 @@ export function getOldWorkshopValues(workshop) {
     categoryId: resolveCategoryId(workshop),
     levelId: resolveLevelId(workshop),
 
-    thumbnailLink: workshop?.thumbnailLink ?? workshop?.ThumbnailLink,
+    thumbnailLink:
+      workshop?.thumbnailLink ??
+      workshop?.ThumbnailLink ??
+      workshop?.workshopImages?.[0]?.imgLink ??
+      workshop?.workshopImages?.[0]?.ImgLink ??
+      workshop?.WorkshopImages?.[0]?.imgLink ??
+      workshop?.WorkshopImages?.[0]?.ImgLink ??
+      workshop?.images?.[0]?.imgLink ??
+      workshop?.images?.[0]?.ImgLink ??
+      workshop?.images?.[0]?.imageUrl ??
+      workshop?.images?.[0]?.ImageUrl,
 
     language: workshop?.language ?? workshop?.Language,
     status: workshop?.status ?? workshop?.Status,

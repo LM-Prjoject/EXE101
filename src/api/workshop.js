@@ -175,3 +175,29 @@ export async function getUpcomingSchedules(token, page = 1, pageSize = 10) {
 
   return body;
 }
+
+export async function updateWorkshopApproval(workshopId, approved, token) {
+  const authToken =
+    token ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("accessToken");
+
+  const response = await fetchWithFallback(
+    `/api/workshop/approval/${workshopId}?approved=${approved}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    },
+  );
+
+  const body = await parseJsonResponse(response);
+
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}

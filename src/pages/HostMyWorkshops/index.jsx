@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { createWorkshop } from "../../api";
 
 import HostSidebar from "../../components/HostSidebar";
 import useHostWorkshops from "../../hooks/useHostWorkshops";
@@ -15,6 +14,9 @@ import {
 } from "../../utils/workshopStatus";
 
 import { formatScheduleDate } from "../../utils/workshopFormatters";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE || "https://exe.kakgonbri.party";
 
 const statusTabs = [
   {
@@ -38,6 +40,38 @@ const statusTabs = [
     countKey: "pending",
   },
 ];
+
+function normalizeImageUrl(url) {
+  if (!url) return "";
+
+  const cleanUrl = String(url).trim();
+
+  if (!cleanUrl) return "";
+
+  if (
+    cleanUrl.startsWith("http://") ||
+    cleanUrl.startsWith("https://") ||
+    cleanUrl.startsWith("blob:") ||
+    cleanUrl.startsWith("data:")
+  ) {
+    return cleanUrl;
+  }
+
+  if (cleanUrl.startsWith("/")) {
+    return `${API_BASE_URL}${cleanUrl}`;
+  }
+
+  return `${API_BASE_URL}/${cleanUrl}`;
+}
+
+function getWorkshopImage(workshop) {
+  const rawImage =
+    workshop.thumbnailLink ||
+    workshop.ThumbnailLink ||
+    workshop.schedules?.[0]?.workshopThumbnailLink ||
+    workshop.Schedules?.[0]?.WorkshopThumbnailLink;
+  return normalizeImageUrl(rawImage);
+}
 
 function getNumberValue(...values) {
   for (const value of values) {
@@ -120,21 +154,6 @@ export default function HostMyWorkshops() {
                 </div>
               ) : (
                 filteredWorkshops.map((workshop, index) => {
-                  function getNumberValue(...values) {
-                    for (const value of values) {
-                      if (
-                        value !== undefined &&
-                        value !== null &&
-                        value !== ""
-                      ) {
-                        const number = Number(value);
-                        if (!Number.isNaN(number)) return number;
-                      }
-                    }
-
-                    return null;
-                  }
-
                   const schedules = [
                     ...(workshop.schedules ?? workshop.Schedules ?? []),
                   ].sort(
@@ -148,10 +167,7 @@ export default function HostMyWorkshops() {
                   const ticket =
                     nextSchedule?.tickets?.[0] ?? nextSchedule?.Tickets?.[0];
 
-                  const imageSrc =
-                    workshop.thumbnailLink ||
-                    workshop.ThumbnailLink ||
-                    "https://via.placeholder.com/640x360?text=Workshop";
+                  const imageSrc = getWorkshopImage(workshop);
 
                   const scheduleDate =
                     nextSchedule?.startOn ??
@@ -222,11 +238,13 @@ export default function HostMyWorkshops() {
                       className="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all cursor-pointer"
                     >
                       <div className="aspect-video relative overflow-hidden">
-                        <img
-                          alt={workshop.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          src={imageSrc}
-                        />
+                        {imageSrc && (
+                          <img
+                            alt={workshop.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            src={imageSrc}
+                          />
+                        )}
 
                         <div className="absolute top-3 right-3 flex gap-2">
                           <button
