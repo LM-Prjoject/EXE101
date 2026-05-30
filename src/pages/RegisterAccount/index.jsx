@@ -16,6 +16,7 @@ export default function RegisterAccount() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleRegister(event) {
     event.preventDefault();
@@ -224,10 +225,19 @@ export default function RegisterAccount() {
                           onChange={(e) => setPassword(e.target.value)}
                           className="w-full rounded-xl border border-[#e9e2da] bg-white pl-4 pr-12 h-12 text-base focus:border-[#c3996c] focus:ring-1 focus:ring-[#c3996c] focus:outline-none transition-shadow placeholder:text-[#4a6663]/55"
                           placeholder="Nhập mật khẩu"
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           minLength={8}
                           required
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                            {showPassword ? 'visibility' : 'visibility_off'}
+                          </span>
+                        </button>
                       </div>
                     </label>
 
