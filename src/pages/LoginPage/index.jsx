@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // Forgot password flow states
   const [mode, setMode] = useState('login'); // 'login' | 'forgot' | 'reset'
@@ -19,6 +21,11 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const location = useLocation();
+
+  useEffect(() => {
+    setShowPassword(false);
+    setShowNewPassword(false);
+  }, [mode]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -239,12 +246,35 @@ export default function LoginPage() {
                     <input
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      type="password" required
+                      type={showPassword ? 'text' : 'password'} required
                       placeholder="••••••••"
-                      style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 40, paddingRight: 12, paddingTop: 12, paddingBottom: 12, border: '1.5px solid #e5e7eb', borderRadius: 12, fontSize: '0.9rem', background: '#fff', color: '#2b2b2b', outline: 'none', transition: 'border-color 0.15s' }}
+                      style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 40, paddingRight: 40, paddingTop: 12, paddingBottom: 12, border: '1.5px solid #e5e7eb', borderRadius: 12, fontSize: '0.9rem', background: '#fff', color: '#2b2b2b', outline: 'none', transition: 'border-color 0.15s' }}
                       onFocus={e => { e.target.style.borderColor = '#c3996c'; }}
                       onBlur={e => { e.target.style.borderColor = '#e5e7eb'; }}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        color: '#9ca3af',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        outline: 'none'
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                        {showPassword ? 'visibility' : 'visibility_off'}
+                      </span>
+                    </button>
                   </div>
                 </div>
                 {/* Submit */}
@@ -369,12 +399,35 @@ export default function LoginPage() {
                     <input
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      type="password" required
+                      type={showNewPassword ? 'text' : 'password'} required
                       placeholder="Tối thiểu 6 ký tự"
-                      style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 40, paddingRight: 12, paddingTop: 12, paddingBottom: 12, border: '1.5px solid #e5e7eb', borderRadius: 12, fontSize: '0.9rem', background: '#fff', color: '#2b2b2b', outline: 'none', transition: 'border-color 0.15s' }}
+                      style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 40, paddingRight: 40, paddingTop: 12, paddingBottom: 12, border: '1.5px solid #e5e7eb', borderRadius: 12, fontSize: '0.9rem', background: '#fff', color: '#2b2b2b', outline: 'none', transition: 'border-color 0.15s' }}
                       onFocus={e => { e.target.style.borderColor = '#c3996c'; }}
                       onBlur={e => { e.target.style.borderColor = '#e5e7eb'; }}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        color: '#9ca3af',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        outline: 'none'
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                        {showNewPassword ? 'visibility' : 'visibility_off'}
+                      </span>
+                    </button>
                   </div>
                 </div>
 

@@ -20,7 +20,6 @@ import ConfirmSuccess from './pages/ConfirmSuccess';
 import UserProfile from './pages/UserProfile';
 import MySchedule from './pages/MySchedule';
 import CommunityMomentsFeed from './pages/CommunityMomentsFeed';
-import WorkshopChat from './pages/WorkshopChat';
 
 // Host flow
 import HostDashboard from './pages/HostDashboard';
@@ -80,7 +79,6 @@ export default function App() {
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/my-schedule" element={<MySchedule />} />
           <Route path="/community" element={<CommunityMomentsFeed />} />
-          <Route path="/workshop-chat" element={<WorkshopChat />} />
 
           {/* ── Host flow ── */}
           <Route path="/host/dashboard" element={<HostDashboard />} />

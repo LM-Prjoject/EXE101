@@ -1688,64 +1688,117 @@ export default function FindCompanion() {
                   </div>
                 </div>
 
-                {/* Find a Buddy Section */}
-                <div
-                  className="p-6 rounded-2xl border"
-                  style={{
-                    background: `${BRAND.soft}18`,
-                    borderColor: `${BRAND.soft}66`,
-                  }}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span
-                      className="w-10 h-10 rounded-full flex items-center justify-center border"
-                      style={{
-                        background: `${BRAND.soft}22`,
-                        borderColor: `${BRAND.soft}66`,
-                        color: BRAND.primary,
-                      }}
-                    >
-                      <span className="material-symbols-outlined">
-                        groups_2
-                      </span>
-                    </span>
-                    <div>
-                      <h4
-                        className="text-sm font-black"
-                        style={{ color: "#0f172a" }}
-                      >
-                        Bạn đang tìm bạn đồng hành?
-                      </h4>
-                      <p
-                        className="text-xs mt-0.5"
-                        style={{ color: "#64748b" }}
-                      >
-                        Kết nối với những người tham gia khác để cùng sáng tạo!
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    className="w-full py-2.5 px-4 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2"
-                    style={{
-                      background: BRAND.primary,
-                      color: "white",
-                      boxShadow: "0 14px 30px rgba(195,153,108,0.16)",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.filter = "brightness(0.96)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.filter = "none")
-                    }
-                    onClick={() => navigate("/workshop-chat")}
+                {/* Host / Shop Info Card */}
+                {(workshop?.hostId || workshop?.HostId) && (
+                  <div
+                    className="p-5 rounded-2xl shadow-sm border"
+                    style={cardStyle}
                   >
-                    <span className="material-symbols-outlined text-lg">
-                      forum
-                    </span>
-                    Tìm bạn đồng hành
-                  </button>
-                </div>
+                    {/* Section header */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <span
+                        className="w-7 h-7 rounded-lg flex items-center justify-center border shrink-0"
+                        style={{
+                          background: `${BRAND.soft}22`,
+                          borderColor: `${BRAND.soft}99`,
+                          color: BRAND.primary,
+                        }}
+                      >
+                        <span className="material-symbols-outlined text-base">storefront</span>
+                      </span>
+                      <h4 className="text-sm font-black" style={{ color: '#334155' }}>
+                        Người tổ chức
+                      </h4>
+                    </div>
+
+                    {/* Avatar + Name row */}
+                    <div className="flex items-center gap-3 mb-4">
+                      {/* Avatar */}
+                      <div
+                        className="w-14 h-14 rounded-full shrink-0 flex items-center justify-center overflow-hidden border-2"
+                        style={{
+                          borderColor: `${BRAND.soft}99`,
+                          background: `${BRAND.soft}33`,
+                          ...((workshop?.hostAvatarLink || workshop?.HostAvatarLink)
+                            ? {
+                                backgroundImage: `url('${workshop?.hostAvatarLink || workshop?.HostAvatarLink}')`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                              }
+                            : {}
+                          ),
+                        }}
+                      >
+                        {!(workshop?.hostAvatarLink || workshop?.HostAvatarLink) && (
+                          <span className="material-symbols-outlined text-2xl" style={{ color: BRAND.primary }}>
+                            person
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Name */}
+                      <div className="min-w-0 flex-1">
+                        <div className="font-black text-sm leading-tight" style={{ color: '#0f172a' }}>
+                          {workshop?.hostName || workshop?.HostName || 'Người tổ chức'}
+                        </div>
+                        {(workshop?.hostLocation || workshop?.HostLocation) && (
+                          <div className="flex items-center gap-1 mt-1 text-xs" style={{ color: '#64748b' }}>
+                            <span className="material-symbols-outlined text-sm shrink-0" style={{ color: BRAND.primary }}>location_on</span>
+                            <span className="line-clamp-1">{workshop?.hostLocation || workshop?.HostLocation}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stats row */}
+                    <div
+                      className="grid grid-cols-3 gap-2 py-3 border-t border-b mb-4"
+                      style={{ borderColor: `${BRAND.soft}55` }}
+                    >
+                      {/* Rating */}
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="material-symbols-outlined text-base" style={{ color: BRAND.primary }}>star</span>
+                        <span className="text-sm font-black" style={{ color: '#0f172a' }}>
+                          {workshop?.rating != null ? Number(workshop.rating).toFixed(1) : '—'}
+                        </span>
+                        <span className="text-[10px] font-semibold" style={{ color: '#94a3b8' }}>Đánh giá</span>
+                      </div>
+
+                      {/* Review count */}
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="material-symbols-outlined text-base" style={{ color: BRAND.primary }}>rate_review</span>
+                        <span className="text-sm font-black" style={{ color: '#0f172a' }}>
+                          {workshop?.reviewCount ?? workshop?.ReviewCount ?? '—'}
+                        </span>
+                        <span className="text-[10px] font-semibold" style={{ color: '#94a3b8' }}>Nhận xét</span>
+                      </div>
+
+                      {/* Location badge */}
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="material-symbols-outlined text-base" style={{ color: BRAND.primary }}>verified</span>
+                        <span className="text-sm font-black" style={{ color: BRAND.primary }}>Host</span>
+                        <span className="text-[10px] font-semibold" style={{ color: '#94a3b8' }}>Xác nhận</span>
+                      </div>
+                    </div>
+
+                    {/* View profile link */}
+                    <button
+                      className="w-full py-2 rounded-xl text-xs font-black border transition-colors flex items-center justify-center gap-1.5"
+                      style={{
+                        borderColor: `${BRAND.soft}99`,
+                        color: BRAND.primary,
+                        background: `${BRAND.soft}11`,
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = `${BRAND.soft}30`; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = `${BRAND.soft}11`; }}
+                      onClick={() => navigate(`/instructor/${workshop?.hostId || workshop?.HostId}`)}
+                    >
+                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      Xem hồ sơ người tổ chức
+                    </button>
+                  </div>
+                )}
+
 
                 {/* Cancellation Policy */}
                 <div
