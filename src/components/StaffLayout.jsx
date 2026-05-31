@@ -15,6 +15,7 @@ export default function StaffLayout() {
   const menuItems = [
     { to: '/staff/users', label: 'Quản lý Users', icon: 'people' },
     { to: '/staff/hosts', label: 'Duyệt Host', icon: 'assignment_ind' },
+    { to: '/staff/withdrawals', label: 'Duyệt Rút tiền', icon: 'payments' },
     { to: '/staff/workshops', label: 'Quản lý Workshops', icon: 'storefront' },
     { to: '/staff/bookings', label: 'Quản lý Đặt chỗ', icon: 'book_online' },
     { to: '/staff/settings', label: 'Cài đặt hệ thống', icon: 'settings' },

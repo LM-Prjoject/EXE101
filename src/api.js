@@ -292,12 +292,39 @@ export async function confirmOtp(email, otp) {
 }
 
 export async function createWithdrawRequest({ amount, bankName, bankAccount }) {
-  const response = await fetchWithFallback('/api/revenue/requests', {
+  const response = await fetchWithFallback('/api/Revenue/requests', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ amount, bankName, bankAccount }),
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function getRevenueStatistics(year) {
+  const params = new URLSearchParams({ year: year.toString() });
+  const response = await fetchWithFallback(`/api/Revenue/statistics?${params}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function getHostWorkshopsRevenue() {
+  const response = await fetchWithFallback('/api/Revenue/workshops', {
+    method: 'GET',
   });
 
   const body = await parseJsonResponse(response);
