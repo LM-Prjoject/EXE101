@@ -15,6 +15,70 @@ function getWorkshopList(data) {
 function getWorkshopPrice(workshop) {
   return workshop.price ?? workshop.priceLower ?? workshop.priceUpper;
 }
+const CATEGORY_LABELS = {
+  1: "Làm gốm",
+  2: "Hội họa",
+  3: "Trang sức",
+  4: "Dệt may",
+  5: "Khác",
+};
+
+const CATEGORY_TEXT_MAP = {
+  pottery: "Làm gốm",
+  ceramic: "Làm gốm",
+  ceramics: "Làm gốm",
+  "làm gốm": "Làm gốm",
+
+  art: "Hội họa",
+  painting: "Hội họa",
+  "hội họa": "Hội họa",
+
+  jewelry: "Trang sức",
+  jewellery: "Trang sức",
+  "trang sức": "Trang sức",
+
+  textile: "Dệt may",
+  textiles: "Dệt may",
+  sewing: "Dệt may",
+  weaving: "Dệt may",
+  "dệt may": "Dệt may",
+
+  music: "Khác",
+  photography: "Khác",
+  other: "Khác",
+  others: "Khác",
+  khác: "Khác",
+};
+
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function getCategoryName(workshop) {
+  const categoryId = Number(
+    workshop.categoryId ??
+      workshop.CategoryId ??
+      workshop.categoryID ??
+      workshop.category?.id ??
+      workshop.category?.categoryId,
+  );
+
+  if (CATEGORY_LABELS[categoryId]) {
+    return CATEGORY_LABELS[categoryId];
+  }
+
+  const rawCategory = normalizeText(
+    workshop.categoryName ??
+      workshop.CategoryName ??
+      workshop.category?.name ??
+      workshop.category?.title ??
+      workshop.category,
+  );
+
+  return CATEGORY_TEXT_MAP[rawCategory] || "Workshop";
+}
 
 export default function HomeWithBanner() {
   const navigate = useNavigate();
@@ -86,6 +150,21 @@ export default function HomeWithBanner() {
           scheduleWithinDays: scheduleWithinDays,
         });
         setWorkshops(getWorkshopList(data));
+        const list = getWorkshopList(data);
+
+        console.log(
+          "HOME WORKSHOPS CATEGORY:",
+          list.map((w) => ({
+            id: w.id,
+            title: w.title,
+            categoryId: w.categoryId,
+            category: w.category,
+            levelId: w.levelId,
+            level: w.level,
+          })),
+        );
+
+        setWorkshops(list);
       } catch (err) {
         setWorkshopError(err?.message || "Không thể tải danh sách workshop.");
       } finally {
@@ -700,7 +779,7 @@ export default function HomeWithBanner() {
                             className="text-xs font-semibold uppercase tracking-wider"
                             style={{ color: PRIMARY }}
                           >
-                            {workshop.category || "Workshop"}
+                            {getCategoryName(workshop)}
                           </span>
                           <span
                             className="text-xs font-medium"

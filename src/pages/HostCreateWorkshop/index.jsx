@@ -1,13 +1,62 @@
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import HostSidebar from "../../components/HostSidebar";
 import HostCreateWorkshopForm from "../../components/HostCreateWorkshopForm";
 import useHostCreateWorkshopForm from "../../hooks/useHostCreateWorkshopForm";
+import { getWorkshopById } from "../../api/workshop";
+
+function getWorkshopId(workshop) {
+  return (
+    workshop?.id ?? workshop?.Id ?? workshop?.workshopId ?? workshop?.WorkshopId
+  );
+}
 
 export default function HostCreateWorkshop() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
 
-  const editingWorkshop = routerLocation.state?.workshop || null;
+  const stateWorkshop = routerLocation.state?.workshop || null;
+  const workshopId = getWorkshopId(stateWorkshop);
+
+  const [editingWorkshop, setEditingWorkshop] = useState(stateWorkshop);
+  const [loadingWorkshop, setLoadingWorkshop] = useState(Boolean(workshopId));
+
+  useEffect(() => {
+    if (!workshopId) {
+      setLoadingWorkshop(false);
+      return;
+    }
+
+    let ignore = false;
+
+    async function loadFullWorkshop() {
+      setLoadingWorkshop(true);
+
+      try {
+        const data = await getWorkshopById(workshopId);
+
+        if (!ignore) {
+          setEditingWorkshop(data);
+        }
+      } catch (err) {
+        console.error("Load full workshop failed:", err);
+
+        if (!ignore) {
+          setEditingWorkshop(stateWorkshop);
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingWorkshop(false);
+        }
+      }
+    }
+
+    loadFullWorkshop();
+
+    return () => {
+      ignore = true;
+    };
+  }, [workshopId]);
 
   const form = useHostCreateWorkshopForm(editingWorkshop, () => {
     navigate("/host/workshops");
@@ -30,11 +79,17 @@ export default function HostCreateWorkshop() {
             </p>
           </div>
 
-          <HostCreateWorkshopForm
-            form={form}
-            editingWorkshop={editingWorkshop}
-            onCancel={() => navigate("/host/workshops")}
-          />
+          {loadingWorkshop ? (
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2c2a] p-6 text-sm font-semibold text-slate-500 dark:text-slate-300">
+              Đang tải đầy đủ lịch workshop...
+            </div>
+          ) : (
+            <HostCreateWorkshopForm
+              form={form}
+              editingWorkshop={editingWorkshop}
+              onCancel={() => navigate("/host/workshops")}
+            />
+          )}
         </main>
       </div>
     </div>

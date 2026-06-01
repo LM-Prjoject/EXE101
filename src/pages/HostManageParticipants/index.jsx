@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import HostSidebar from '../../components/HostSidebar';
-import HostHeader from '../../components/HostHeader';
-import { getHostTickets, getTicketParticipants, checkInParticipant } from '../../api/host';
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import HostSidebar from "../../components/HostSidebar";
+import HostHeader from "../../components/HostHeader";
+import {
+  getHostTickets,
+  getTicketParticipants,
+  checkInParticipant,
+} from "../../api/host";
 
 export default function HostManageParticipants() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
-  const [selectedTicketId, setSelectedTicketId] = useState('');
+  const [selectedTicketId, setSelectedTicketId] = useState("");
   const [participants, setParticipants] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [checkInLoading, setCheckInLoading] = useState({});
 
   // Fetch all sold tickets on mount
@@ -29,7 +33,7 @@ export default function HostManageParticipants() {
         }
       } catch (err) {
         console.error(err);
-        setError('Không thể tải danh sách loại vé.');
+        setError("Không thể tải danh sách loại vé.");
       } finally {
         setLoadingTickets(false);
       }
@@ -52,7 +56,7 @@ export default function HostManageParticipants() {
         }
       } catch (err) {
         console.error(err);
-        if (!ignore) setError('Không thể tải danh sách học viên.');
+        if (!ignore) setError("Không thể tải danh sách học viên.");
       } finally {
         if (!ignore) setLoadingParticipants(false);
       }
@@ -67,52 +71,60 @@ export default function HostManageParticipants() {
   const handleCheckIn = async (ticketId, participantId) => {
     console.log("handleCheckIn called with:", { ticketId, participantId });
     try {
-      setCheckInLoading(prev => ({ ...prev, [participantId]: true }));
+      setCheckInLoading((prev) => ({ ...prev, [participantId]: true }));
       await checkInParticipant(ticketId, participantId);
-      
-      setSuccess('Check in học viên thành công!');
-      setTimeout(() => setSuccess(''), 3000);
-      
+
+      setSuccess("Check in học viên thành công!");
+      setTimeout(() => setSuccess(""), 3000);
+
       // Update local state directly
-      setParticipants(prev => prev.map(p => {
-        const id = p.participantId ?? p.ParticipantId;
-        if (id === participantId) {
-          return { ...p, status: 'checked in', Status: 'checked in' };
-        }
-        return p;
-      }));
+      setParticipants((prev) =>
+        prev.map((p) => {
+          const id = p.participantId ?? p.ParticipantId;
+          if (id === participantId) {
+            return { ...p, status: "checked in", Status: "checked in" };
+          }
+          return p;
+        }),
+      );
     } catch (err) {
       console.error(err);
-      if (err?.message?.includes("500") || err?.message?.toLowerCase().includes("internal server error") || err?.message?.toLowerCase().includes("invalid date")) {
-        setError('Không thể check-in: Buổi học này chưa diễn ra hoặc đã kết thúc. Bạn chỉ có thể check-in trong khung giờ của buổi học đang diễn ra!');
+      if (
+        err?.message?.includes("500") ||
+        err?.message?.toLowerCase().includes("internal server error") ||
+        err?.message?.toLowerCase().includes("invalid date")
+      ) {
+        setError(
+          "Không thể check-in: Buổi học này chưa diễn ra hoặc đã kết thúc. Bạn chỉ có thể check-in trong khung giờ của buổi học đang diễn ra!",
+        );
       } else {
-        setError(err?.message || 'Check in thất bại. Vui lòng thử lại.');
+        setError(err?.message || "Check in thất bại. Vui lòng thử lại.");
       }
-      setTimeout(() => setError(''), 6000);
+      setTimeout(() => setError(""), 6000);
     } finally {
-      setCheckInLoading(prev => ({ ...prev, [participantId]: false }));
+      setCheckInLoading((prev) => ({ ...prev, [participantId]: false }));
     }
   };
 
-  const selectedTicket = tickets.find(t => t.id === Number(selectedTicketId));
+  const selectedTicket = tickets.find((t) => t.id === Number(selectedTicketId));
 
   // Filter participants locally by search query (name or email)
-  const filteredParticipants = participants.filter(p => {
+  const filteredParticipants = participants.filter((p) => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return true;
     return (
-      (p.userName || '').toLowerCase().includes(query) ||
-      (p.userEmail || '').toLowerCase().includes(query)
+      (p.userName || "").toLowerCase().includes(query) ||
+      (p.userEmail || "").toLowerCase().includes(query)
     );
   });
 
   const formatTicketDate = (dateStr) => {
-    if (!dateStr) return '';
+    if (!dateStr) return "";
     try {
-      return new Date(dateStr).toLocaleDateString('vi-VN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
+      return new Date(dateStr).toLocaleDateString("vi-VN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       });
     } catch {
       return dateStr;
@@ -120,7 +132,7 @@ export default function HostManageParticipants() {
   };
 
   const formatTicketTime = (timeStr) => {
-    if (!timeStr) return '';
+    if (!timeStr) return "";
     return timeStr.slice(0, 5);
   };
 
@@ -150,30 +162,49 @@ export default function HostManageParticipants() {
               </div>
             )}
 
-            {!loadingTickets && tickets.length > 0 && selectedTicket && !selectedTicket.isOngoing && (
-              <div className="mx-8 mt-6 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 text-sm flex items-start gap-2">
-                <span className="material-symbols-outlined shrink-0 text-amber-600 dark:text-amber-400">warning</span>
-                <div>
-                  <p className="font-bold">Buổi học hiện không trong giờ diễn ra</p>
-                  <p className="mt-1 text-xs opacity-90">
-                    Theo quy định của hệ thống, nút Check-in chỉ hoạt động khi buổi học này đang diễn ra (đúng ngày {formatTicketDate(selectedTicket.startOn)} và nằm trong khung giờ {formatTicketTime(selectedTicket.startTime)} - {formatTicketTime(selectedTicket.endTime)}). Việc check-in vào thời điểm khác sẽ bị Server từ chối.
-                  </p>
+            {!loadingTickets &&
+              tickets.length > 0 &&
+              selectedTicket &&
+              !selectedTicket.isOngoing && (
+                <div className="mx-8 mt-6 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 text-sm flex items-start gap-2">
+                  <span className="material-symbols-outlined shrink-0 text-amber-600 dark:text-amber-400">
+                    warning
+                  </span>
+                  <div>
+                    <p className="font-bold">
+                      Buổi học hiện không trong giờ diễn ra
+                    </p>
+                    <p className="mt-1 text-xs opacity-90">
+                      Theo quy định của hệ thống, nút Check-in chỉ hoạt động khi
+                      buổi học này đang diễn ra (đúng ngày{" "}
+                      {formatTicketDate(selectedTicket.startOn)} và nằm trong
+                      khung giờ {formatTicketTime(selectedTicket.startTime)} -{" "}
+                      {formatTicketTime(selectedTicket.endTime)}). Việc check-in
+                      vào thời điểm khác sẽ bị Server từ chối.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div className="p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col">
               {loadingTickets ? (
                 <div className="flex flex-col items-center justify-center py-20 flex-1">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                  <p className="mt-4 text-slate-500 text-sm">Đang tải thông tin vé...</p>
+                  <p className="mt-4 text-slate-500 text-sm">
+                    Đang tải thông tin vé...
+                  </p>
                 </div>
               ) : tickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center flex-1">
-                  <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700 mb-4">confirmation_number</span>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-300">Chưa có vé nào được bán</h4>
+                  <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700 mb-4">
+                    confirmation_number
+                  </span>
+                  <h4 className="font-bold text-slate-700 dark:text-slate-300">
+                    Chưa có vé nào được bán
+                  </h4>
                   <p className="text-slate-500 text-sm mt-1 max-w-sm">
-                    Hiện chưa có học viên nào mua vé cho các buổi workshop do bạn tổ chức.
+                    Hiện chưa có học viên nào mua vé cho các buổi workshop do
+                    bạn tổ chức.
                   </p>
                 </div>
               ) : (
@@ -181,24 +212,39 @@ export default function HostManageParticipants() {
                   {/* Filters Row */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
                     <div className="flex items-center gap-4 flex-1">
-                      <label className="text-sm font-bold text-slate-500 whitespace-nowrap">Chọn loại vé:</label>
+                      <label className="text-sm font-bold text-slate-500 whitespace-nowrap">
+                        Chọn loại vé:
+                      </label>
                       <select
                         className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm px-4 py-2 focus:ring-2 focus:ring-primary text-slate-700 dark:text-slate-300 font-bold cursor-pointer max-w-md w-full md:w-auto"
                         value={selectedTicketId}
-                        onChange={(e) => setSelectedTicketId(Number(e.target.value))}
+                        onChange={(e) =>
+                          setSelectedTicketId(Number(e.target.value))
+                        }
                       >
-                        {tickets.map(t => (
-                          <option key={t.id} value={t.id}>
-                            {t.workshopTitle} - {t.ticketType} ({formatTicketDate(t.startOn)})
-                          </option>
-                        ))}
+                        {tickets.map((t) => {
+                          const ticketId = t.id ?? t.Id;
+                          const startOn = t.startOn ?? t.StartOn;
+                          const startTime = t.startTime ?? t.StartTime;
+                          const endTime = t.endTime ?? t.EndTime;
+
+                          return (
+                            <option key={ticketId} value={ticketId}>
+                              {formatTicketDate(startOn)} •{" "}
+                              {formatTicketTime(startTime)} -{" "}
+                              {formatTicketTime(endTime)}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                     <div className="relative group w-full md:w-64">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                      <input 
-                        className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-2 focus:ring-primary" 
-                        placeholder="Tìm kiếm người tham gia..." 
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        search
+                      </span>
+                      <input
+                        className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-2 focus:ring-primary"
+                        placeholder="Tìm kiếm người tham gia..."
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -213,18 +259,29 @@ export default function HostManageParticipants() {
                       </h2>
                       <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
                         <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">calendar_today</span>
-                          <span className="text-sm font-semibold">{formatTicketDate(selectedTicket?.startOn)}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">schedule</span>
+                          <span className="material-symbols-outlined text-sm">
+                            calendar_today
+                          </span>
                           <span className="text-sm font-semibold">
-                            {formatTicketTime(selectedTicket?.startTime)} - {formatTicketTime(selectedTicket?.endTime)}
+                            {formatTicketDate(selectedTicket?.startOn)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">location_on</span>
-                          <span className="text-sm font-semibold">{selectedTicket?.workshopLocation}</span>
+                          <span className="material-symbols-outlined text-sm">
+                            schedule
+                          </span>
+                          <span className="text-sm font-semibold">
+                            {formatTicketTime(selectedTicket?.startTime)} -{" "}
+                            {formatTicketTime(selectedTicket?.endTime)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">
+                            location_on
+                          </span>
+                          <span className="text-sm font-semibold">
+                            {selectedTicket?.workshopLocation}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -233,21 +290,35 @@ export default function HostManageParticipants() {
                   {/* Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500 mb-1">Loại vé</p>
-                      <h3 className="text-2xl font-black text-primary">{selectedTicket?.ticketType}</h3>
+                      <p className="text-sm font-medium text-slate-500 mb-1">
+                        Loại vé
+                      </p>
+                      <h3 className="text-2xl font-black text-primary">
+                        {selectedTicket?.ticketType}
+                      </h3>
                     </div>
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500 mb-1">Tổng số đăng ký</p>
-                      <h3 className="text-2xl font-black text-slate-900 dark:text-white">{selectedTicket?.participantCount} học viên</h3>
+                      <p className="text-sm font-medium text-slate-500 mb-1">
+                        Tổng số đăng ký
+                      </p>
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white">
+                        {selectedTicket?.participantCount} học viên
+                      </h3>
                     </div>
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500 mb-1">Trạng thái lớp học</p>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        selectedTicket?.isOngoing 
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
-                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
-                      }`}>
-                        {selectedTicket?.isOngoing ? "Đang diễn ra" : "Chưa diễn ra / Đã kết thúc"}
+                      <p className="text-sm font-medium text-slate-500 mb-1">
+                        Trạng thái lớp học
+                      </p>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          selectedTicket?.isOngoing
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                        }`}
+                      >
+                        {selectedTicket?.isOngoing
+                          ? "Đang diễn ra"
+                          : "Chưa diễn ra / Đã kết thúc"}
                       </span>
                     </div>
                   </div>
@@ -258,47 +329,74 @@ export default function HostManageParticipants() {
                       <table className="w-full text-left">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                           <tr>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Người tham gia</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày mua</th>
-                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Hành động</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                              Người tham gia
+                            </th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                              Trạng thái
+                            </th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                              Ngày mua
+                            </th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                              Hành động
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           {loadingParticipants ? (
                             <tr>
-                              <td colSpan="4" className="text-center py-10 text-sm text-slate-500">
+                              <td
+                                colSpan="4"
+                                className="text-center py-10 text-sm text-slate-500"
+                              >
                                 <div className="flex items-center justify-center gap-2">
-                                  <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                                  <span className="material-symbols-outlined animate-spin text-lg">
+                                    progress_activity
+                                  </span>
                                   Đang tải danh sách học viên...
                                 </div>
                               </td>
                             </tr>
                           ) : filteredParticipants.length === 0 ? (
                             <tr>
-                              <td colSpan="4" className="text-center py-10 text-sm text-slate-500 font-semibold">
-                                {searchTerm ? "Không tìm thấy học viên nào phù hợp." : "Chưa có học viên nào đăng ký loại vé này."}
+                              <td
+                                colSpan="4"
+                                className="text-center py-10 text-sm text-slate-500 font-semibold"
+                              >
+                                {searchTerm
+                                  ? "Không tìm thấy học viên nào phù hợp."
+                                  : "Chưa có học viên nào đăng ký loại vé này."}
                               </td>
                             </tr>
                           ) : (
                             filteredParticipants.map((p) => {
                               const partId = p.participantId ?? p.ParticipantId;
-                              const isCheckedIn = String(p.status ?? p.Status ?? '').trim().toLowerCase() === 'checked in';
+                              const isCheckedIn =
+                                String(p.status ?? p.Status ?? "")
+                                  .trim()
+                                  .toLowerCase() === "checked in";
                               const isLoading = checkInLoading[partId];
-                              const nameVal = p.userName ?? p.UserName ?? 'Học viên';
-                              const emailVal = p.userEmail ?? p.UserEmail ?? '';
+                              const nameVal =
+                                p.userName ?? p.UserName ?? "Học viên";
+                              const emailVal = p.userEmail ?? p.UserEmail ?? "";
                               const avatarVal = p.avatarLink ?? p.AvatarLink;
                               const bookedVal = p.bookedOn ?? p.BookedOn;
-                              const initials = nameVal.slice(0, 2).toUpperCase();
+                              const initials = nameVal
+                                .slice(0, 2)
+                                .toUpperCase();
 
                               return (
-                                <tr key={partId} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <tr
+                                  key={partId}
+                                  className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                                >
                                   <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                       {avatarVal ? (
-                                        <img 
-                                          src={avatarVal} 
-                                          alt={nameVal} 
+                                        <img
+                                          src={avatarVal}
+                                          alt={nameVal}
                                           className="size-10 rounded-full object-cover border border-slate-200"
                                         />
                                       ) : (
@@ -307,30 +405,50 @@ export default function HostManageParticipants() {
                                         </div>
                                       )}
                                       <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{nameVal}</p>
-                                        <p className="text-xs text-slate-500 mt-1">{emailVal}</p>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">
+                                          {nameVal}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                          {emailVal}
+                                        </p>
                                       </div>
                                     </div>
                                   </td>
                                   <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                                      isCheckedIn 
-                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
-                                        : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                    }`}>
-                                      {isCheckedIn ? "Đã check in" : "Chờ check in"}
+                                    <span
+                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                        isCheckedIn
+                                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                      }`}
+                                    >
+                                      {isCheckedIn
+                                        ? "Đã check in"
+                                        : "Chờ check in"}
                                     </span>
                                   </td>
                                   <td className="px-6 py-4 text-sm text-slate-500">
-                                    {bookedVal ? new Date(bookedVal).toLocaleDateString('vi-VN', {
-                                      day: '2-digit',
-                                      month: '2-digit',
-                                      year: 'numeric'
-                                    }) : ''}
+                                    {bookedVal
+                                      ? new Date(bookedVal).toLocaleDateString(
+                                          "vi-VN",
+                                          {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                          },
+                                        )
+                                      : ""}
                                   </td>
                                   <td className="px-6 py-4 text-right">
-                                    <button 
-                                      onClick={() => handleCheckIn(p.ticketId ?? p.TicketId ?? selectedTicketId, partId)}
+                                    <button
+                                      onClick={() =>
+                                        handleCheckIn(
+                                          p.ticketId ??
+                                            p.TicketId ??
+                                            selectedTicketId,
+                                          partId,
+                                        )
+                                      }
                                       disabled={isCheckedIn || isLoading}
                                       className={`px-4 py-2 text-xs font-bold rounded-lg transition-all border ${
                                         isCheckedIn
@@ -338,7 +456,11 @@ export default function HostManageParticipants() {
                                           : "bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20"
                                       }`}
                                     >
-                                      {isLoading ? 'Đang xử lý...' : isCheckedIn ? 'Đã check in' : 'Check in'}
+                                      {isLoading
+                                        ? "Đang xử lý..."
+                                        : isCheckedIn
+                                          ? "Đã check in"
+                                          : "Check in"}
                                     </button>
                                   </td>
                                 </tr>

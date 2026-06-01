@@ -15,9 +15,7 @@ export default function HostCreateWorkshopForm({
 
       <BasicInfoSection form={form} />
 
-      <ScheduleSection form={form} />
-
-      <TicketSection form={form} />
+      <ScheduleTicketSection form={form} />
 
       <ImageSection form={form} />
 
@@ -156,7 +154,118 @@ function BasicInfoSection({ form }) {
   );
 }
 
-function ScheduleSection({ form }) {
+function createEmptyTicket() {
+  return {
+    ticketType: "standard",
+    startTime: "09:00",
+    endTime: "12:00",
+    price: "",
+    maxTickets: "",
+  };
+}
+
+function createEmptySchedule() {
+  return {
+    startOn: "",
+    tickets: [createEmptyTicket()],
+  };
+}
+
+function ScheduleTicketSection({ form }) {
+  const schedules =
+    Array.isArray(form.schedules) && form.schedules.length > 0
+      ? form.schedules
+      : [createEmptySchedule()];
+
+  function updateSchedules(nextSchedules) {
+    form.setSchedules(nextSchedules);
+  }
+
+  function updateScheduleDate(scheduleIndex, value) {
+    const nextSchedules = schedules.map((schedule, index) =>
+      index === scheduleIndex ? { ...schedule, startOn: value } : schedule,
+    );
+
+    updateSchedules(nextSchedules);
+  }
+
+  function addSchedule() {
+    updateSchedules([...schedules, createEmptySchedule()]);
+  }
+
+  function removeSchedule(scheduleIndex) {
+    const nextSchedules = schedules.filter(
+      (_, index) => index !== scheduleIndex,
+    );
+
+    updateSchedules(
+      nextSchedules.length > 0 ? nextSchedules : [createEmptySchedule()],
+    );
+  }
+
+  function duplicateSchedule(scheduleIndex) {
+    const selectedSchedule = schedules[scheduleIndex];
+
+    updateSchedules([
+      ...schedules,
+      {
+        ...selectedSchedule,
+        startOn: "",
+        tickets: selectedSchedule.tickets.map((ticket) => ({ ...ticket })),
+      },
+    ]);
+  }
+
+  function addTicket(scheduleIndex) {
+    const nextSchedules = schedules.map((schedule, index) =>
+      index === scheduleIndex
+        ? {
+            ...schedule,
+            tickets: [...schedule.tickets, createEmptyTicket()],
+          }
+        : schedule,
+    );
+
+    updateSchedules(nextSchedules);
+  }
+
+  function removeTicket(scheduleIndex, ticketIndex) {
+    const nextSchedules = schedules.map((schedule, index) => {
+      if (index !== scheduleIndex) return schedule;
+
+      const nextTickets = schedule.tickets.filter(
+        (_, currentTicketIndex) => currentTicketIndex !== ticketIndex,
+      );
+
+      return {
+        ...schedule,
+        tickets: nextTickets.length > 0 ? nextTickets : [createEmptyTicket()],
+      };
+    });
+
+    updateSchedules(nextSchedules);
+  }
+
+  function updateTicket(scheduleIndex, ticketIndex, field, value) {
+    const nextSchedules = schedules.map((schedule, index) => {
+      if (index !== scheduleIndex) return schedule;
+
+      return {
+        ...schedule,
+        tickets: schedule.tickets.map((ticket, currentTicketIndex) =>
+          currentTicketIndex === ticketIndex
+            ? {
+                ...ticket,
+                [field]: value,
+              }
+            : ticket,
+        ),
+      };
+    });
+
+    updateSchedules(nextSchedules);
+  }
+
   return (
     <section className="bg-white dark:bg-[#1a2c2a] rounded-xl p-6 md:p-8 shadow-sm border border-slate-100 dark:border-slate-800">
       <div className="flex items-center gap-3 mb-6">
@@ -164,127 +273,200 @@ function ScheduleSection({ form }) {
           2
         </span>
 
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Cài Đặt Lịch Trình
-        </h2>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Lịch trình &amp; Vé
+          </h2>
+
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Một workshop có thể có nhiều ngày, mỗi ngày có nhiều khung giờ
+            riêng.
+          </p>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">
-            Ngày mở lớp <span className="text-red-500">*</span>
-          </label>
+      <div className="space-y-6">
+        {schedules.map((schedule, scheduleIndex) => (
+          <div
+            key={scheduleIndex}
+            className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-5"
+          >
+            <div className="flex flex-col md:flex-row md:items-end gap-4 mb-5">
+              <div className="flex-1">
+                <label className="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">
+                  Ngày mở lớp <span className="text-red-500">*</span>
+                </label>
 
-          <input
-            type="date"
-            value={form.scheduleDate}
-            onChange={(event) => form.setScheduleDate(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-          />
-        </div>
+                <input
+                  required
+                  type="date"
+                  value={schedule.startOn}
+                  onChange={(event) =>
+                    updateScheduleDate(scheduleIndex, event.target.value)
+                  }
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                />
+              </div>
 
-        <div>
-          <label className="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">
-            Khung giờ <span className="text-red-500">*</span>
-          </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => duplicateSchedule(scheduleIndex)}
+                  className="px-4 py-3 rounded-xl border border-primary/30 text-primary text-sm font-bold hover:bg-primary/10 transition"
+                >
+                  Sao chép ngày
+                </button>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <input
-                className="rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white p-2 text-sm focus:border-primary focus:ring-0"
-                type="time"
-                value={form.startTime}
-                onChange={(event) => form.setStartTime(event.target.value)}
-              />
+                <button
+                  type="button"
+                  onClick={() => removeSchedule(scheduleIndex)}
+                  className="px-4 py-3 rounded-xl border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                >
+                  Xóa ngày
+                </button>
+              </div>
+            </div>
 
-              <span className="text-slate-400 text-sm">đến</span>
+            <div className="space-y-3">
+              <label className="block text-slate-700 dark:text-slate-200 text-sm font-bold">
+                Khung giờ trong ngày <span className="text-red-500">*</span>
+              </label>
 
-              <input
-                className="rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white p-2 text-sm focus:border-primary focus:ring-0"
-                type="time"
-                value={form.endTime}
-                onChange={(event) => form.setEndTime(event.target.value)}
-              />
+              {schedule.tickets.map((ticket, ticketIndex) => (
+                <div
+                  key={ticketIndex}
+                  className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 items-end rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-4"
+                >
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Bắt đầu
+                    </label>
+
+                    <input
+                      required
+                      type="time"
+                      value={ticket.startTime}
+                      onChange={(event) =>
+                        updateTicket(
+                          scheduleIndex,
+                          ticketIndex,
+                          "startTime",
+                          event.target.value,
+                        )
+                      }
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Kết thúc
+                    </label>
+
+                    <input
+                      required
+                      type="time"
+                      value={ticket.endTime}
+                      onChange={(event) =>
+                        updateTicket(
+                          scheduleIndex,
+                          ticketIndex,
+                          "endTime",
+                          event.target.value,
+                        )
+                      }
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Giá vé
+                    </label>
+
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                        ₫
+                      </span>
+
+                      <input
+                        required
+                        min="1"
+                        type="number"
+                        inputMode="numeric"
+                        value={ticket.price}
+                        onChange={(event) => {
+                          const value = event.target.value.replace(/\D/g, "");
+
+                          updateTicket(
+                            scheduleIndex,
+                            ticketIndex,
+                            "price",
+                            value === "" ? "" : Number(value),
+                          );
+                        }}
+                        placeholder="50000"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Số vé
+                    </label>
+
+                    <input
+                      required
+                      min="1"
+                      type="number"
+                      inputMode="numeric"
+                      value={ticket.maxTickets}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/\D/g, "");
+
+                        updateTicket(
+                          scheduleIndex,
+                          ticketIndex,
+                          "maxTickets",
+                          value === "" ? "" : Number(value),
+                        );
+                      }}
+                      placeholder="10"
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => removeTicket(scheduleIndex, ticketIndex)}
+                    className="px-3 py-2.5 rounded-lg text-red-500 text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              ))}
             </div>
 
             <button
-              className="flex items-center gap-2 text-primary font-bold text-sm hover:underline"
               type="button"
+              onClick={() => addTicket(scheduleIndex)}
+              className="mt-4 inline-flex items-center gap-2 text-primary font-bold text-sm hover:underline"
             >
               <span className="material-symbols-outlined text-lg">add</span>
               Thêm khung giờ khác
             </button>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TicketSection({ form }) {
-  return (
-    <section className="bg-white dark:bg-[#1a2c2a] rounded-xl p-6 md:p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-      <div className="flex items-center gap-3 mb-6">
-        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm">
-          3
-        </span>
-
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Vé &amp; Sức Chứa
-        </h2>
+        ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">
-            Giá mỗi người (VND) <span className="text-red-500">*</span>
-          </label>
-
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
-              ₫
-            </span>
-
-            <input
-              required
-              min="1"
-              value={form.price}
-              onChange={(event) => {
-                const value = event.target.value.replace(/\D/g, "");
-                form.setPrice(value === "" ? "" : Number(value));
-              }}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-8 pr-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
-              placeholder="500000"
-              type="number"
-              inputMode="numeric"
-            />
-          </div>
-
-          <p className="text-xs text-slate-400 mt-2">
-            Đã bao gồm phí nền tảng và thuế.
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">
-            Số lượng tối đa <span className="text-red-500">*</span>
-          </label>
-
-          <input
-            required
-            min="1"
-            value={form.maxTickets}
-            onChange={(event) => {
-              const value = event.target.value.replace(/\D/g, "");
-              form.setMaxTickets(value === "" ? "" : Number(value));
-            }}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
-            placeholder="8"
-            type="number"
-            inputMode="numeric"
-          />
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={addSchedule}
+        className="mt-6 w-full rounded-xl border-2 border-dashed border-primary/40 py-4 text-primary font-bold hover:bg-primary/10 transition"
+      >
+        + Thêm ngày khác
+      </button>
     </section>
   );
 }
@@ -353,17 +535,26 @@ function ImageSection({ form }) {
 
       {form.hasAnyImage ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          {form.existingThumbnail ? (
-            <div className="relative aspect-square rounded-xl overflow-hidden group">
+          {form.existingImageLinks?.map((imageLink, index) => (
+            <div
+              key={`${imageLink}-${index}`}
+              className="relative aspect-square rounded-xl overflow-hidden group"
+            >
               <img
-                alt="existing"
+                alt={`existing-${index}`}
                 className="w-full h-full object-cover"
-                src={form.existingThumbnail}
+                src={imageLink}
               />
+
+              {index === 0 ? (
+                <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-1 text-[10px] font-bold text-white">
+                  Ảnh đại diện
+                </span>
+              ) : null}
 
               <button
                 type="button"
-                onClick={() => form.setExistingThumbnail("")}
+                onClick={() => form.removeExistingImageAt(index)}
                 className="absolute top-2 right-2 p-1 bg-white/90 rounded-full text-red-500"
               >
                 <span className="material-symbols-outlined text-sm">
@@ -371,7 +562,7 @@ function ImageSection({ form }) {
                 </span>
               </button>
             </div>
-          ) : null}
+          ))}
 
           {form.previews.map((preview, index) => (
             <div
