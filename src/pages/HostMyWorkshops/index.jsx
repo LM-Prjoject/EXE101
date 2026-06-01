@@ -84,6 +84,131 @@ function getNumberValue(...values) {
   return null;
 }
 
+function getScheduleDate(schedule) {
+  return schedule?.startOn ?? schedule?.StartOn ?? "";
+}
+
+function getScheduleTickets(schedule) {
+  const tickets =
+    schedule?.tickets ??
+    schedule?.Tickets ??
+    schedule?.workshopTickets ??
+    schedule?.WorkshopTickets ??
+    [];
+
+  return Array.isArray(tickets) ? tickets : [];
+}
+
+function getTicketPrice(ticket) {
+  return getNumberValue(ticket?.price, ticket?.Price);
+}
+
+function getTicketRemaining(ticket) {
+  return getNumberValue(ticket?.remainingTickets, ticket?.RemainingTickets);
+}
+
+function getTicketMax(ticket) {
+  return getNumberValue(ticket?.maxTickets, ticket?.MaxTickets);
+}
+
+function getTodayString() {
+  const today = new Date();
+
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(today.getDate()).padStart(2, "0")}`;
+}
+
+function getWorkshopScheduleSummary(workshop) {
+  const schedules = [...(workshop.schedules ?? workshop.Schedules ?? [])].sort(
+    (a, b) =>
+      new Date(`${getScheduleDate(a)}T00:00:00`) -
+      new Date(`${getScheduleDate(b)}T00:00:00`),
+  );
+
+  const todayStr = getTodayString();
+
+  const nextSchedule =
+    schedules.find((schedule) => getScheduleDate(schedule) >= todayStr) ??
+    schedules[0];
+
+  const allTickets = schedules.flatMap((schedule) =>
+    getScheduleTickets(schedule).map((ticket) => ({
+      ...ticket,
+      scheduleDate: getScheduleDate(schedule),
+    })),
+  );
+
+  const remainingValues = allTickets
+    .map(getTicketRemaining)
+    .filter((value) => value !== null);
+
+  const maxTicketValues = allTickets
+    .map(getTicketMax)
+    .filter((value) => value !== null);
+
+  const priceValues = allTickets
+    .map(getTicketPrice)
+    .filter((value) => value !== null && value > 0);
+
+  const scheduleRemainingValues = schedules
+    .map((schedule) =>
+      getNumberValue(schedule.remainingTickets, schedule.RemainingTickets),
+    )
+    .filter((value) => value !== null);
+
+  const scheduleMaxTicketValues = schedules
+    .map((schedule) => getNumberValue(schedule.maxTickets, schedule.MaxTickets))
+    .filter((value) => value !== null);
+
+  const totalRemaining =
+    remainingValues.length > 0
+      ? remainingValues.reduce((sum, value) => sum + value, 0)
+      : scheduleRemainingValues.length > 0
+        ? scheduleRemainingValues.reduce((sum, value) => sum + value, 0)
+        : getNumberValue(workshop.remainingTickets, workshop.RemainingTickets);
+
+  const totalMaxTickets =
+    maxTicketValues.length > 0
+      ? maxTicketValues.reduce((sum, value) => sum + value, 0)
+      : scheduleMaxTicketValues.length > 0
+        ? scheduleMaxTicketValues.reduce((sum, value) => sum + value, 0)
+        : getNumberValue(workshop.maxTickets, workshop.MaxTickets);
+
+  const priceLower =
+    priceValues.length > 0
+      ? Math.min(...priceValues)
+      : getNumberValue(
+          workshop.priceLower,
+          workshop.PriceLower,
+          workshop.price,
+          workshop.Price,
+        );
+
+  const priceUpper =
+    priceValues.length > 0
+      ? Math.max(...priceValues)
+      : getNumberValue(
+          workshop.priceUpper,
+          workshop.PriceUpper,
+          workshop.priceLower,
+          workshop.PriceLower,
+          workshop.price,
+          workshop.Price,
+        );
+
+  return {
+    nextDate: getScheduleDate(nextSchedule),
+    scheduleCount: schedules.length,
+    slotCount: allTickets.length,
+    totalRemaining,
+    totalMaxTickets,
+    priceLower,
+    priceUpper,
+  };
+}
+
 export default function HostMyWorkshops() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -101,6 +226,19 @@ export default function HostMyWorkshops() {
 
   function handleEdit(workshop) {
     navigate("/host/create-workshop", { state: { workshop } });
+  }
+
+  function handleViewDetails(workshop) {
+    const id = getWorkshopId(workshop);
+
+    if (!id) {
+      setError("Không tìm thấy ID workshop.");
+      return;
+    }
+
+    navigate(`/find-companion/${id}`, {
+      state: { workshop },
+    });
   }
 
   async function handleDelete(workshop) {
@@ -154,87 +292,39 @@ export default function HostMyWorkshops() {
                 </div>
               ) : (
                 filteredWorkshops.map((workshop, index) => {
-                  const schedules = [
-                    ...(workshop.schedules ?? workshop.Schedules ?? []),
-                  ].sort(
-                    (a, b) =>
-                      new Date(`${a.startOn ?? a.StartOn}T00:00:00`) -
-                      new Date(`${b.startOn ?? b.StartOn}T00:00:00`),
-                  );
-
-                  const nextSchedule = schedules[0];
-
-                  const ticket =
-                    nextSchedule?.tickets?.[0] ?? nextSchedule?.Tickets?.[0];
-
                   const imageSrc = getWorkshopImage(workshop);
 
-                  const scheduleDate =
-                    nextSchedule?.startOn ??
-                    nextSchedule?.StartOn ??
-                    workshop.nextSchedule ??
-                    workshop.NextSchedule;
+                  const summary = getWorkshopScheduleSummary(workshop);
 
-                  const scheduleText = scheduleDate
-                    ? `Tiếp theo: ${formatScheduleDate(scheduleDate)}`
+                  const scheduleText = summary.nextDate
+                    ? `Tiếp theo: ${formatScheduleDate(summary.nextDate)}${
+                        summary.scheduleCount > 1 || summary.slotCount > 1
+                          ? ` • ${summary.scheduleCount} lịch / ${summary.slotCount} ca`
+                          : ""
+                      }`
                     : "Chưa có lịch";
 
-                  const remainingTickets = getNumberValue(
-                    workshop.remainingTickets,
-                    workshop.RemainingTickets,
-                    nextSchedule?.remainingTickets,
-                    nextSchedule?.RemainingTickets,
-                    ticket?.remainingTickets,
-                    ticket?.RemainingTickets,
-                  );
-
-                  const maxTickets = getNumberValue(
-                    workshop.maxTickets,
-                    workshop.MaxTickets,
-                    nextSchedule?.maxTickets,
-                    nextSchedule?.MaxTickets,
-                    ticket?.maxTickets,
-                    ticket?.MaxTickets,
-                  );
-
                   const seatText =
-                    remainingTickets !== null
-                      ? `Còn ${remainingTickets} vé`
-                      : maxTickets !== null
-                        ? `Tối đa ${maxTickets} vé`
+                    summary.totalRemaining !== null
+                      ? `Còn ${summary.totalRemaining} vé`
+                      : summary.totalMaxTickets !== null
+                        ? `Tối đa ${summary.totalMaxTickets} vé`
                         : "Chưa có vé";
 
-                  const priceLower = getNumberValue(
-                    workshop.priceLower,
-                    workshop.PriceLower,
-                    nextSchedule?.priceLower,
-                    nextSchedule?.PriceLower,
-                    ticket?.price,
-                    ticket?.Price,
-                  );
-
-                  const priceUpper = getNumberValue(
-                    workshop.priceUpper,
-                    workshop.PriceUpper,
-                    nextSchedule?.priceUpper,
-                    nextSchedule?.PriceUpper,
-                    ticket?.price,
-                    ticket?.Price,
-                  );
-
                   const priceText =
-                    priceLower !== null &&
-                    priceUpper !== null &&
-                    priceLower > 0 &&
-                    priceUpper > 0
-                      ? priceLower === priceUpper
-                        ? `${priceLower.toLocaleString("vi-VN")}đ`
-                        : `${priceLower.toLocaleString("vi-VN")}đ - ${priceUpper.toLocaleString("vi-VN")}đ`
+                    summary.priceLower !== null &&
+                    summary.priceUpper !== null &&
+                    summary.priceLower > 0 &&
+                    summary.priceUpper > 0
+                      ? summary.priceLower === summary.priceUpper
+                        ? `${summary.priceLower.toLocaleString("vi-VN")}đ`
+                        : `${summary.priceLower.toLocaleString("vi-VN")}đ - ${summary.priceUpper.toLocaleString("vi-VN")}đ`
                       : "Chưa có giá";
 
                   return (
                     <div
                       key={getWorkshopId(workshop) ?? index}
+                      onClick={() => handleViewDetails(workshop)}
                       className="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all cursor-pointer"
                     >
                       <div className="aspect-video relative overflow-hidden">
@@ -302,12 +392,24 @@ export default function HostMyWorkshops() {
                         </div>
 
                         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                          <span className="text-xs font-medium text-primary flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+
+                              const id = getWorkshopId(workshop);
+
+                              navigate(`/host/workshops/${id}/participants`, {
+                                state: { workshop },
+                              });
+                            }}
+                            className="text-xs font-medium text-primary flex items-center gap-1"
+                          >
                             Quản lý người tham gia
                             <span className="material-symbols-outlined text-sm">
                               chevron_right
                             </span>
-                          </span>
+                          </button>
                         </div>
                       </div>
                     </div>
