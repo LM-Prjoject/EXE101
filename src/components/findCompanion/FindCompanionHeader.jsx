@@ -1,121 +1,133 @@
-import { Link } from "react-router-dom";
-import { BRAND } from "../../constants/findCompanionTheme";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-export default function FindCompanionHeader({ currentUser }) {
+export default function FindCompanionHeader() {
+  const navigate = useNavigate();
+  const { currentUser, userProfile } = useAuth();
+
+  const PRIMARY = "#f08a78"; // salmon (main)
+
   return (
-    <header
-      className="sticky top-0 z-50 w-full border-b backdrop-blur-md"
-      style={{
-        background: "rgba(254,254,253,0.82)",
-        borderColor: `${BRAND.soft}99`,
-      }}
-    >
-      <div className="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between gap-8">
-        <Link className="flex items-center gap-3 group" to="/home">
-          <div className="relative w-10 h-10 shrink-0 overflow-visible">
+    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
+      <div className="flex items-center gap-8">
+        <Link to="/home" className="flex items-center gap-4">
+          <div className="flex size-10 items-center justify-center overflow-visible">
             <img
               src="/img/onlyLogo.png"
-              alt="Hands & Hour logo"
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 object-contain"
+              alt="Hands & Hour Logo"
+              className="h-8 w-8 object-contain scale-150 origin-center"
             />
           </div>
-
-          <h1 className="text-xl font-black tracking-tight">
-            Hands &amp; Hour
-          </h1>
+          <h2 className="text-xl font-black tracking-tight">
+            <span className="text-[#c3996c]">Hands</span>{" "}
+            <span className="text-[#f08a78]">&amp;</span>{" "}
+            <span className="text-[#c3996c]">Hour</span>
+          </h2>
         </Link>
 
-        <div className="hidden md:flex flex-1 max-w-md">
-          <div className="relative w-full group">
-            <div
-              className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              style={{ color: "#94a3b8" }}
-            >
-              <span className="material-symbols-outlined">search</span>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = e.target.search.value;
+            navigate(`/advanced-search?q=${encodeURIComponent(q)}`);
+          }}
+          className="hidden md:flex flex-col min-w-40 !h-10 max-w-64"
+        >
+          <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
+            <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
+              <span className="material-symbols-outlined text-xl">
+                search
+              </span>
             </div>
-
             <input
-              className="block w-full pl-10 pr-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{
-                background: `${BRAND.soft}18`,
-                border: `1px solid ${BRAND.soft}99`,
-                color: "#0f172a",
-              }}
-              placeholder="Tìm kiếm workshop tại Đà Nẵng..."
+              name="search"
+              className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] dark:bg-slate-800 h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all"
+              placeholder="Tìm kiếm workshop..."
               type="text"
             />
           </div>
+        </form>
+      </div>
+
+      <div className="flex flex-1 justify-end gap-8 items-center">
+        <div className="hidden lg:flex items-center gap-9">
+          <Link
+            className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal"
+            to="/home"
+          >
+            Workshops
+          </Link>
+          <Link
+            className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal"
+            to="/advanced-search"
+          >
+            Khám phá
+          </Link>
         </div>
 
-        <div className="flex items-center gap-6">
-          <nav className="hidden lg:flex items-center gap-6">
-            <Link
-              className="text-sm font-semibold"
-              to="/login"
-              style={{ color: "#334155" }}
-            >
-              Workshops
-            </Link>
-
-            <Link
-              className="text-sm font-semibold"
-              to="/register"
-              style={{ color: "#334155" }}
-            >
-              Sự kiện
-            </Link>
-
-            <a
-              className="text-sm font-semibold"
-              href="#"
-              style={{ color: "#334155" }}
-            >
-              Blog
-            </a>
-          </nav>
-
-          <div
-            className="flex items-center gap-3 pl-6 border-l"
-            style={{ borderColor: `${BRAND.soft}99` }}
+        {currentUser && (
+          <button
+            onClick={() => {
+              if (currentUser?.role === "host") {
+                navigate("/host/dashboard");
+              } else {
+                navigate("/host/verification");
+              }
+            }}
+            className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"
           >
-            {currentUser ? (
-              <div
-                className="text-sm font-semibold"
-                style={{ color: "#334155" }}
-              >
-                Xin chào,{" "}
-                <span className="font-black" style={{ color: BRAND.primary }}>
-                  {currentUser.name || currentUser.email?.split("@")[0]}
-                </span>
-              </div>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="hidden sm:flex h-10 px-4 items-center justify-center rounded-xl text-sm font-black"
-                  style={{
-                    background: `${BRAND.soft}22`,
-                    border: `1px solid ${BRAND.soft}99`,
-                    color: "#0f172a",
-                  }}
-                >
-                  Đăng nhập
-                </Link>
+            <span className="truncate">
+              {currentUser?.role === "host"
+                ? "Chế độ Host"
+                : "Trở thành Host"}
+            </span>
+          </button>
+        )}
 
-                <Link
-                  to="/register"
-                  className="font-black py-2.5 px-5 rounded-xl"
+        <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
+          <button className="relative group">
+            <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">
+              notifications
+            </span>
+            <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </button>
+
+          {currentUser ? (
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">
+                Xin chào,{" "}
+                <span className="font-black">
+                  {userProfile?.name ||
+                    currentUser?.name ||
+                    currentUser?.email?.split("@")[0] ||
+                    "Khách"}
+                </span>
+              </span>
+              <Link to="/user-profile">
+                <div
+                  className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#f08a78] cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
-                    background: BRAND.accent,
-                    color: "white",
-                    boxShadow: "0 14px 30px rgba(240,138,120,0.18)",
+                    backgroundImage: `url("${userProfile?.avatarLink || userProfile?.avatar || userProfile?.avatarUrl || currentUser?.avatarLink || currentUser?.avatar || currentUser?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDWd1XTQX6PPpP4uVb3J3DvN82EuBQmaH_4cJ2cjKJMCFlIrnPWzMyo6azLwhiTO9DZzpOkU_qy_CdO7C1D3RrjkJmYWrX9BSAIpdAiVKsveXPTH_FfLh_0HDhz_1kesEpZNKF3ypdi8maOiOtwGttcPUdES-o5AkDsa7TgEd5VzzxEHvR3QS5Qk2PqjLEuKGecI2kiuEfns-Jwe4cMy8YnFtxPRc2bAJmw0Jt1VbJE-r-JVbVFCFnnGhGTXyZdLWT2iORieQHwlzcE"}")`,
                   }}
-                >
-                  Đăng ký
-                </Link>
-              </>
-            )}
-          </div>
+                />
+              </Link>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <Link
+                className="text-sm font-semibold text-[#c3996c] hover:text-[#f08a78] transition-colors hidden sm:block"
+                to="/login"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                to="/register"
+                className="bg-[#f08a78] hover:bg-[#ee7a66] text-white font-extrabold py-2 px-5 rounded-xl transition-colors shadow-sm shadow-[#f08a78]/25 text-sm"
+              >
+                Đăng ký
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

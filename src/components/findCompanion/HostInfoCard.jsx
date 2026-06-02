@@ -99,18 +99,7 @@ export default function HostInfoCard({ workshop, navigate }) {
         <HostStat icon="verified" value="Host" label="Xác nhận" highlight />
       </div>
 
-      <button
-        className="w-full py-2 rounded-xl text-xs font-black border flex items-center justify-center gap-1.5"
-        style={{
-          borderColor: `${BRAND.soft}99`,
-          color: BRAND.primary,
-          background: `${BRAND.soft}11`,
-        }}
-        onClick={() => navigate(`/instructor/${hostId}`)}
-      >
-        <span className="material-symbols-outlined text-sm">open_in_new</span>
-        Xem hồ sơ người tổ chức
-      </button>
+
     </div>
   );
 }

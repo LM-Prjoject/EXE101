@@ -27,7 +27,7 @@ export function useFindCompanion() {
   const { workshopId } = useParams();
   const location = useLocation();
 
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   const [workshop, setWorkshop] = useState(location.state?.workshop || null);
   const [loading, setLoading] = useState(Boolean(workshopId));
@@ -391,6 +391,7 @@ export function useFindCompanion() {
     loadMoreReviews,
 
     currentUser,
+    userProfile,
 
     selectedScheduleId,
     setSelectedScheduleId,

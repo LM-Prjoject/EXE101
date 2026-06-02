@@ -10,6 +10,7 @@ export async function registerHost() {
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({}),
   });
 
   const body = await parseJsonResponse(response);

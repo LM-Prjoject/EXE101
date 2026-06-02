@@ -45,6 +45,49 @@ function toCard(workshop) {
   };
 }
 
+const categoriesConfig = [
+  { value: "all", label: "Tất cả danh mục" },
+  { value: "2", label: "Gốm sứ" },
+  { value: "1", label: "Hội họa" },
+  { value: "4", label: "Thêu thùa" },
+  { value: "3", label: "Làm đồ trang sức" },
+];
+
+const levelsConfig = [
+  { value: 2, label: "Trung cấp" },
+  { value: 3, label: "Nâng cao" },
+  { value: "tre_em", label: "Trẻ em" },
+];
+
+function getWorkshopCategoryId(w) {
+  const direct = w.categoryId ?? w.CategoryId ?? w.categoryID ?? w.CategoryID;
+  if (direct != null && direct !== "") return Number(direct);
+  const cat = w.category ?? w.Category;
+  if (typeof cat === "object" && cat !== null) {
+    return Number(cat.id ?? cat.Id ?? cat.categoryId);
+  }
+  const catName = String(w.categoryName ?? w.CategoryName ?? cat?.name ?? cat?.Name ?? cat?.label ?? cat ?? "").trim().toLowerCase();
+  if (catName.includes("gốm") || catName.includes("pottery") || catName.includes("ceramic")) return 2;
+  if (catName.includes("họa") || catName.includes("vẽ") || catName.includes("art") || catName.includes("paint")) return 1;
+  if (catName.includes("trang sức") || catName.includes("jewelry")) return 3;
+  if (catName.includes("dệt") || catName.includes("thêu") || catName.includes("thêu thùa") || catName.includes("textile") || catName.includes("sew") || catName.includes("weave")) return 4;
+  return 5;
+}
+
+function getWorkshopLevelId(w) {
+  const direct = w.levelId ?? w.LevelId ?? w.levelID ?? w.LevelID;
+  if (direct != null && direct !== "") return Number(direct);
+  const lvl = w.level ?? w.Level;
+  if (typeof lvl === "object" && lvl !== null) {
+    return Number(lvl.id ?? lvl.Id ?? lvl.levelId);
+  }
+  const lvlName = String(lvl?.name ?? lvl?.Name ?? lvl?.label ?? lvl ?? "").trim().toLowerCase();
+  if (lvlName.includes("cơ bản") || lvlName.includes("basic") || lvlName.includes("beginner")) return 1;
+  if (lvlName.includes("trung cấp") || lvlName.includes("intermediate")) return 2;
+  if (lvlName.includes("nâng cao") || lvlName.includes("advanced")) return 3;
+  return 1;
+}
+
 export default function AdvancedSearch() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,6 +96,14 @@ export default function AdvancedSearch() {
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Filter states
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [priceMin, setPriceMin] = useState(0);
+  const [priceMax, setPriceMax] = useState(2000000);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedLevels, setSelectedLevels] = useState([]);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   // Đồng bộ từ khóa tìm kiếm lên URL query parameter ?q=...
   useEffect(() => {
@@ -76,7 +127,7 @@ export default function AdvancedSearch() {
       setError("");
 
       try {
-        const data = await getWorkshops(1, 50, searchTerm);
+        const data = await getWorkshops({ page: 1, pageSize: 100, search: searchTerm });
         if (!ignore) setWorkshops(getWorkshopList(data));
       } catch (err) {
         if (!ignore) setError(err?.message || "Không thể tải danh sách workshop.");
@@ -96,11 +147,83 @@ export default function AdvancedSearch() {
     const keyword = searchTerm.trim().toLowerCase();
     return workshops
       .filter((workshop) => {
-        if (!keyword) return true;
-        return (workshop.title || "").toLowerCase().includes(keyword);
+        // 1. Text Search Filter
+        if (keyword) {
+          const matchTitle = (workshop.title || "").toLowerCase().includes(keyword);
+          const matchDesc = (workshop.description || "").toLowerCase().includes(keyword);
+          if (!matchTitle && !matchDesc) return false;
+        }
+
+        // 2. Category Filter
+        if (selectedCategory !== "all") {
+          const wCatId = getWorkshopCategoryId(workshop);
+          if (wCatId !== Number(selectedCategory)) return false;
+        }
+
+        // 3. Price Filter
+        const price = workshop.price ?? workshop.priceLower ?? workshop.priceUpper ?? 0;
+        if (price < priceMin || price > priceMax) return false;
+
+        // 4. Location Filter
+        if (selectedLocations.length > 0) {
+          const wLoc = String(workshop.location || "").toLowerCase();
+          const matchesLocation = selectedLocations.some((loc) => wLoc.includes(loc.toLowerCase()));
+          if (!matchesLocation) return false;
+        }
+
+        // 5. Level Filter
+        if (selectedLevels.length > 0) {
+          const wLevelId = getWorkshopLevelId(workshop);
+          const isKids = 
+            String(workshop.level ?? "").toLowerCase().includes("trẻ em") ||
+            String(workshop.level ?? "").toLowerCase().includes("kids") ||
+            String(workshop.title ?? "").toLowerCase().includes("trẻ em") ||
+            String(workshop.title ?? "").toLowerCase().includes("kids") ||
+            String(workshop.description ?? "").toLowerCase().includes("trẻ em") ||
+            String(workshop.description ?? "").toLowerCase().includes("kids");
+
+          const matchesLevel = selectedLevels.some((level) => {
+            if (level === "tre_em") return isKids;
+            return wLevelId === Number(level);
+          });
+          if (!matchesLevel) return false;
+        }
+
+        return true;
       })
       .map(toCard);
-  }, [workshops, searchTerm]);
+  }, [workshops, searchTerm, selectedCategory, priceMin, priceMax, selectedLocations, selectedLevels]);
+
+  const handleResetFilters = () => {
+    setSelectedCategory("all");
+    setPriceMin(0);
+    setPriceMax(2000000);
+    setSelectedLocations([]);
+    setSelectedLevels([]);
+    setSearchTerm("");
+  };
+
+  const activeTags = useMemo(() => {
+    const tags = [];
+    if (searchTerm) {
+      tags.push({ type: "search", label: `Từ khóa: ${searchTerm}`, value: searchTerm });
+    }
+    if (selectedCategory !== "all") {
+      const catObj = categoriesConfig.find(c => c.value === selectedCategory);
+      if (catObj) tags.push({ type: "category", label: catObj.label, value: selectedCategory });
+    }
+    if (priceMin > 0 || priceMax < 2000000) {
+      tags.push({ type: "price", label: `Giá < ${priceMax.toLocaleString("vi-VN")}₫`, value: { priceMin, priceMax } });
+    }
+    selectedLocations.forEach(loc => {
+      tags.push({ type: "location", label: `Khu vực: ${loc}`, value: loc });
+    });
+    selectedLevels.forEach(lvl => {
+      const lvlObj = levelsConfig.find(l => l.value === lvl);
+      if (lvlObj) tags.push({ type: "level", label: lvlObj.label, value: lvl });
+    });
+    return tags;
+  }, [searchTerm, selectedCategory, priceMin, priceMax, selectedLocations, selectedLevels]);
 
   // ===== Cards data =====
   const cards = [
@@ -344,7 +467,6 @@ export default function AdvancedSearch() {
             <div className="hidden lg:flex items-center gap-9">
               <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/home">Workshops</Link>
               <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/advanced-search">Khám phá</Link>
-              <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/community">Cộng đồng</Link>
             </div>
 
             {currentUser && (
@@ -415,10 +537,17 @@ export default function AdvancedSearch() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Sidebar Filters */}
-            <aside className="hidden lg:block lg:col-span-3 space-y-8 pr-4">
+            <aside className={`${showMobileSidebar ? "block fixed inset-0 z-50 bg-[#f6f2e9] dark:bg-[#0b0f14] p-6 overflow-y-auto" : "hidden"} lg:block lg:col-span-3 space-y-8 pr-4`}>
+              {showMobileSidebar && (
+                <div className="flex justify-end lg:hidden">
+                  <button onClick={() => setShowMobileSidebar(false)} className="p-2">
+                    <span className="material-symbols-outlined text-2xl">close</span>
+                  </button>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <h3 className="font-black text-lg">Bộ lọc</h3>
-                <button className="text-sm text-[#c3996c] font-semibold hover:underline">
+                <button onClick={handleResetFilters} className="text-sm text-[#c3996c] font-semibold hover:underline">
                   Thiết lập lại
                 </button>
               </div>
@@ -429,28 +558,23 @@ export default function AdvancedSearch() {
                   Danh mục
                 </h4>
                 <div className="space-y-2">
-                  {[
-                    "Tất cả danh mục",
-                    "Gốm sứ",
-                    "Hội họa",
-                    "Thêu thùa",
-                    "Làm đồ trang sức",
-                  ].map((label, idx) => (
+                  {categoriesConfig.map((cat) => (
                     <label
-                      key={label}
+                      key={cat.value}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
                       <input
                         className="sr-only peer"
                         name="category"
                         type="radio"
-                        defaultChecked={idx === 1}
+                        checked={selectedCategory === cat.value}
+                        onChange={() => setSelectedCategory(cat.value)}
                       />
                       <div className="w-5 h-5 rounded-full border-2 border-[#fbc4ae]/80 dark:border-white/15 peer-checked:border-[#f08a78] peer-checked:bg-[#f08a78] flex items-center justify-center transition-all">
                         <div className="w-2 h-2 bg-white rounded-full opacity-0 peer-checked:opacity-100" />
                       </div>
-                      <span className="text-sm font-semibold group-hover:text-[#f08a78] transition-colors">
-                        {label}
+                      <span className="text-sm font-semibold group-hover:text-[#f08a78] transition-colors text-slate-700 dark:text-slate-300">
+                        {cat.label}
                       </span>
                     </label>
                   ))}
@@ -466,26 +590,27 @@ export default function AdvancedSearch() {
                 </h4>
                 <div className="relative pt-6 pb-2">
                   <div className="absolute top-0 left-0 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    $0
+                    0₫
                   </div>
                   <div className="absolute top-0 right-0 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    $200+
+                    2.000.000₫+
                   </div>
                   <input
                     className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-[#f08a78] bg-[#fbc4ae]/70 dark:bg-white/10"
-                    max="200"
+                    max="2000000"
                     min="0"
+                    step="50000"
                     type="range"
-                    value="50"
-                    readOnly
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(Number(e.target.value))}
                   />
-                  <div className="flex justify-between mt-2">
-                    <div className="border border-[#fbc4ae]/70 dark:border-white/10 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-white/5 w-20 text-center font-semibold">
-                      $10
+                  <div className="flex justify-between mt-2 items-center gap-2">
+                    <div className="border border-[#fbc4ae]/70 dark:border-white/10 rounded-lg px-2 py-1.5 text-xs bg-white dark:bg-white/5 w-24 text-center font-semibold text-slate-700 dark:text-slate-300">
+                      {priceMin.toLocaleString("vi-VN")}₫
                     </div>
                     <div className="text-slate-400">-</div>
-                    <div className="border border-[#fbc4ae]/70 dark:border-white/10 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-white/5 w-20 text-center font-semibold">
-                      $80
+                    <div className="border border-[#fbc4ae]/70 dark:border-white/10 rounded-lg px-2 py-1.5 text-xs bg-white dark:bg-white/5 w-24 text-center font-semibold text-slate-700 dark:text-slate-300">
+                      {priceMax.toLocaleString("vi-VN")}₫
                     </div>
                   </div>
                 </div>
@@ -493,25 +618,44 @@ export default function AdvancedSearch() {
 
               <div className="h-px bg-[#fbc4ae]/60 dark:bg-white/10" />
 
-              {/* Distance (demo) */}
+              {/* Distance / Location */}
               <div className="space-y-4">
                 <h4 className="font-black text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Khu vực
                 </h4>
                 <div className="space-y-2">
-                  {["Tất cả", "Sơn Trà", "Hải Châu"].map((label, idx) => (
-                    <label
-                      key={label}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        className="w-5 h-5 rounded border-[#fbc4ae]/80 text-[#f08a78] focus:ring-[#f08a78]/20 bg-transparent"
-                        type="checkbox"
-                        defaultChecked={idx === 1}
-                      />
-                      <span className="text-sm font-semibold">{label}</span>
-                    </label>
-                  ))}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      className="w-5 h-5 rounded border-[#fbc4ae]/80 text-[#f08a78] focus:ring-[#f08a78]/20 bg-transparent"
+                      type="checkbox"
+                      checked={selectedLocations.length === 0}
+                      onChange={() => setSelectedLocations([])}
+                    />
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tất cả</span>
+                  </label>
+                  {["Sơn Trà", "Hải Châu"].map((label) => {
+                    const isChecked = selectedLocations.includes(label);
+                    return (
+                      <label
+                        key={label}
+                        className="flex items-center gap-3 cursor-pointer group"
+                      >
+                        <input
+                          className="w-5 h-5 rounded border-[#fbc4ae]/80 text-[#f08a78] focus:ring-[#f08a78]/20 bg-transparent"
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setSelectedLocations(selectedLocations.filter((x) => x !== label));
+                            } else {
+                              setSelectedLocations([...selectedLocations, label]);
+                            }
+                          }}
+                        />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -523,23 +667,35 @@ export default function AdvancedSearch() {
                   Trình độ
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  <button className="px-3 py-1.5 rounded-lg border border-[#f08a78]/60 bg-[#fbc4ae]/35 text-[#c3996c] text-sm font-bold transition-colors">
-                    Gốm sứ{" "}
-                    <button className="ml-1 hover:text-red-500" type="button">
-                      <span className="material-symbols-outlined text-[14px]">
-                        close
-                      </span>
-                    </button>
-                  </button>
-                  {["Trung cấp", "Nâng cao", "Trẻ em"].map((label) => (
-                    <button
-                      key={label}
-                      className="px-3 py-1.5 rounded-lg border border-[#fbc4ae]/70 dark:border-white/10 hover:border-[#f08a78]/60 hover:text-[#f08a78] text-sm font-semibold transition-colors"
-                      type="button"
-                    >
-                      {label}
-                    </button>
-                  ))}
+                  {levelsConfig.map((lvl) => {
+                    const isSelected = selectedLevels.includes(lvl.value);
+                    if (isSelected) {
+                      return (
+                        <button
+                          key={lvl.value}
+                          onClick={() => setSelectedLevels(selectedLevels.filter((x) => x !== lvl.value))}
+                          className="px-3 py-1.5 rounded-lg border border-[#f08a78]/60 bg-[#fbc4ae]/35 text-[#c3996c] text-sm font-bold transition-colors flex items-center gap-1.5"
+                          type="button"
+                        >
+                          {lvl.label}
+                          <span className="material-symbols-outlined text-[14px] hover:text-red-500">
+                            close
+                          </span>
+                        </button>
+                      );
+                    } else {
+                      return (
+                        <button
+                          key={lvl.value}
+                          onClick={() => setSelectedLevels([...selectedLevels, lvl.value])}
+                          className="px-3 py-1.5 rounded-lg border border-[#fbc4ae]/70 dark:border-white/10 hover:border-[#f08a78]/60 hover:text-[#f08a78] text-slate-700 dark:text-slate-300 text-sm font-semibold transition-colors"
+                          type="button"
+                        >
+                          {lvl.label}
+                        </button>
+                      );
+                    }
+                  })}
                 </div>
               </div>
             </aside>
@@ -562,21 +718,8 @@ export default function AdvancedSearch() {
                 </div>
 
                 <div className="flex items-center gap-3 self-start md:self-auto">
-                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                    Sắp xếp theo:
-                  </span>
-                  <div className="relative group">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 px-4 py-2 bg-[#fbc4ae]/25 dark:bg-white/5 border border-[#fbc4ae]/60 dark:border-white/10 rounded-lg text-sm font-bold hover:border-[#f08a78]/60 hover:bg-[#fbc4ae]/35 transition-colors"
-                    >
-                      Đề xuất{" "}
-                      <span className="material-symbols-outlined text-[18px]">
-                        expand_more
-                      </span>
-                    </button>
-                  </div>
                   <button
+                    onClick={() => setShowMobileSidebar(true)}
                     type="button"
                     className="lg:hidden flex items-center gap-2 px-4 py-2 bg-[#fbc4ae]/30 text-[#f08a78] rounded-lg text-sm font-bold"
                   >
@@ -587,22 +730,43 @@ export default function AdvancedSearch() {
                   </button>
                 </div>
               </div>
-
+ 
               {/* Active Filters Tags */}
               <div className="flex flex-wrap gap-2">
-                {[searchTerm || "Tất cả workshop"].map((tag) => (
+                {activeTags.map((tag) => (
                   <div
-                    key={tag}
+                    key={tag.label}
                     className="flex items-center gap-1.5 px-3 py-1 bg-[#fbc4ae]/35 text-[#c3996c] rounded-full text-xs font-black uppercase tracking-wide border border-[#f08a78]/20"
                   >
-                    {tag}
-                    <button type="button" className="hover:text-red-500">
+                    {tag.label}
+                    <button
+                      type="button"
+                      className="hover:text-red-500"
+                      onClick={() => {
+                        if (tag.type === "search") setSearchTerm("");
+                        else if (tag.type === "category") setSelectedCategory("all");
+                        else if (tag.type === "price") {
+                          setPriceMin(0);
+                          setPriceMax(2000000);
+                        }
+                        else if (tag.type === "location") setSelectedLocations(selectedLocations.filter(x => x !== tag.value));
+                        else if (tag.type === "level") setSelectedLevels(selectedLevels.filter(x => x !== tag.value));
+                      }}
+                    >
                       <span className="material-symbols-outlined text-[14px]">
                         close
                       </span>
                     </button>
                   </div>
                 ))}
+                {activeTags.length > 0 && (
+                  <button
+                    onClick={handleResetFilters}
+                    className="text-xs text-[#c3996c] hover:text-[#f08a78] font-bold underline px-2 py-1"
+                  >
+                    Xóa tất cả
+                  </button>
+                )}
               </div>
 
               {/* Cards Grid (FULL) */}
@@ -687,7 +851,7 @@ export default function AdvancedSearch() {
             </div>
 
             <div className="text-slate-500 dark:text-slate-400 text-sm">
-              © 2024 Hands &amp; Hour. Được tạo ra với tình yêu tại Đà Nẵng.
+              © 2024 Hands &amp; Hour. Được tạo ra với tình yêu.
             </div>
 
             <div className="flex gap-6">

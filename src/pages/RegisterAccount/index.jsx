@@ -147,29 +147,8 @@ export default function RegisterAccount() {
                   Tham gia cộng đồng sáng tạo của chúng tôi
                 </h1>
                 <p className="text-white/90 text-lg font-medium leading-normal mb-8">
-                  Khám phá các Workshop, gặp gỡ các nghệ nhân địa phương và học những nghề thủ công mới tại Đà Nẵng.
+                  Khám phá các Workshop, gặp gỡ các nghệ nhân địa phương và học những nghề thủ công mới.
                 </p>
-
-                <div className="flex items-center gap-3 text-white/80 text-sm font-medium">
-                  <div className="flex -space-x-2">
-                    <img
-                      alt="User avatar"
-                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeL8Zb7qMYedHPbq2g3S-ha47gPum62lSsJv1XIQxVDduBpSmGFWOor6VQulXBH4EvgHuh3CGLBRlHXe78Ydod6hFZkjBCPV6tMNcOzk_-GfytSjpP67ekb8LVPf-wkHIfPRuAXkVNHAn8PrH-kA1q7hyq34GbS1T9uf6ze-n0EbIkxQZ2TWMzCiDQHdW9xVceu2KN2oQ89CFizXMMT53OjzbmlUm-God9uIK7fsPc6EVOabqdzWIXR_4ndJ9KzA4tP9OdEsWbJK6a"
-                    />
-                    <img
-                      alt="User avatar"
-                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrrnjcwPew1dlhWFZOx2kECc5a1j5bNJbXQyvIQTaIsK7zYYkkD1nw5aOfUVnR1Jd7CEKtnugEGt2WhuoQd3QpBrsP1iz8_KfuYArVqd79n3wDMl7IgZRG5JDqDxY7j7nPf7QFDI9V3YRlZoAt8c3Ngxys_F2suPHGJ3vQz9UoN6233Mk-xk7PAkUTbCLRkdISXCcMpgI2kbHDh-oPBXcx_jw7vubf3TJmaJYAzSqeviiD4c_aZEk4kZqi6qbkrdD-QWYIBeSagDmr"
-                    />
-                    <img
-                      alt="User avatar"
-                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9MVorx6AV5HL98atCCPdontf4sESVeqLM0qVUzJnVXQDGDUn5G6Ht7PSsWZfceDawn7ukULmIEbWy7GmcuTYYinJHEG1QCkGAFqxElZajPMiNPfr1w_Yj98QJspd6P_KNiYKheZUMvYMF9k-w2OUv3clsgudE-Ai9JLKj4DtB-06ZvPe83k0iyEVo-vlA8RMHYBRbudKtj6OHmofan3BBk1cHGyUsePm2pYZfOAX0dZbs3fbJQqoL7tRCT5jPtwpJSjx4n9Qsj324"
-                    />
-                  </div>
-                  <span>Tham gia cùng hơn 2.000 người sáng tạo</span>
-                </div>
               </div>
             </div>
 

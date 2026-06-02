@@ -63,6 +63,7 @@ export function parseJwt(token) {
       id: json['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || json.nameid || json.sub,
       name: json.name || json.unique_name || json['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || json.email,
       role: json['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || json.role,
+      email: json.email || json['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || json.unique_name || json.sub,
     };
   } catch {
     return null;

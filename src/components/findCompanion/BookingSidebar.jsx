@@ -16,6 +16,7 @@ export default function BookingSidebar({
   workshop,
   detail,
   currentUser,
+  userProfile,
   selectedScheduleId,
   setSelectedScheduleId,
   tickets,
@@ -58,7 +59,7 @@ export default function BookingSidebar({
               activeSchedule={activeSchedule}
             />
 
-            <BuyerInfo currentUser={currentUser} />
+            <BuyerInfo currentUser={currentUser} userProfile={userProfile} />
           </div>
 
           {paymentError ? (
@@ -92,21 +93,24 @@ export default function BookingSidebar({
 }
 
 function BookingPriceHeader({ priceText, activeRemainingTickets }) {
+  const isContact = priceText === "Liên hệ" || !priceText;
+
   return (
     <div className="flex justify-between items-start mb-6">
       <div>
-        <span className="text-sm font-semibold" style={{ color: "#64748b" }}>
-          Giá mỗi người
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          Giá tham gia
         </span>
 
-        <div className="flex items-baseline gap-1 mt-1">
-          <span className="text-3xl font-black" style={{ color: "#0f172a" }}>
+        <div className="flex items-baseline gap-1.5 mt-1.5">
+          <span className="text-3xl font-black text-slate-900 dark:text-white" style={{ color: !isContact ? BRAND.accent : undefined }}>
             {priceText}
           </span>
-
-          <span className="text-lg font-semibold" style={{ color: "#64748b" }}>
-            mỗi người
-          </span>
+          {!isContact && (
+            <span className="text-sm font-semibold text-slate-500">
+              / người
+            </span>
+          )}
         </div>
       </div>
 
@@ -337,7 +341,7 @@ function TicketSelector({
   );
 }
 
-function BuyerInfo({ currentUser }) {
+function BuyerInfo({ currentUser, userProfile }) {
   return (
     <div className="space-y-2">
       <label className="block text-sm font-black" style={{ color: "#334155" }}>
@@ -376,7 +380,8 @@ function BuyerInfo({ currentUser }) {
               className="text-sm font-black truncate"
               style={{ color: "#0f172a" }}
             >
-              {currentUser?.name ||
+              {userProfile?.name ||
+                currentUser?.name ||
                 currentUser?.email?.split("@")[0] ||
                 "Người dùng"}
             </div>
@@ -385,7 +390,7 @@ function BuyerInfo({ currentUser }) {
               className="text-xs truncate font-semibold"
               style={{ color: "#64748b" }}
             >
-              {currentUser?.email || "Chưa cập nhật email"}
+              {userProfile?.email || currentUser?.email || "Chưa cập nhật email"}
             </div>
           </div>
         </div>
