@@ -59,10 +59,10 @@ function normalizeText(value) {
 function getCategoryName(workshop) {
   const categoryId = Number(
     workshop.categoryId ??
-      workshop.CategoryId ??
-      workshop.categoryID ??
-      workshop.category?.id ??
-      workshop.category?.categoryId,
+    workshop.CategoryId ??
+    workshop.categoryID ??
+    workshop.category?.id ??
+    workshop.category?.categoryId,
   );
 
   if (CATEGORY_LABELS[categoryId]) {
@@ -71,10 +71,10 @@ function getCategoryName(workshop) {
 
   const rawCategory = normalizeText(
     workshop.categoryName ??
-      workshop.CategoryName ??
-      workshop.category?.name ??
-      workshop.category?.title ??
-      workshop.category,
+    workshop.CategoryName ??
+    workshop.category?.name ??
+    workshop.category?.title ??
+    workshop.category,
   );
 
   return CATEGORY_TEXT_MAP[rawCategory] || "Workshop";
@@ -185,11 +185,6 @@ export default function HomeWithBanner() {
   };
 
   const handleSelectDistrict = (loc) => {
-    // Clear other filter categories
-    setPriceMin(null);
-    setPriceMax(null);
-    setScheduleWithinDays(null);
-
     setSelectedDistricts((prev) => {
       const isChecked = prev.includes(loc);
       if (isChecked) {
@@ -201,36 +196,19 @@ export default function HomeWithBanner() {
   };
 
   const handleSelectPrice = (min, max) => {
-    // Clear other filter categories
-    setSelectedDistricts([]);
-    setScheduleWithinDays(null);
-
     setPriceMin(min);
     setPriceMax(max);
   };
 
   const handleCustomPriceMin = (val) => {
-    // Clear other filter categories
-    setSelectedDistricts([]);
-    setScheduleWithinDays(null);
-
     setPriceMin(val);
   };
 
   const handleCustomPriceMax = (val) => {
-    // Clear other filter categories
-    setSelectedDistricts([]);
-    setScheduleWithinDays(null);
-
     setPriceMax(val);
   };
 
   const handleSelectSchedule = (days) => {
-    // Clear other filter categories
-    setSelectedDistricts([]);
-    setPriceMin(null);
-    setPriceMax(null);
-
     setScheduleWithinDays(days);
   };
 
@@ -304,13 +282,11 @@ export default function HomeWithBanner() {
                     </span>
                   </div>
                   <input
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all cursor-pointer"
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all"
                     placeholder="Tìm kiếm workshop..."
-                    readOnly
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    onClick={handleSearch}
                   />
                 </div>
               </label>
@@ -330,12 +306,7 @@ export default function HomeWithBanner() {
                 >
                   Khám phá
                 </Link>
-                <Link
-                  className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal"
-                  to="/community"
-                >
-                  Cộng đồng
-                </Link>
+
               </div>
 
               {currentUser && (
@@ -415,7 +386,7 @@ export default function HomeWithBanner() {
                   style={{ color: TEXT_MAIN }}
                 >
                   Khám phá các <span style={{ color: PRIMARY }}>Workshop</span>{" "}
-                  Sáng tạo <br className="hidden md:block" /> tại Đà Nẵng
+                  Sáng tạo
                 </h1>
 
                 <div className="w-full max-w-2xl">
@@ -477,12 +448,12 @@ export default function HomeWithBanner() {
                       style={{
                         borderColor:
                           openDropdown === "district" ||
-                          selectedDistricts.length > 0
+                            selectedDistricts.length > 0
                             ? PRIMARY
                             : BORDER,
                         color:
                           openDropdown === "district" ||
-                          selectedDistricts.length > 0
+                            selectedDistricts.length > 0
                             ? PRIMARY
                             : TEXT_MAIN,
                       }}
@@ -543,14 +514,14 @@ export default function HomeWithBanner() {
                       style={{
                         borderColor:
                           openDropdown === "price" ||
-                          priceMin !== null ||
-                          priceMax !== null
+                            priceMin !== null ||
+                            priceMax !== null
                             ? PRIMARY
                             : BORDER,
                         color:
                           openDropdown === "price" ||
-                          priceMin !== null ||
-                          priceMax !== null
+                            priceMin !== null ||
+                            priceMax !== null
                             ? PRIMARY
                             : TEXT_MAIN,
                       }}
@@ -617,12 +588,12 @@ export default function HomeWithBanner() {
                       style={{
                         borderColor:
                           openDropdown === "schedule" ||
-                          scheduleWithinDays !== null
+                            scheduleWithinDays !== null
                             ? PRIMARY
                             : BORDER,
                         color:
                           openDropdown === "schedule" ||
-                          scheduleWithinDays !== null
+                            scheduleWithinDays !== null
                             ? PRIMARY
                             : TEXT_MAIN,
                       }}
@@ -684,12 +655,12 @@ export default function HomeWithBanner() {
                       color: TEXT_MAIN,
                     }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(251,196,174,0.75)")
+                    (e.currentTarget.style.background =
+                      "rgba(251,196,174,0.75)")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(251,196,174,0.55)")
+                    (e.currentTarget.style.background =
+                      "rgba(251,196,174,0.55)")
                     }
                   >
                     Xóa tất cả
@@ -880,42 +851,23 @@ export default function HomeWithBanner() {
                     </h2>
                     <p className="mt-4 text-lg text-white/90">
                       Xem những tác phẩm tuyệt đẹp và những gương mặt hạnh phúc
-                      từ các workshop gần đây. Tìm cảm hứng sáng tạo tại Đà
-                      Nẵng.
+                      từ các workshop gần đây. Tìm cảm hứng sáng tạo.
                     </p>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-4">
-                    <Link
-                      className="group flex items-center gap-3 rounded-2xl bg-white px-8 py-4 text-base font-bold transition-all hover:shadow-lg active:scale-95"
+                    <button
+                      className="group flex items-center gap-3 rounded-2xl bg-white/70 px-8 py-4 text-base font-bold transition-all cursor-not-allowed opacity-75"
                       style={{ color: PRIMARY }}
-                      to="/community"
+                      disabled
                     >
-                      Xem tất cả{" "}
-                      <span className="material-symbols-outlined text-sm">
-                        arrow_forward
-                      </span>
-                    </Link>
+                      Coming soon
+                    </button>
                   </div>
                 </div>
               </section>
 
-              <div className="flex justify-center py-8">
-                <button
-                  className="flex h-12 w-full max-w-[200px] items-center justify-center rounded-xl border-2 bg-transparent text-sm font-bold transition-colors"
-                  style={{ borderColor: PRIMARY, color: PRIMARY }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = PRIMARY;
-                    e.currentTarget.style.color = "#fff";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = PRIMARY;
-                  }}
-                >
-                  Tải thêm
-                </button>
-              </div>
+
             </div>
           </main>
 
@@ -948,7 +900,7 @@ export default function HomeWithBanner() {
                     className="text-sm leading-relaxed"
                     style={{ color: TEXT_MUTED }}
                   >
-                    Kết nối những tâm hồn sáng tạo tại Đà Nẵng. Khám phá niềm
+                    Kết nối những tâm hồn sáng tạo. Khám phá niềm
                     đam mê tiếp theo của bạn hoặc chia sẻ kỹ năng với cộng đồng
                     sôi động của chúng tôi.
                   </p>
@@ -1012,7 +964,15 @@ export default function HomeWithBanner() {
                           onMouseLeave={(e) =>
                             (e.currentTarget.style.color = TEXT_MUTED)
                           }
-                          href="#"
+                          href={
+                            ic === "public"
+                              ? "https://www.facebook.com/profile.php?id=61590287254561"
+                              : ic === "photo_camera"
+                              ? "https://www.instagram.com/workshop_handsandhour"
+                              : "#"
+                          }
+                          target={ic === "public" || ic === "photo_camera" ? "_blank" : undefined}
+                          rel={ic === "public" || ic === "photo_camera" ? "noopener noreferrer" : undefined}
                         >
                           <span className="material-symbols-outlined">
                             {ic}

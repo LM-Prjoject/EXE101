@@ -12,9 +12,9 @@ export default function HostVerifyStep2() {
     }
   }, [currentUser]);
 
-  const name = userProfile?.name || currentUser?.name || 'Thành viên';
-  const email = currentUser?.email || 'N/A';
-  const phone = userProfile?.phoneNumber || currentUser?.phoneNumber || 'Chưa cập nhật';
+  const name = userProfile?.name || userProfile?.Name || currentUser?.name || currentUser?.Name || 'Thành viên';
+  const email = userProfile?.email || userProfile?.Email || currentUser?.email || currentUser?.Email || 'N/A';
+  const phone = userProfile?.phoneNumber || userProfile?.PhoneNumber || currentUser?.phoneNumber || currentUser?.PhoneNumber || 'Chưa cập nhật';
 
   return (
     <>
@@ -79,19 +79,19 @@ export default function HostVerifyStep2() {
               <h3 className="text-base font-bold text-slate-700 dark:text-slate-300 mb-4 pb-2 border-b border-slate-200/50 dark:border-slate-800">Thông tin đăng ký</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Họ &amp; Tên / Thương hiệu:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Họ &amp; Tên / Thương hiệu:</span>
                   <span className="text-slate-800 dark:text-white font-bold">{name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Địa chỉ Email:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Địa chỉ Email:</span>
                   <span className="text-slate-800 dark:text-white font-bold">{email}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Số điện thoại liên hệ:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Số điện thoại liên hệ:</span>
                   <span className="text-slate-800 dark:text-white font-bold">{phone}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#d5ddc3] dark:text-slate-400 font-medium">Trạng thái duyệt:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Trạng thái duyệt:</span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200/55">
                     <span className="size-1.5 rounded-full bg-amber-500 animate-ping"></span>
                     <span>Đang chờ phê duyệt</span>
@@ -106,21 +106,21 @@ export default function HostVerifyStep2() {
                 <div className="size-8 rounded-full bg-[#f08a78]/10 text-[#f08a78] font-bold flex items-center justify-center shrink-0">1</div>
                 <div>
                   <h4 className="font-bold text-[#2B2B2B] dark:text-white">Kiểm tra thông tin (1-2 ngày làm việc)</h4>
-                  <p className="text-xs text-[#d5ddc3] dark:text-slate-400 mt-1">Staff sẽ rà soát thông tin liên hệ và lịch sử tài khoản của bạn để đảm bảo tính an toàn cho cộng đồng.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Staff sẽ rà soát thông tin liên hệ và lịch sử tài khoản của bạn để đảm bảo tính an toàn cho cộng đồng.</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="size-8 rounded-full bg-[#fbc4ae]/20 text-[#fbc4ae] font-bold flex items-center justify-center shrink-0">2</div>
                 <div>
                   <h4 className="font-bold text-[#2B2B2B] dark:text-white">Nhận thông báo qua email</h4>
-                  <p className="text-xs text-[#d5ddc3] dark:text-slate-400 mt-1">Hệ thống sẽ gửi email tự động thông báo kết quả duyệt (Chấp nhận/Từ chối kèm lý do) đến hộp thư của bạn.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Hệ thống sẽ gửi email tự động thông báo kết quả duyệt (Chấp nhận/Từ chối kèm lý do) đến hộp thư của bạn.</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="size-8 rounded-full bg-[#d5ddce] text-[#6f8b6f] font-bold flex items-center justify-center shrink-0">3</div>
                 <div>
                   <h4 className="font-bold text-[#2B2B2B] dark:text-white">Kích hoạt chế độ Host</h4>
-                  <p className="text-xs text-[#d5ddc3] dark:text-slate-400 mt-1">Ngay khi được duyệt, tài khoản của bạn sẽ tự động chuyển sang chế độ Host. Bạn có thể truy cập dashboard để tạo và đăng ký workshop mới.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Ngay khi được duyệt, tài khoản của bạn sẽ tự động chuyển sang chế độ Host. Bạn có thể truy cập dashboard để tạo và đăng ký workshop mới.</p>
                 </div>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function HostVerifyStep2() {
         </main>
 
         {/* Footer */}
-        <footer className="py-6 text-center text-[#d5ddc3] text-xs mt-auto">
+        <footer className="py-6 text-center text-slate-500 dark:text-slate-400 text-xs mt-auto">
           © 2026 Hands &amp; Hour. Tất cả các quyền được bảo lưu.
         </footer>
       </div>

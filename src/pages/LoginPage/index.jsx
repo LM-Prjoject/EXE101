@@ -132,46 +132,6 @@ export default function LoginPage() {
               <span style={{ color: '#f08a78' }}>Sáng tạo</span> của Bạn<br />
               Ngay Hôm Nay.
             </h1>
-            <p style={{ color: '#4a6663', fontSize: '1rem', lineHeight: 1.7, margin: '0 0 2rem', maxWidth: 340 }}>
-              Gia nhập cộng đồng những người làm thủ công sôi động nhất Đà Nẵng.
-            </p>
-
-            {/* Avatar row */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
-  {/* Hàng 1: avatar */}
-  <div style={{ display: 'flex' }}>
-    {[
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDRukATfo1BzF-10reJdFWGWYpQcYy4CydvuN2SC30FPJLa3QzKDmCN6zbQb--gPLag_7cILHAmPayz6hWnQ_WH387376Fuv2-CwJScPuuOrX8-FjenncpC-f9SIsrRO4bZbHAoVp4aAqBPjKQW3HV9OSmD2GY2BlSR781XqgLEeyZ-UTjLxJxg5YMvS8YpRuUilfXW_Qnw60z871JlGF7OYES1GWT2N1BjwJ2rqFh9xtpR7fiSoZZJykpm8jhz-P29_RYFyXyCm7Iy',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBwQM5woL7I0jhiuuwLuCC1HqfOKpIPY7k0icRcbWf1QgCN8gsFzdC8Cr3e6ak9s_dHxIGcizyCTsPPKvbzEdAdhxTE7DxxCUGSSoFBh1LBf4BBXGDSIYoOlbEm2m_u76f84tOnUg6Hx08ba_RwJBuyrJtoYj3zOipEiOyl7arGYjNHdoccqTF7rgAcrs2h0MHinakPS5RnlRKfro3Tjz62EAdEF9o1Wvo8uUdYdlTIL-1gRrzl6H5Z4zC9eO9wRgH-J4uRHwJN6TyP',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDZBISV6viUM6PxlhuqOkLMJXsiIdXg783Nn_DiEIetUIy8lSCibGBRXA9IkhQWhnn3-5MMu71-ezcjdVh0EPSanebE-5nAWrzg0tWeh6iirN0YSDHY6arllT2n7RQrscGNF6KtilnMk8CyqXR8D-BXu4USi68OPRBf5prHPS7nxwKdh4yKTRHn_8AkHGwI2QsrY6jyuMu9s2bGhbGWDZecQ026qraebQ51rrkK5_oVOpcCm61lf2wfrKIfQWU3nZjNvYfAvyJQVBuK',
-    ].map((src, i) => (
-      <img
-        key={i}
-        src={src}
-        alt=""
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: '2px solid #fff',
-          marginLeft: i === 0 ? 0 : -10,
-        }}
-      />
-    ))}
-  </div>
-
-  {/* Hàng 2: text */}
-  <div>
-    <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#2b2b2b', lineHeight: 1.2 }}>
-      Nhà sáng tạo tích cực
-    </div>
-    <div style={{ fontSize: '0.72rem', color: '#4a6663' }}>
-      Gia nhập đại gia đình +2k
-    </div>
-  </div>
-</div>
-
           </div>
 
           {/* Hero image bottom-right */}

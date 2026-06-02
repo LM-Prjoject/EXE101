@@ -6,7 +6,6 @@ const userLinks = [
   { to: "/home", label: "Trang Chủ", icon: "home" },
   { to: "/advanced-search", label: "Tìm kiếm", icon: "search" },
   { to: "/my-schedule", label: "Lịch", icon: "calendar_today" },
-  { to: "/community", label: "Cộng đồng", icon: "photo_camera" },
   { to: "/user-profile", label: "Hồ sơ", icon: "person" },
 ];
 

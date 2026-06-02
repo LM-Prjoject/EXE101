@@ -29,6 +29,7 @@ async function parseJsonResponse(response) {
 }
 
 function buildError(response, body) {
+  console.error('[API Error Detail]:', { status: response.status, statusText: response.statusText, body });
   const defaultMessage = `${response.status} ${response.statusText}`;
   if (!body) return new Error(defaultMessage);
   if (typeof body === 'string') return new Error(body);

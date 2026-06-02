@@ -148,26 +148,32 @@ export default function MySchedule() {
                 </h2>
               </Link>
 
-              <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const q = e.target.search.value;
+                  navigate(`/advanced-search?q=${encodeURIComponent(q)}`);
+                }}
+                className="hidden md:flex flex-col min-w-40 !h-10 max-w-64"
+              >
                 <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
                   <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
                     <span className="material-symbols-outlined text-xl">search</span>
                   </div>
                   <input
+                    name="search"
                     className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] dark:bg-slate-800 h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all"
                     placeholder="Tìm kiếm workshop..."
-                    readOnly
-                    onClick={() => navigate("/advanced-search")}
+                    type="text"
                   />
                 </div>
-              </label>
+              </form>
             </div>
 
             <div className="flex flex-1 justify-end gap-8 items-center">
               <div className="hidden lg:flex items-center gap-9">
                 <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/home">Workshops</Link>
                 <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/advanced-search">Khám phá</Link>
-                <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/community">Cộng đồng</Link>
               </div>
 
               {currentUser && (
@@ -228,7 +234,7 @@ export default function MySchedule() {
                     {monthName}
                   </h3>
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={handlePrevMonth}
                       className="p-2 hover:bg-[#fbc4ae]/25 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
@@ -236,7 +242,7 @@ export default function MySchedule() {
                         chevron_left
                       </span>
                     </button>
-                    <button 
+                    <button
                       onClick={handleNextMonth}
                       className="p-2 hover:bg-[#fbc4ae]/25 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
@@ -266,10 +272,10 @@ export default function MySchedule() {
                     const day = idx + 1;
                     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     const isSelected = selectedDateStr === dateStr;
-                    
+
                     const daysSchedules = schedules.filter((s) => s.startOn === dateStr);
                     const hasSchedules = daysSchedules.length > 0;
-                    
+
                     const hasFuture = daysSchedules.some(item => {
                       const ticketList = item.tickets || [];
                       if (ticketList.length === 0) {
@@ -308,9 +314,8 @@ export default function MySchedule() {
                       <div
                         key={day}
                         onClick={handleDayClick}
-                        className={`py-3 relative rounded-lg cursor-pointer transition-all ${
-                          isSelected ? "ring-2 ring-[#f08a78] ring-offset-2 dark:ring-offset-[#151822]" : ""
-                        } ${bgClass || "hover:bg-[#fbc4ae]/10 text-[#c3996c] dark:text-slate-100"}`}
+                        className={`py-3 relative rounded-lg cursor-pointer transition-all ${isSelected ? "ring-2 ring-[#f08a78] ring-offset-2 dark:ring-offset-[#151822]" : ""
+                          } ${bgClass || "hover:bg-[#fbc4ae]/10 text-[#c3996c] dark:text-slate-100"}`}
                         title={hasSchedules ? daysSchedules.map(s => s.workshopTitle).join(", ") : undefined}
                       >
                         <span>{day}</span>
@@ -327,7 +332,7 @@ export default function MySchedule() {
                   <div className="flex items-center gap-2">
                     <div className="size-2 bg-[#f08a78] rounded-full"></div>
                     <span className="text-xs text-[#c3996c]/70 font-medium">
-                      Hội thảo sắp tới
+                      Workshop sắp tới
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -346,8 +351,8 @@ export default function MySchedule() {
                     {selectedDateStr ? `Hội thảo ngày ${formattedSelectedDate}` : "Sự kiện sắp tới"}
                   </h2>
                   {selectedDateStr && (
-                    <button 
-                      onClick={() => setSelectedDateStr(null)} 
+                    <button
+                      onClick={() => setSelectedDateStr(null)}
                       className="text-[#f08a78] text-sm font-bold hover:underline flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-sm">close</span>
@@ -384,13 +389,13 @@ export default function MySchedule() {
                       {selectedDateStr ? `Không có lịch ngày ${formattedSelectedDate}` : "Chưa có workshop sắp tới"}
                     </h4>
                     <p className="text-[#c3996c]/70 dark:text-slate-400 text-sm mt-2">
-                      {selectedDateStr 
+                      {selectedDateStr
                         ? "Không có buổi học nào được lên lịch vào ngày này."
                         : "Bạn chưa đăng ký workshop nào sắp tới. Hãy khám phá và đăng ký ngay nhé!"}
                     </p>
                     {!selectedDateStr && (
-                      <button 
-                        onClick={() => navigate("/advanced-search")} 
+                      <button
+                        onClick={() => navigate("/advanced-search")}
                         className="mt-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all"
                       >
                         Khám phá workshop
@@ -448,7 +453,7 @@ export default function MySchedule() {
                               </span>
                             </div>
 
-                            <Link 
+                            <Link
                               to={`/find-companion/${item.workshopId || item.id}`}
                               className="bg-[#f08a78] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
                             >

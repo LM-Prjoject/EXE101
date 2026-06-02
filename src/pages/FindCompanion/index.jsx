@@ -21,6 +21,7 @@ export default function FindCompanion() {
     error,
     detail,
     currentUser,
+    userProfile,
 
     reviews,
     reviewsLoading,
@@ -70,7 +71,7 @@ export default function FindCompanion() {
       <FindCompanionHeader currentUser={currentUser} />
 
       <main className="flex-grow w-full max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
-        <Breadcrumbs location={detail.location} />
+        <Breadcrumbs location={detail.title} />
 
         <WorkshopHero detail={detail} />
 
@@ -99,6 +100,7 @@ export default function FindCompanion() {
             workshop={workshop}
             detail={detail}
             currentUser={currentUser}
+            userProfile={userProfile}
             selectedScheduleId={selectedScheduleId}
             setSelectedScheduleId={setSelectedScheduleId}
             tickets={tickets}

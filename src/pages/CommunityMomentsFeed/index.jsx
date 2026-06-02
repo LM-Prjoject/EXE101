@@ -62,19 +62,26 @@ export default function CommunityMomentsFeed() {
               </h2>
             </Link>
 
-              <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const q = e.target.search.value;
+                  navigate(`/advanced-search?q=${encodeURIComponent(q)}`);
+                }}
+                className="hidden md:flex flex-col min-w-40 !h-10 max-w-64"
+              >
                 <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
                   <div className="text-[#c3996c]/70 flex border-none bg-[#fffaf5] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
                     <span className="material-symbols-outlined text-xl">search</span>
                   </div>
                   <input
+                    name="search"
                     className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#c3996c] dark:text-slate-100 focus:outline-0 focus:ring-2 focus:ring-[#f08a78]/40 border-none bg-[#fffaf5] dark:bg-slate-800 h-full placeholder:text-[#c3996c]/60 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal transition-all"
                     placeholder="Tìm kiếm workshop..."
-                    readOnly
-                    onClick={() => navigate("/advanced-search")}
+                    type="text"
                   />
                 </div>
-              </label>
+              </form>
           </div>
 
           <div className="flex flex-1 justify-end gap-8 items-center">
@@ -152,7 +159,7 @@ export default function CommunityMomentsFeed() {
               </h1>
 
               <p className="text-lg" style={{ color: MUTED }}>
-                Xem cộng đồng sáng tạo tại Đà Nẵng đang làm gì! Từ bàn xoay gốm
+                Xem cộng đồng sáng tạo đang làm gì! Từ bàn xoay gốm
                 đến khung tranh, hãy khám phá niềm vui của đồ thủ công.
               </p>
             </div>
@@ -643,7 +650,7 @@ export default function CommunityMomentsFeed() {
               </div>
 
               <div className="text-sm" style={{ color: MUTED }}>
-                © 2025 Hands &amp; Hour. Được tạo ra với tình yêu tại Đà Nẵng.
+                © 2025 Hands &amp; Hour. Được tạo ra với tình yêu.
               </div>
 
               <div className="flex gap-4">
@@ -652,7 +659,9 @@ export default function CommunityMomentsFeed() {
                   style={{ color: MUTED }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = ACCENT)}
                   onMouseLeave={(e) => (e.currentTarget.style.color = MUTED)}
-                  href="#"
+                  href="https://www.instagram.com/workshop_handsandhour"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <i className="material-symbols-outlined">photo_camera</i>
                 </a>
