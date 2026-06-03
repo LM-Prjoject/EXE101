@@ -105,7 +105,10 @@ export default function App() {
             <Route path="/payment/cancel" element={<ConfirmSuccess />} />
             <Route path="/user-profile" element={<UserProfile />} />
             <Route path="/my-schedule" element={<MySchedule />} />
-            <Route path="/community" element={<Navigate to="/home" replace />} />
+            <Route
+              path="/community"
+              element={<Navigate to="/home" replace />}
+            />
 
             {/* ── Host flow ── */}
             <Route path="/host/dashboard" element={<HostDashboard />} />

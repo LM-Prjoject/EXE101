@@ -59,10 +59,10 @@ function normalizeText(value) {
 function getCategoryName(workshop) {
   const categoryId = Number(
     workshop.categoryId ??
-    workshop.CategoryId ??
-    workshop.categoryID ??
-    workshop.category?.id ??
-    workshop.category?.categoryId,
+      workshop.CategoryId ??
+      workshop.categoryID ??
+      workshop.category?.id ??
+      workshop.category?.categoryId,
   );
 
   if (CATEGORY_LABELS[categoryId]) {
@@ -71,10 +71,10 @@ function getCategoryName(workshop) {
 
   const rawCategory = normalizeText(
     workshop.categoryName ??
-    workshop.CategoryName ??
-    workshop.category?.name ??
-    workshop.category?.title ??
-    workshop.category,
+      workshop.CategoryName ??
+      workshop.category?.name ??
+      workshop.category?.title ??
+      workshop.category,
   );
 
   return CATEGORY_TEXT_MAP[rawCategory] || "Workshop";
@@ -306,7 +306,6 @@ export default function HomeWithBanner() {
                 >
                   Khám phá
                 </Link>
-
               </div>
 
               {currentUser && (
@@ -436,72 +435,6 @@ export default function HomeWithBanner() {
                   ref={filterBarRef}
                   className="flex flex-wrap items-center justify-center gap-3"
                 >
-                  {/* Area Dropdown */}
-                  <div className="relative">
-                    <button
-                      onClick={() =>
-                        setOpenDropdown(
-                          openDropdown === "district" ? null : "district",
-                        )
-                      }
-                      className="group flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm font-medium transition-all"
-                      style={{
-                        borderColor:
-                          openDropdown === "district" ||
-                            selectedDistricts.length > 0
-                            ? PRIMARY
-                            : BORDER,
-                        color:
-                          openDropdown === "district" ||
-                            selectedDistricts.length > 0
-                            ? PRIMARY
-                            : TEXT_MAIN,
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        map
-                      </span>
-                      {selectedDistricts.length === 0
-                        ? "Quận/Huyện"
-                        : selectedDistricts.length === 1
-                          ? selectedDistricts[0]
-                          : `${selectedDistricts.length} khu vực`}
-                      <span className="material-symbols-outlined text-[18px]">
-                        expand_more
-                      </span>
-                    </button>
-                    {openDropdown === "district" && (
-                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl bg-white border border-[#e9e2da] p-3 shadow-xl z-50 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="text-[11px] font-bold text-[#4a6663] mb-2 px-2 uppercase tracking-wider">
-                          Khu vực (Đà Nẵng)
-                        </div>
-                        <div className="space-y-1">
-                          {allAvailableLocations.map((loc) => {
-                            const isChecked = selectedDistricts.includes(loc);
-                            return (
-                              <button
-                                key={loc}
-                                onClick={() => handleSelectDistrict(loc)}
-                                className="w-full flex items-center justify-between text-left text-sm font-semibold py-2 px-3 hover:bg-[#fbc4ae]/15 rounded-xl transition-colors"
-                                style={{
-                                  color: isChecked ? PRIMARY : TEXT_MAIN,
-                                }}
-                              >
-                                <span className="truncate pr-2">{loc}</span>
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  readOnly
-                                  className="accent-[#f08a78] pointer-events-none h-4 w-4 rounded border-gray-300"
-                                />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Price Dropdown */}
                   <div className="relative">
                     <button
@@ -514,14 +447,14 @@ export default function HomeWithBanner() {
                       style={{
                         borderColor:
                           openDropdown === "price" ||
-                            priceMin !== null ||
-                            priceMax !== null
+                          priceMin !== null ||
+                          priceMax !== null
                             ? PRIMARY
                             : BORDER,
                         color:
                           openDropdown === "price" ||
-                            priceMin !== null ||
-                            priceMax !== null
+                          priceMin !== null ||
+                          priceMax !== null
                             ? PRIMARY
                             : TEXT_MAIN,
                       }}
@@ -588,12 +521,12 @@ export default function HomeWithBanner() {
                       style={{
                         borderColor:
                           openDropdown === "schedule" ||
-                            scheduleWithinDays !== null
+                          scheduleWithinDays !== null
                             ? PRIMARY
                             : BORDER,
                         color:
                           openDropdown === "schedule" ||
-                            scheduleWithinDays !== null
+                          scheduleWithinDays !== null
                             ? PRIMARY
                             : TEXT_MAIN,
                       }}
@@ -655,12 +588,12 @@ export default function HomeWithBanner() {
                       color: TEXT_MAIN,
                     }}
                     onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(251,196,174,0.75)")
+                      (e.currentTarget.style.background =
+                        "rgba(251,196,174,0.75)")
                     }
                     onMouseLeave={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(251,196,174,0.55)")
+                      (e.currentTarget.style.background =
+                        "rgba(251,196,174,0.55)")
                     }
                   >
                     Xóa tất cả
@@ -866,8 +799,6 @@ export default function HomeWithBanner() {
                   </div>
                 </div>
               </section>
-
-
             </div>
           </main>
 
@@ -900,9 +831,9 @@ export default function HomeWithBanner() {
                     className="text-sm leading-relaxed"
                     style={{ color: TEXT_MUTED }}
                   >
-                    Kết nối những tâm hồn sáng tạo. Khám phá niềm
-                    đam mê tiếp theo của bạn hoặc chia sẻ kỹ năng với cộng đồng
-                    sôi động của chúng tôi.
+                    Kết nối những tâm hồn sáng tạo. Khám phá niềm đam mê tiếp
+                    theo của bạn hoặc chia sẻ kỹ năng với cộng đồng sôi động của
+                    chúng tôi.
                   </p>
                 </div>
 
@@ -968,11 +899,19 @@ export default function HomeWithBanner() {
                             ic === "public"
                               ? "https://www.facebook.com/profile.php?id=61590287254561"
                               : ic === "photo_camera"
-                              ? "https://www.instagram.com/workshop_handsandhour"
-                              : "#"
+                                ? "https://www.instagram.com/workshop_handsandhour"
+                                : "#"
                           }
-                          target={ic === "public" || ic === "photo_camera" ? "_blank" : undefined}
-                          rel={ic === "public" || ic === "photo_camera" ? "noopener noreferrer" : undefined}
+                          target={
+                            ic === "public" || ic === "photo_camera"
+                              ? "_blank"
+                              : undefined
+                          }
+                          rel={
+                            ic === "public" || ic === "photo_camera"
+                              ? "noopener noreferrer"
+                              : undefined
+                          }
                         >
                           <span className="material-symbols-outlined">
                             {ic}
