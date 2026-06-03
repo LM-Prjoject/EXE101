@@ -112,28 +112,49 @@ function ReviewEmpty() {
 }
 
 function ReviewItem({ review }) {
-  const rating = review.rating ?? review.star ?? review.stars ?? 0;
+  const rating = review.rating ?? review.Rating ?? review.star ?? review.stars ?? 0;
   const fullStars = Math.round(rating);
 
   const name =
-    review.userName ??
     review.reviewerName ??
+    review.ReviewerName ??
+    review.userName ??
+    review.UserName ??
     review.name ??
+    review.Name ??
     review.user?.name ??
     "Người dùng";
 
   const avatar =
+    review.reviewerAvatarLink ??
+    review.ReviewerAvatarLink ??
     review.userAvatar ??
+    review.UserAvatar ??
     review.avatar ??
+    review.Avatar ??
     review.profilePicture ??
     review.user?.avatar ??
     null;
 
+  const title = review.title ?? review.Title ?? "";
+
   const comment =
-    review.comment ?? review.content ?? review.body ?? review.text ?? "";
+    review.description ??
+    review.Description ??
+    review.comment ??
+    review.content ??
+    review.body ??
+    review.text ??
+    "";
 
   const createdAt =
-    review.createdAt ?? review.reviewDate ?? review.date ?? null;
+    review.createdOn ??
+    review.CreatedOn ??
+    review.createdAt ??
+    review.CreatedAt ??
+    review.reviewDate ??
+    review.date ??
+    null;
   const response = review.response ?? review.Response;
 
   return (
@@ -201,11 +222,17 @@ function ReviewItem({ review }) {
             ) : null}
           </div>
 
-          {comment ? (
+          {title && (
+            <h5 className="text-sm font-bold mb-1 text-slate-800 dark:text-slate-200">
+              {title}
+            </h5>
+          )}
+
+          {comment && (
             <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
               {comment}
             </p>
-          ) : null}
+          )}
 
           {response ? (
             <div

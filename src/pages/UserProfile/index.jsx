@@ -533,25 +533,28 @@ export default function UserProfile() {
                   </div>
                   <div className="flex flex-col gap-6">
                     {purchasedTickets.map((item) => {
-                      const ticketList = item.workshopTickets || [];
+                      const ticketList = item.tickets || item.Tickets || item.workshopTickets || item.WorkshopTickets || [];
                       // Tìm vé tương ứng của user hiện tại
                       const myParticipants = ticketList
-                        .flatMap(wt => (wt.workshopParticipants || []).map(wp => ({
+                        .flatMap(wt => (wt.workshopParticipants || wt.WorkshopParticipants || wt.participants || wt.Participants || []).map(wp => ({
                           ...wp,
-                          ticketType: wt.ticketType,
-                          price: wt.price,
-                          startTime: wt.startTime,
-                          endTime: wt.endTime
+                          participantId: wp.participantId || wp.ParticipantId,
+                          status: wp.status || wp.Status,
+                          ticketType: wt.ticketType || wt.TicketType,
+                          price: wt.price || wt.Price,
+                          startTime: wt.startTime || wt.StartTime,
+                          endTime: wt.endTime || wt.EndTime
                         })))
-                        .filter(wp => wp.participantId === (user?.id || currentUser?.id));
+                        .filter(wp => Number(wp.participantId) === Number(user?.id || currentUser?.id));
                       
                       const activeParticipant = myParticipants[0];
                       const ticketTypeLabel = activeParticipant ? activeParticipant.ticketType : "Đã đặt";
                       const timeRange = activeParticipant ? `${formatTimeOnly(activeParticipant.startTime)} - ${formatTimeOnly(activeParticipant.endTime)}` : "";
-                      const img = item.workshopThumbnailLink || "/img/onlyLogo.png";
+                      const img = item.workshopThumbnailLink || item.WorkshopThumbnailLink || "/img/onlyLogo.png";
 
                       // Kiểm tra xem workshop đã kết thúc chưa
-                      const startDateTime = new Date(`${item.startOn}T${activeParticipant?.startTime || "00:00:00"}`);
+                      const startOnStr = item.startOn || item.StartOn;
+                      const startDateTime = new Date(`${startOnStr}T${activeParticipant?.startTime || "00:00:00"}`);
                       const isPast = startDateTime < new Date();
 
                       return (
@@ -582,14 +585,14 @@ export default function UserProfile() {
                               </div>
 
                               <h4 className="text-lg font-bold text-[#2B2B2B] dark:text-white mb-1">
-                                {item.workshopTitle}
+                                {item.workshopTitle || item.WorkshopTitle}
                               </h4>
 
                               <p className="text-sm text-[#c3996c]/80 dark:text-slate-400 mb-4 flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-base">
                                   location_on
                                 </span>
-                                <span>Địa điểm: {item.workshopLocation}</span>
+                                <span>Địa điểm: {item.workshopLocation || item.WorkshopLocation}</span>
                               </p>
                             </div>
 
@@ -599,7 +602,7 @@ export default function UserProfile() {
                                   Ngày &amp; Giờ
                                 </span>
                                 <span className="text-sm font-semibold text-[#c3996c] dark:text-slate-100">
-                                  {formatDate(item.startOn)} {timeRange && `• ${timeRange}`}
+                                  {formatDate(item.startOn || item.StartOn)} {timeRange && `• ${timeRange}`}
                                 </span>
                               </div>
 
@@ -617,7 +620,7 @@ export default function UserProfile() {
                                         Đánh giá
                                       </button>
                                       <Link
-                                        to={`/find-companion/${item.workshopId || item.id}`}
+                                        to={`/find-companion/${item.workshopId || item.WorkshopId || item.id}`}
                                         className="bg-[#f08a78] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
                                       >
                                         Xem chi tiết
@@ -627,7 +630,7 @@ export default function UserProfile() {
                                 }
                                 return (
                                   <Link
-                                    to={`/find-companion/${item.workshopId || item.id}`}
+                                    to={`/find-companion/${item.workshopId || item.WorkshopId || item.id}`}
                                     className="bg-[#f08a78] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
                                   >
                                     Xem chi tiết

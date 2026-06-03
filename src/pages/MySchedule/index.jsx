@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getUpcomingSchedules } from "../../api/workshop";
+import { getPurchasedSchedules } from "../../api/workshop";
 
 function formatCurrency(value) {
   if (value == null) return "Liên hệ";
@@ -54,7 +54,7 @@ export default function MySchedule() {
       setLoading(true);
       setError("");
       try {
-        const response = await getUpcomingSchedules(authToken, 1, 50);
+        const response = await getPurchasedSchedules(authToken, 1, 50);
         if (!ignore) {
           setSchedules(response?.data || []);
         }
@@ -108,10 +108,9 @@ export default function MySchedule() {
     setSelectedDateStr(null);
   };
 
-  // Filtered schedules display
   const displayedSchedules = useMemo(() => {
     if (!selectedDateStr) return schedules;
-    return schedules.filter((s) => s.startOn === selectedDateStr);
+    return schedules.filter((s) => (s.startOn || s.StartOn) === selectedDateStr);
   }, [schedules, selectedDateStr]);
 
   const formattedSelectedDate = useMemo(() => {
@@ -123,6 +122,107 @@ export default function MySchedule() {
       return selectedDateStr;
     }
   }, [selectedDateStr]);
+
+  const { upcomingSchedules, pastSchedules } = useMemo(() => {
+    const upcoming = [];
+    const past = [];
+    const now = new Date();
+
+    schedules.forEach((item) => {
+      const ticketList = item.tickets || item.Tickets || item.workshopTickets || item.WorkshopTickets || [];
+      const startOnStr = item.startOn || item.StartOn;
+      const firstTicket = ticketList[0];
+      const startTimeStr = firstTicket ? (firstTicket.startTime || firstTicket.StartTime) : "00:00:00";
+      const startDateTime = new Date(`${startOnStr}T${startTimeStr}`);
+
+      if (startDateTime >= now) {
+        upcoming.push(item);
+      } else {
+        past.push(item);
+      }
+    });
+
+    // Sort upcoming ascending (soonest first)
+    upcoming.sort((a, b) => {
+      const startA = a.startOn || a.StartOn;
+      const startB = b.startOn || b.StartOn;
+      const timeA = a.tickets?.[0]?.startTime || a.Tickets?.[0]?.StartTime || a.workshopTickets?.[0]?.startTime || a.WorkshopTickets?.[0]?.StartTime || "00:00:00";
+      const timeB = b.tickets?.[0]?.startTime || b.Tickets?.[0]?.StartTime || b.workshopTickets?.[0]?.startTime || b.WorkshopTickets?.[0]?.StartTime || "00:00:00";
+      return new Date(`${startA}T${timeA}`) - new Date(`${startB}T${timeB}`);
+    });
+
+    // Sort past descending (most recent first)
+    past.sort((a, b) => {
+      const startA = a.startOn || a.StartOn;
+      const startB = b.startOn || b.StartOn;
+      const timeA = a.tickets?.[0]?.startTime || a.Tickets?.[0]?.StartTime || a.workshopTickets?.[0]?.startTime || a.WorkshopTickets?.[0]?.StartTime || "00:00:00";
+      const timeB = b.tickets?.[0]?.startTime || b.Tickets?.[0]?.StartTime || b.workshopTickets?.[0]?.startTime || b.WorkshopTickets?.[0]?.StartTime || "00:00:00";
+      return new Date(`${startB}T${timeB}`) - new Date(`${startA}T${timeA}`);
+    });
+
+    return { upcomingSchedules: upcoming, pastSchedules: past };
+  }, [schedules]);
+
+  const renderScheduleCard = (item) => {
+    const ticketList = item.tickets || item.Tickets || item.workshopTickets || item.WorkshopTickets || [];
+    const firstTicket = ticketList[0];
+    const ticketTypeLabel = firstTicket ? (firstTicket.ticketType || firstTicket.TicketType) : "Đã đặt";
+    const timeRange = firstTicket ? `${formatTimeOnly(firstTicket.startTime || firstTicket.StartTime)} - ${formatTimeOnly(firstTicket.endTime || firstTicket.EndTime)}` : "";
+    const img = item.workshopThumbnailLink || item.WorkshopThumbnailLink || "/img/onlyLogo.png";
+
+    return (
+      <div
+        key={item.id || item.Id}
+        className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col md:flex-row"
+      >
+        <div className="md:w-48 h-48 md:h-auto overflow-hidden shrink-0">
+          <div
+            className="w-full h-48 md:h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-105"
+            style={{ backgroundImage: `url("${img}")` }}
+          />
+        </div>
+
+        <div className="flex-1 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <span className="px-2 py-1 bg-[#f08a78]/20 text-[#f08a78] text-[10px] font-bold uppercase tracking-wider rounded">
+                Vé {ticketTypeLabel}
+              </span>
+            </div>
+
+            <h4 className="text-lg font-bold text-[#2B2B2B] dark:text-white mb-1">
+              {item.workshopTitle || item.WorkshopTitle}
+            </h4>
+
+            <p className="text-sm text-[#c3996c]/70 dark:text-slate-400 mb-4 flex items-center gap-1">
+              <span className="material-symbols-outlined text-base">
+                location_on
+              </span>
+              Địa điểm: {item.workshopLocation || item.WorkshopLocation}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between mt-auto pt-4 border-t border-dashed border-[#fbc4ae]/20">
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-[#c3996c]/55 uppercase">
+                Ngày &amp; Giờ
+              </span>
+              <span className="text-sm font-semibold text-[#c3996c] dark:text-slate-100">
+                {formatDate(item.startOn || item.StartOn)} {timeRange && `• ${timeRange}`}
+              </span>
+            </div>
+
+            <Link
+              to={`/find-companion/${item.workshopId || item.WorkshopId || item.id || item.Id}`}
+              className="bg-[#f08a78] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
+            >
+              Xem chi tiết
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -273,16 +373,18 @@ export default function MySchedule() {
                     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     const isSelected = selectedDateStr === dateStr;
 
-                    const daysSchedules = schedules.filter((s) => s.startOn === dateStr);
+                    const daysSchedules = schedules.filter((s) => (s.startOn || s.StartOn) === dateStr);
                     const hasSchedules = daysSchedules.length > 0;
 
                     const hasFuture = daysSchedules.some(item => {
-                      const ticketList = item.tickets || [];
+                      const ticketList = item.tickets || item.Tickets || item.workshopTickets || item.WorkshopTickets || [];
+                      const startOnStr = item.startOn || item.StartOn;
                       if (ticketList.length === 0) {
-                        return new Date(`${item.startOn}T23:59:59`) >= new Date();
+                        return new Date(`${startOnStr}T23:59:59`) >= new Date();
                       }
                       return ticketList.some(t => {
-                        const slotTime = new Date(`${item.startOn}T${t.startTime}`);
+                        const startTimeStr = t.startTime || t.StartTime;
+                        const slotTime = new Date(`${startOnStr}T${startTimeStr}`);
                         return slotTime >= new Date();
                       });
                     });
@@ -316,7 +418,7 @@ export default function MySchedule() {
                         onClick={handleDayClick}
                         className={`py-3 relative rounded-lg cursor-pointer transition-all ${isSelected ? "ring-2 ring-[#f08a78] ring-offset-2 dark:ring-offset-[#151822]" : ""
                           } ${bgClass || "hover:bg-[#fbc4ae]/10 text-[#c3996c] dark:text-slate-100"}`}
-                        title={hasSchedules ? daysSchedules.map(s => s.workshopTitle).join(", ") : undefined}
+                        title={hasSchedules ? daysSchedules.map(s => s.workshopTitle || s.WorkshopTitle).join(", ") : undefined}
                       >
                         <span>{day}</span>
                         {hasSchedules && (
@@ -380,90 +482,61 @@ export default function MySchedule() {
                     </h4>
                     <p className="text-slate-500 text-sm mt-2">{error}</p>
                   </div>
-                ) : displayedSchedules.length === 0 ? (
-                  <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 text-center shadow-sm">
-                    <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
-                      event_busy
-                    </span>
-                    <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
-                      {selectedDateStr ? `Không có lịch ngày ${formattedSelectedDate}` : "Chưa có workshop sắp tới"}
-                    </h4>
-                    <p className="text-[#c3996c]/70 dark:text-slate-400 text-sm mt-2">
-                      {selectedDateStr
-                        ? "Không có buổi học nào được lên lịch vào ngày này."
-                        : "Bạn chưa đăng ký workshop nào sắp tới. Hãy khám phá và đăng ký ngay nhé!"}
-                    </p>
-                    {!selectedDateStr && (
-                      <button
-                        onClick={() => navigate("/advanced-search")}
-                        className="mt-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all"
-                      >
-                        Khám phá workshop
-                      </button>
+                ) : selectedDateStr ? (
+                  // Render single date events
+                  displayedSchedules.length === 0 ? (
+                    <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 text-center shadow-sm">
+                      <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
+                        event_busy
+                      </span>
+                      <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                        Không có lịch ngày {formattedSelectedDate}
+                      </h4>
+                      <p className="text-[#c3996c]/70 dark:text-slate-400 text-sm mt-2">
+                        Không có buổi học nào được lên lịch vào ngày này.
+                      </p>
+                    </div>
+                  ) : (
+                    displayedSchedules.map(renderScheduleCard)
+                  )
+                ) : (
+                  // Default view: Render upcoming & past events categorized
+                  <div className="flex flex-col gap-8">
+                    {/* Upcoming section */}
+                    <div className="flex flex-col gap-4">
+                      {upcomingSchedules.length === 0 ? (
+                        <div className="bg-white dark:bg-[#151822] rounded-2xl border border-[#fbc4ae]/40 dark:border-slate-800 p-8 text-center shadow-sm">
+                          <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3">
+                            event_busy
+                          </span>
+                          <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                            Chưa có workshop sắp tới
+                          </h4>
+                          <p className="text-[#c3996c]/70 dark:text-slate-400 text-sm mt-2">
+                            Bạn chưa đăng ký workshop nào sắp tới. Hãy khám phá và đăng ký ngay nhé!
+                          </p>
+                          <button
+                            onClick={() => navigate("/advanced-search")}
+                            className="mt-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all"
+                          >
+                            Khám phá workshop
+                          </button>
+                        </div>
+                      ) : (
+                        upcomingSchedules.map(renderScheduleCard)
+                      )}
+                    </div>
+
+                    {/* Past section */}
+                    {pastSchedules.length > 0 && (
+                      <div className="flex flex-col gap-4">
+                        <h3 className="text-xl font-bold text-[#2B2B2B] dark:text-white border-t border-[#fbc4ae]/20 pt-6 mt-4">
+                          Sự kiện đã qua
+                        </h3>
+                        {pastSchedules.map(renderScheduleCard)}
+                      </div>
                     )}
                   </div>
-                ) : (
-                  displayedSchedules.map((item) => {
-                    const ticketList = item.tickets || [];
-                    const firstTicket = ticketList[0];
-                    const priceText = firstTicket ? formatCurrency(firstTicket.price) : "Liên hệ";
-                    const ticketTypeLabel = firstTicket ? firstTicket.ticketType : "Đã đặt";
-                    const timeRange = firstTicket ? `${formatTimeOnly(firstTicket.startTime)} - ${formatTimeOnly(firstTicket.endTime)}` : "";
-                    const img = item.workshopThumbnailLink || "/img/onlyLogo.png";
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="group bg-white dark:bg-[#151822] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-[#fbc4ae]/40 dark:border-slate-800 flex flex-col md:flex-row"
-                      >
-                        <div className="md:w-48 h-48 md:h-auto overflow-hidden shrink-0">
-                          <div
-                            className="w-full h-48 md:h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-105"
-                            style={{ backgroundImage: `url("${img}")` }}
-                          />
-                        </div>
-
-                        <div className="flex-1 p-6 flex flex-col justify-between">
-                          <div>
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="px-2 py-1 bg-[#f08a78]/20 text-[#f08a78] text-[10px] font-bold uppercase tracking-wider rounded">
-                                Vé {ticketTypeLabel}
-                              </span>
-                            </div>
-
-                            <h4 className="text-lg font-bold text-[#2B2B2B] dark:text-white mb-1">
-                              {item.workshopTitle}
-                            </h4>
-
-                            <p className="text-sm text-[#c3996c]/70 dark:text-slate-400 mb-4 flex items-center gap-1">
-                              <span className="material-symbols-outlined text-base">
-                                location_on
-                              </span>
-                              Địa điểm: {item.workshopLocation}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-between mt-auto pt-4 border-t border-dashed border-[#fbc4ae]/20">
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-[#c3996c]/55 uppercase">
-                                Ngày &amp; Giờ
-                              </span>
-                              <span className="text-sm font-semibold text-[#c3996c] dark:text-slate-100">
-                                {formatDate(item.startOn)} {timeRange && `• ${timeRange}`}
-                              </span>
-                            </div>
-
-                            <Link
-                              to={`/find-companion/${item.workshopId || item.id}`}
-                              className="bg-[#f08a78] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
-                            >
-                              Xem chi tiết
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
                 )}
               </div>
             </div>
