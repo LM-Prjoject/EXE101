@@ -7,6 +7,7 @@ import EditProfileModal from "../../components/EditProfileModal";
 import ChangePasswordModal from "../../components/ChangePasswordModal";
 import HostSidebar from "../../components/HostSidebar";
 import HostHeader from "../../components/HostHeader";
+import { getPurchasedSchedules, postWorkshopReview } from "../../api/workshop";
 export default function UserProfile() {
   const navigate = useNavigate();
   const { currentUser, userProfile, authToken, logout } = useAuth();
@@ -75,6 +76,119 @@ export default function UserProfile() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const [purchasedTickets, setPurchasedTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [ticketsError, setTicketsError] = useState("");
+
+  const [reviewWorkshop, setReviewReviewWorkshop] = useState(null);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewDesc, setReviewDesc] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
+
+  const handleOpenReviewModal = (workshop) => {
+    setReviewReviewWorkshop(workshop);
+    setReviewTitle("");
+    setReviewDesc("");
+    setReviewRating(5);
+    setReviewHoverRating(0);
+    setReviewError("");
+    setReviewSuccess("");
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!reviewTitle.trim() || !reviewDesc.trim()) {
+      setReviewError("Vui lòng nhập đầy đủ tiêu đề và nội dung đánh giá.");
+      return;
+    }
+
+    setSubmittingReview(true);
+    setReviewError("");
+    setReviewSuccess("");
+
+    try {
+      await postWorkshopReview(
+        reviewWorkshop.workshopId || reviewWorkshop.id,
+        reviewTitle,
+        reviewDesc,
+        reviewRating,
+        authToken
+      );
+      setReviewSuccess("Đăng đánh giá thành công! Cảm ơn nhận xét của bạn.");
+      
+      setTimeout(() => {
+        setReviewReviewWorkshop(null);
+        // Refresh purchased list to update state if needed
+        getPurchasedSchedules(authToken, 1, 50).then(res => {
+          setPurchasedTickets(res?.data || []);
+        });
+      }, 2000);
+    } catch (err) {
+      setReviewError(err?.message || "Đã xảy ra lỗi khi gửi đánh giá.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authToken) return;
+
+    let ignore = false;
+    async function loadTickets() {
+      setLoadingTickets(true);
+      setTicketsError("");
+      try {
+        const response = await getPurchasedSchedules(authToken, 1, 50);
+        if (!ignore) {
+          setPurchasedTickets(response?.data || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setTicketsError(err?.message || "Không thể tải lịch sử mua vé.");
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingTickets(false);
+        }
+      }
+    }
+
+    loadTickets();
+    return () => {
+      ignore = true;
+    };
+  }, [authToken]);
+
+  const formatCurrency = (value) => {
+    if (value == null) return "Liên hệ";
+    return `${Number(value).toLocaleString("vi-VN")}₫`;
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "Đang cập nhật";
+    try {
+      return new Intl.DateTimeFormat("vi-VN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(new Date(dateStr));
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatTimeOnly = (timeStr) => {
+    if (!timeStr) return "";
+    const parts = timeStr.split(":");
+    if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+    return timeStr;
+  };
 
   const pageClass = isHost
     ? "bg-[#f4efe6] dark:bg-[#0f1115] font-display antialiased text-[#071634] dark:text-slate-100 min-h-screen flex"
@@ -346,22 +460,188 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-end mb-6">
-                <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">
-                  Hoạt động gần đây
-                </h3>
-              </div>
+              {loadingTickets ? (
+                <>
+                  <div className="flex justify-between items-end mb-6">
+                    <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">
+                      Vé workshop của tôi
+                    </h3>
+                  </div>
+                  <div className={`bg-white dark:bg-[#151822] rounded-3xl p-10 shadow-sm border ${boxBorderClass}`}>
+                    <div className="text-center py-8 flex flex-col items-center justify-center">
+                      <span className="material-symbols-outlined text-[#f08a78] text-4xl mb-3 animate-spin">
+                        progress_activity
+                      </span>
+                      <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                        Đang tải danh sách vé...
+                      </h4>
+                    </div>
+                  </div>
+                </>
+              ) : ticketsError ? (
+                <>
+                  <div className="flex justify-between items-end mb-6">
+                    <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">
+                      Vé workshop của tôi
+                    </h3>
+                  </div>
+                  <div className={`bg-white dark:bg-[#151822] rounded-3xl p-10 shadow-sm border ${boxBorderClass}`}>
+                    <div className="text-center py-8 flex flex-col items-center justify-center">
+                      <span className="material-symbols-outlined text-rose-500 text-4xl mb-3">
+                        error
+                      </span>
+                      <h4 className="text-rose-600 font-bold text-lg">
+                        Lỗi tải thông tin vé
+                      </h4>
+                      <p className="text-slate-500 text-sm mt-2">{ticketsError}</p>
+                    </div>
+                  </div>
+                </>
+              ) : purchasedTickets.length === 0 ? (
+                <>
+                  <div className="flex justify-between items-end mb-6">
+                    <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">
+                      Vé workshop của tôi
+                    </h3>
+                  </div>
+                  <div className={`bg-white dark:bg-[#151822] rounded-3xl p-10 shadow-sm border ${boxBorderClass}`}>
+                    <div className="text-center py-8 flex flex-col items-center justify-center">
+                      <span className={`material-symbols-outlined ${iconColor} text-4xl mb-3`}>
+                        receipt_long
+                      </span>
+                      <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
+                        Bạn chưa mua vé nào
+                      </h4>
+                      <p className="text-[#c3996c]/70 dark:text-slate-400 text-sm mt-2 max-w-md">
+                        Khám phá ngay các workshop và bắt đầu hành trình sáng tạo của bạn nhé!
+                      </p>
+                      <button
+                        onClick={() => navigate("/advanced-search")}
+                        className="mt-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-[#f08a78]/25 transition-all w-fit"
+                      >
+                        Khám phá workshop
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between items-end mb-6">
+                    <h3 className="text-[#2B2B2B] dark:text-slate-100 text-2xl font-bold">
+                      Vé workshop của tôi ({purchasedTickets.length})
+                    </h3>
+                  </div>
+                  <div className="flex flex-col gap-6">
+                    {purchasedTickets.map((item) => {
+                      const ticketList = item.workshopTickets || [];
+                      // Tìm vé tương ứng của user hiện tại
+                      const myParticipants = ticketList
+                        .flatMap(wt => (wt.workshopParticipants || []).map(wp => ({
+                          ...wp,
+                          ticketType: wt.ticketType,
+                          price: wt.price,
+                          startTime: wt.startTime,
+                          endTime: wt.endTime
+                        })))
+                        .filter(wp => wp.participantId === (user?.id || currentUser?.id));
+                      
+                      const activeParticipant = myParticipants[0];
+                      const ticketTypeLabel = activeParticipant ? activeParticipant.ticketType : "Đã đặt";
+                      const timeRange = activeParticipant ? `${formatTimeOnly(activeParticipant.startTime)} - ${formatTimeOnly(activeParticipant.endTime)}` : "";
+                      const img = item.workshopThumbnailLink || "/img/onlyLogo.png";
 
-              <div className={`bg-white dark:bg-[#151822] rounded-3xl p-6 shadow-sm border ${boxBorderClass}`}>
-                <div className="text-center py-8">
-                  <span className={`material-symbols-outlined ${iconColor} text-4xl mb-3`}>
-                    history
-                  </span>
-                  <h4 className="text-[#2B2B2B] dark:text-slate-100 font-bold text-lg">
-                    Chưa có hoạt động gần đây
-                  </h4>
-                </div>
-              </div>
+                      // Kiểm tra xem workshop đã kết thúc chưa
+                      const startDateTime = new Date(`${item.startOn}T${activeParticipant?.startTime || "00:00:00"}`);
+                      const isPast = startDateTime < new Date();
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="group bg-white dark:bg-[#151822] rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-[#fbc4ae]/45 dark:border-slate-800 flex flex-col md:flex-row"
+                        >
+                          <div className="md:w-44 h-44 md:h-auto overflow-hidden shrink-0">
+                            <div
+                              className="w-full h-full bg-center bg-cover transition-transform duration-500 group-hover:scale-105"
+                              style={{ backgroundImage: `url("${img}")`, minHeight: "176px" }}
+                            />
+                          </div>
+
+                          <div className="flex-1 p-6 flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start mb-2">
+                                <span className="px-2.5 py-1 bg-[#f08a78]/15 text-[#f08a78] text-[10px] font-bold uppercase tracking-wider rounded-lg">
+                                  Vé {ticketTypeLabel}
+                                </span>
+                                <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg ${
+                                  isPast 
+                                    ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" 
+                                    : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                }`}>
+                                  {isPast ? "Đã diễn ra" : "Sắp diễn ra"}
+                                </span>
+                              </div>
+
+                              <h4 className="text-lg font-bold text-[#2B2B2B] dark:text-white mb-1">
+                                {item.workshopTitle}
+                              </h4>
+
+                              <p className="text-sm text-[#c3996c]/80 dark:text-slate-400 mb-4 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-base">
+                                  location_on
+                                </span>
+                                <span>Địa điểm: {item.workshopLocation}</span>
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-dashed border-[#fbc4ae]/20">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-[#c3996c]/60 uppercase tracking-wider">
+                                  Ngày &amp; Giờ
+                                </span>
+                                <span className="text-sm font-semibold text-[#c3996c] dark:text-slate-100">
+                                  {formatDate(item.startOn)} {timeRange && `• ${timeRange}`}
+                                </span>
+                              </div>
+
+                              {(() => {
+                                const statusStr = String(activeParticipant?.status || activeParticipant?.Status || "").toLowerCase();
+                                const isBought = statusStr === "paid" || statusStr === "checked in";
+                                const canReview = isPast && isBought;
+                                if (canReview) {
+                                  return (
+                                    <div className="flex gap-2.5 items-center">
+                                      <button
+                                        onClick={() => handleOpenReviewModal(item)}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-sm shadow-emerald-600/25"
+                                      >
+                                        Đánh giá
+                                      </button>
+                                      <Link
+                                        to={`/find-companion/${item.workshopId || item.id}`}
+                                        className="bg-[#f08a78] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
+                                      >
+                                        Xem chi tiết
+                                      </Link>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <Link
+                                    to={`/find-companion/${item.workshopId || item.id}`}
+                                    className="bg-[#f08a78] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#ee7a66] transition-colors shadow-sm shadow-[#f08a78]/25"
+                                  >
+                                    Xem chi tiết
+                                  </Link>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </main>
 
@@ -423,6 +703,131 @@ export default function UserProfile() {
           handleChangePassword={handleChangePassword}
           onClose={() => setShowPasswordModal(false)}
         />
+      )}
+
+      {reviewWorkshop && (
+        <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#FEFEFD] dark:bg-[#151822] rounded-3xl p-8 max-w-md w-full border border-[#fbc4ae]/50 dark:border-slate-800 shadow-2xl flex flex-col relative animate-fade-in font-display">
+            {/* Close Button */}
+            <button
+              onClick={() => setReviewReviewWorkshop(null)}
+              className="absolute top-4 right-4 text-[#c3996c] hover:text-[#f08a78] transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+
+            <h3 className="text-2xl font-black text-[#2B2B2B] dark:text-white mb-2 pr-6">
+              Đánh giá Workshop
+            </h3>
+            <p className="text-xs text-[#c3996c]/80 dark:text-slate-400 mb-6">
+              Chia sẻ cảm nhận của bạn về workshop <span className="font-bold text-[#f08a78]">{reviewWorkshop.workshopTitle}</span>
+            </p>
+
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              {/* Rating Selector */}
+              <div className="flex flex-col gap-1 text-center">
+                <span className="text-xs font-bold text-[#c3996c]/70 dark:text-slate-400 uppercase tracking-wider">
+                  Số sao đánh giá
+                </span>
+                <div className="flex gap-2 justify-center py-2">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const active = star <= (reviewHoverRating || reviewRating);
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        onMouseEnter={() => setReviewHoverRating(star)}
+                        onMouseLeave={() => setReviewHoverRating(0)}
+                        className="text-3xl focus:outline-none transition-transform hover:scale-110 active:scale-95"
+                      >
+                        <span
+                          className="material-symbols-outlined select-none"
+                          style={{
+                            fontSize: "36px",
+                            color: active ? "#F59E0B" : "#D1D5DB",
+                            fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0"
+                          }}
+                        >
+                          star
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Title input */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-[#c3996c]/70 dark:text-slate-400 uppercase tracking-wider">
+                  Tiêu đề đánh giá
+                </label>
+                <input
+                  type="text"
+                  value={reviewTitle}
+                  onChange={(e) => setReviewTitle(e.target.value)}
+                  placeholder="Ví dụ: Rất tuyệt vời, Hướng dẫn viên nhiệt tình..."
+                  className="w-full rounded-xl px-4 py-2.5 bg-[#fffaf5] dark:bg-slate-800 border border-[#fbc4ae]/40 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#f08a78]/40 text-[#c3996c] dark:text-white text-sm"
+                  required
+                />
+              </div>
+
+              {/* Description input */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-[#c3996c]/70 dark:text-slate-400 uppercase tracking-wider">
+                  Nội dung nhận xét
+                </label>
+                <textarea
+                  value={reviewDesc}
+                  onChange={(e) => setReviewDesc(e.target.value)}
+                  placeholder="Hãy chia sẻ chi tiết trải nghiệm của bạn tại buổi học..."
+                  rows={4}
+                  className="w-full rounded-xl px-4 py-2.5 bg-[#fffaf5] dark:bg-slate-800 border border-[#fbc4ae]/40 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#f08a78]/40 text-[#c3996c] dark:text-white text-sm resize-none"
+                  required
+                />
+              </div>
+
+              {/* Feedback messages */}
+              {reviewError && (
+                <div className="bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 px-4 py-2.5 rounded-xl text-xs font-semibold">
+                  {reviewError}
+                </div>
+              )}
+
+              {reviewSuccess && (
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 px-4 py-2.5 rounded-xl text-xs font-semibold">
+                  {reviewSuccess}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewReviewWorkshop(null)}
+                  disabled={submittingReview}
+                  className="flex-1 rounded-xl h-11 px-4 border border-[#fbc4ae]/60 dark:border-slate-700 text-[#c3996c] dark:text-slate-200 text-sm font-bold hover:bg-[#fbc4ae]/15 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="flex-1 rounded-xl h-11 px-4 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold transition-colors shadow-lg shadow-[#f08a78]/25 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {submittingReview ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                      Đang gửi...
+                    </>
+                  ) : (
+                    "Gửi đánh giá"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );
