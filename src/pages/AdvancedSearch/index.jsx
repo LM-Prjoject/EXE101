@@ -47,16 +47,17 @@ function toCard(workshop) {
 
 const categoriesConfig = [
   { value: "all", label: "Tất cả danh mục" },
-  { value: "2", label: "Gốm sứ" },
-  { value: "1", label: "Hội họa" },
-  { value: "4", label: "Thêu thùa" },
-  { value: "3", label: "Làm đồ trang sức" },
+  { value: "1", label: "Làm gốm" },
+  { value: "2", label: "Hội họa" },
+  { value: "3", label: "Trang sức" },
+  { value: "4", label: "Dệt may" },
+  { value: "5", label: "Khác" },
 ];
 
 const levelsConfig = [
+  { value: 1, label: "Cơ bản" },
   { value: 2, label: "Trung cấp" },
   { value: 3, label: "Nâng cao" },
-  { value: "tre_em", label: "Trẻ em" },
 ];
 
 function getWorkshopCategoryId(w) {
@@ -67,10 +68,10 @@ function getWorkshopCategoryId(w) {
     return Number(cat.id ?? cat.Id ?? cat.categoryId);
   }
   const catName = String(w.categoryName ?? w.CategoryName ?? cat?.name ?? cat?.Name ?? cat?.label ?? cat ?? "").trim().toLowerCase();
-  if (catName.includes("gốm") || catName.includes("pottery") || catName.includes("ceramic")) return 2;
-  if (catName.includes("họa") || catName.includes("vẽ") || catName.includes("art") || catName.includes("paint")) return 1;
-  if (catName.includes("trang sức") || catName.includes("jewelry")) return 3;
-  if (catName.includes("dệt") || catName.includes("thêu") || catName.includes("thêu thùa") || catName.includes("textile") || catName.includes("sew") || catName.includes("weave")) return 4;
+  if (catName.includes("làm gốm") || catName.includes("gốm") || catName.includes("pottery") || catName.includes("ceramic")) return 1;
+  if (catName.includes("hội họa") || catName.includes("họa") || catName.includes("vẽ") || catName.includes("painting") || catName.includes("watercolor")) return 2;
+  if (catName.includes("trang sức") || catName.includes("jewelry") || catName.includes("bracelet")) return 3;
+  if (catName.includes("dệt may") || catName.includes("dệt") || catName.includes("thêu") || catName.includes("textile") || catName.includes("sew") || catName.includes("weave")) return 4;
   return 5;
 }
 
@@ -82,9 +83,9 @@ function getWorkshopLevelId(w) {
     return Number(lvl.id ?? lvl.Id ?? lvl.levelId);
   }
   const lvlName = String(lvl?.name ?? lvl?.Name ?? lvl?.label ?? lvl ?? "").trim().toLowerCase();
-  if (lvlName.includes("cơ bản") || lvlName.includes("basic") || lvlName.includes("beginner")) return 1;
-  if (lvlName.includes("trung cấp") || lvlName.includes("intermediate")) return 2;
-  if (lvlName.includes("nâng cao") || lvlName.includes("advanced")) return 3;
+  if (lvlName.includes("elementary") || lvlName.includes("cơ bản") || lvlName.includes("basic") || lvlName.includes("beginner")) return 1;
+  if (lvlName.includes("intermediate") || lvlName.includes("trung cấp")) return 2;
+  if (lvlName.includes("advanced") || lvlName.includes("nâng cao")) return 3;
   return 1;
 }
 
@@ -174,18 +175,7 @@ export default function AdvancedSearch() {
         // 5. Level Filter
         if (selectedLevels.length > 0) {
           const wLevelId = getWorkshopLevelId(workshop);
-          const isKids = 
-            String(workshop.level ?? "").toLowerCase().includes("trẻ em") ||
-            String(workshop.level ?? "").toLowerCase().includes("kids") ||
-            String(workshop.title ?? "").toLowerCase().includes("trẻ em") ||
-            String(workshop.title ?? "").toLowerCase().includes("kids") ||
-            String(workshop.description ?? "").toLowerCase().includes("trẻ em") ||
-            String(workshop.description ?? "").toLowerCase().includes("kids");
-
-          const matchesLevel = selectedLevels.some((level) => {
-            if (level === "tre_em") return isKids;
-            return wLevelId === Number(level);
-          });
+          const matchesLevel = selectedLevels.some((level) => wLevelId === Number(level));
           if (!matchesLevel) return false;
         }
 
@@ -633,7 +623,12 @@ export default function AdvancedSearch() {
                     />
                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tất cả</span>
                   </label>
-                  {["Sơn Trà", "Hải Châu"].map((label) => {
+                  {[
+                    { label: "Đặng Thùy Trâm", keyword: "Đặng Thùy Trâm" },
+                    { label: "Phan Thành Tài", keyword: "Phan Thành Tài" },
+                    { label: "An Hải", keyword: "An Hải" },
+                    { label: "Hoàng Diệu", keyword: "Hoàng Diệu" },
+                  ].map(({ label, keyword }) => {
                     const isChecked = selectedLocations.includes(label);
                     return (
                       <label

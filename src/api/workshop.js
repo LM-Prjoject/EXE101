@@ -176,6 +176,28 @@ export async function getUpcomingSchedules(token, page = 1, pageSize = 10) {
   return body;
 }
 
+export async function getPurchasedSchedules(token, page = 1, pageSize = 10) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/Schedule/purchased?${params}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+
 export async function updateWorkshopApproval(workshopId, approved, token) {
   const authToken =
     token ||
@@ -195,6 +217,24 @@ export async function updateWorkshopApproval(workshopId, approved, token) {
 
   const body = await parseJsonResponse(response);
 
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
+export async function postWorkshopReview(workshopId, title, description, rating, token) {
+  const response = await fetchWithFallback(`/api/Community/reviews/${workshopId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ Title: title, Description: description, Rating: Number(rating) }),
+  });
+
+  const body = await parseJsonResponse(response);
   if (!response.ok) {
     throw buildError(response, body);
   }
