@@ -102,7 +102,6 @@ export default function AdvancedSearch() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(2000000);
-  const [selectedLocations, setSelectedLocations] = useState([]);
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
@@ -165,12 +164,7 @@ export default function AdvancedSearch() {
         const price = workshop.price ?? workshop.priceLower ?? workshop.priceUpper ?? 0;
         if (price < priceMin || price > priceMax) return false;
 
-        // 4. Location Filter
-        if (selectedLocations.length > 0) {
-          const wLoc = String(workshop.location || "").toLowerCase();
-          const matchesLocation = selectedLocations.some((loc) => wLoc.includes(loc.toLowerCase()));
-          if (!matchesLocation) return false;
-        }
+
 
         // 5. Level Filter
         if (selectedLevels.length > 0) {
@@ -182,13 +176,12 @@ export default function AdvancedSearch() {
         return true;
       })
       .map(toCard);
-  }, [workshops, searchTerm, selectedCategory, priceMin, priceMax, selectedLocations, selectedLevels]);
+  }, [workshops, searchTerm, selectedCategory, priceMin, priceMax, selectedLevels]);
 
   const handleResetFilters = () => {
     setSelectedCategory("all");
     setPriceMin(0);
     setPriceMax(2000000);
-    setSelectedLocations([]);
     setSelectedLevels([]);
     setSearchTerm("");
   };
@@ -205,15 +198,12 @@ export default function AdvancedSearch() {
     if (priceMin > 0 || priceMax < 2000000) {
       tags.push({ type: "price", label: `Giá < ${priceMax.toLocaleString("vi-VN")}₫`, value: { priceMin, priceMax } });
     }
-    selectedLocations.forEach(loc => {
-      tags.push({ type: "location", label: `Khu vực: ${loc}`, value: loc });
-    });
     selectedLevels.forEach(lvl => {
       const lvlObj = levelsConfig.find(l => l.value === lvl);
       if (lvlObj) tags.push({ type: "level", label: lvlObj.label, value: lvl });
     });
     return tags;
-  }, [searchTerm, selectedCategory, priceMin, priceMax, selectedLocations, selectedLevels]);
+  }, [searchTerm, selectedCategory, priceMin, priceMax, selectedLevels]);
 
   // ===== Cards data =====
   const cards = [
@@ -608,54 +598,6 @@ export default function AdvancedSearch() {
 
               <div className="h-px bg-[#fbc4ae]/60 dark:bg-white/10" />
 
-              {/* Distance / Location */}
-              <div className="space-y-4">
-                <h4 className="font-black text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Khu vực
-                </h4>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      className="w-5 h-5 rounded border-[#fbc4ae]/80 text-[#f08a78] focus:ring-[#f08a78]/20 bg-transparent"
-                      type="checkbox"
-                      checked={selectedLocations.length === 0}
-                      onChange={() => setSelectedLocations([])}
-                    />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tất cả</span>
-                  </label>
-                  {[
-                    { label: "Đặng Thùy Trâm", keyword: "Đặng Thùy Trâm" },
-                    { label: "Phan Thành Tài", keyword: "Phan Thành Tài" },
-                    { label: "An Hải", keyword: "An Hải" },
-                    { label: "Hoàng Diệu", keyword: "Hoàng Diệu" },
-                  ].map(({ label, keyword }) => {
-                    const isChecked = selectedLocations.includes(label);
-                    return (
-                      <label
-                        key={label}
-                        className="flex items-center gap-3 cursor-pointer group"
-                      >
-                        <input
-                          className="w-5 h-5 rounded border-[#fbc4ae]/80 text-[#f08a78] focus:ring-[#f08a78]/20 bg-transparent"
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => {
-                            if (isChecked) {
-                              setSelectedLocations(selectedLocations.filter((x) => x !== label));
-                            } else {
-                              setSelectedLocations([...selectedLocations, label]);
-                            }
-                          }}
-                        />
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="h-px bg-[#fbc4ae]/60 dark:bg-white/10" />
-
               {/* Skill Level */}
               <div className="space-y-4">
                 <h4 className="font-black text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -744,7 +686,6 @@ export default function AdvancedSearch() {
                           setPriceMin(0);
                           setPriceMax(2000000);
                         }
-                        else if (tag.type === "location") setSelectedLocations(selectedLocations.filter(x => x !== tag.value));
                         else if (tag.type === "level") setSelectedLevels(selectedLevels.filter(x => x !== tag.value));
                       }}
                     >
