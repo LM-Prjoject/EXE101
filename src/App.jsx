@@ -42,7 +42,7 @@ import HostVerifyStep2 from "./pages/HostVerifyStep2";
 function RootRedirect() {
   const { currentUser } = useAuth();
   if (!currentUser) return <Navigate to="/login" replace />;
-  if (currentUser.role === "host") return <Navigate to="/home" replace />;
+  if (currentUser.role === "host") return <Navigate to="/host/dashboard" replace />;
   if (currentUser.role === "staff" || currentUser.role === "admin")
     return <Navigate to="/staff" replace />;
   return <Navigate to="/home" replace />;

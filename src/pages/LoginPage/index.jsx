@@ -58,7 +58,7 @@ export default function LoginPage() {
       const user = await login(email, password);
       if (user) {
         if (user.role === 'host') {
-          navigate('/home');
+          navigate('/host/dashboard');
         } else if (user.role === 'staff' || user.role === 'admin') {
           navigate('/staff/users');
         } else {
