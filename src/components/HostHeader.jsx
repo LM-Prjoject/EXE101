@@ -1,7 +1,9 @@
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function HostHeader({ title, children, profileOverride }) {
   const { currentUser, userProfile } = useAuth();
+  const navigate = useNavigate();
   const profile = profileOverride || userProfile || currentUser;
 
   const displayName =
@@ -24,6 +26,12 @@ export default function HostHeader({ title, children, profileOverride }) {
       </div>
       <div className="flex items-center gap-4">
         {children}
+        <button
+          onClick={() => navigate("/home")}
+          className="hidden sm:flex items-center justify-center gap-2 rounded-xl h-10 px-5 bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all shadow-lg shadow-primary/30 mr-2"
+        >
+          <span>Chế độ người dùng</span>
+        </button>
         <button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
           <span className="material-symbols-outlined">notifications</span>
         </button>
