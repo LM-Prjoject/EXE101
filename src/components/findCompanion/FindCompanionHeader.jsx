@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "../NotificationBell";
 
 export default function FindCompanionHeader() {
   const navigate = useNavigate();
@@ -85,12 +86,7 @@ export default function FindCompanionHeader() {
         )}
 
         <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
-          <button className="relative group">
-            <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">
-              notifications
-            </span>
-            <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <NotificationBell />
 
           {currentUser ? (
             <div className="flex items-center gap-2">

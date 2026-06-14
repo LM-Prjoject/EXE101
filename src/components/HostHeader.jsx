@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 export default function HostHeader({ title, children, profileOverride }) {
   const { currentUser, userProfile } = useAuth();
@@ -32,9 +33,7 @@ export default function HostHeader({ title, children, profileOverride }) {
         >
           <span>Chế độ người dùng</span>
         </button>
-        <button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
+        <NotificationBell />
         <button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
           <span className="material-symbols-outlined">settings</span>
         </button>

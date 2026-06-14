@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../../components/NotificationBell';
 
 export default function HostVerifyStep2() {
   const navigate = useNavigate();
@@ -40,9 +41,7 @@ export default function HostVerifyStep2() {
             <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-[#f08a78]/10 text-[#f08a78] hover:bg-[#f08a78]/20 transition-all">
               <span className="material-symbols-outlined">help</span>
             </button>
-            <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-[#f08a78]/10 text-[#f08a78] hover:bg-[#f08a78]/20 transition-all">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
+            <NotificationBell />
           </div>
         </header>
 

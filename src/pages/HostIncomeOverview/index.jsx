@@ -318,14 +318,6 @@ export default function HostIncomeOverview() {
 
   return (
     <>
-      {showWithdraw && (
-        <WithdrawModal
-          availableRevenue={stats.availableRevenue}
-          onClose={() => setShowWithdraw(false)}
-          onSuccess={fetchStats}
-        />
-      )}
-
       <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
         <div className="flex min-h-screen">
           {/* Sidebar */}
@@ -338,15 +330,8 @@ export default function HostIncomeOverview() {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Tổng quan thu nhập</h2>
-                  <p className="text-slate-500 dark:text-slate-400 mt-1">Quản lý doanh thu workshop và các khoản thanh toán gần đây của bạn</p>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">Xem chi tiết tổng số tiền doanh thu workshop của bạn</p>
                 </div>
-                <button
-                  id="btn-open-withdraw"
-                  onClick={() => setShowWithdraw(true)}
-                  className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined">account_balance_wallet</span> Rút tiền
-                </button>
               </div>
 
               {errorStats && (
@@ -364,50 +349,20 @@ export default function HostIncomeOverview() {
                 </div>
               )}
 
-              {/* Financial Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-primary/50 transition-colors">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">Tổng doanh thu</span>
-                    <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-lg">
-                      <span className="material-symbols-outlined">trending_up</span>
-                    </div>
+              {/* Financial Stats Card */}
+              <div className="max-w-md bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-primary/50 transition-colors">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Tổng doanh thu</span>
+                  <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-lg">
+                    <span className="material-symbols-outlined">payments</span>
                   </div>
-                  <p className="text-3xl font-black text-slate-900 dark:text-white">
-                    {loadingStats ? 'Đang tải...' : formatCurrency(stats.totalRevenue)}
-                  </p>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
-                    Doanh thu tích lũy đã đối soát
-                  </p>
                 </div>
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-primary/50 transition-colors">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">Đang chờ đối soát</span>
-                    <div className="p-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 rounded-lg">
-                      <span className="material-symbols-outlined">schedule</span>
-                    </div>
-                  </div>
-                  <p className="text-3xl font-black text-slate-900 dark:text-white">
-                    {loadingStats ? 'Đang tải...' : formatCurrency(stats.upcomingRevenue)}
-                  </p>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
-                    Từ các buổi workshop sắp diễn ra
-                  </p>
-                </div>
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-primary/50 transition-colors">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">Số dư khả dụng</span>
-                    <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                      <span className="material-symbols-outlined">account_balance</span>
-                    </div>
-                  </div>
-                  <p className="text-3xl font-black text-slate-900 dark:text-white">
-                    {loadingStats ? 'Đang tải...' : formatCurrency(stats.availableRevenue)}
-                  </p>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
-                    Sẵn sàng để yêu cầu rút tiền
-                  </p>
-                </div>
+                <p className="text-3xl font-black text-slate-900 dark:text-white">
+                  {loadingStats ? 'Đang tải...' : formatCurrency(stats.totalRevenue)}
+                </p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
+                  Tổng số tiền thu nhập tích lũy từ tất cả các buổi học
+                </p>
               </div>
 
               {/* Lịch sử nguồn tiền vào */}

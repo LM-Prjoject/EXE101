@@ -25,3 +25,16 @@ export async function getPaymentStatus(invoiceNumber) {
 
   return body; // Expect { status: 'success' | 'failed' | 'pending' }
 }
+
+export async function directBookTicket(ticketId) {
+  const response = await fetchWithFallback(`/api/IPN/direct-book/${ticketId}`, {
+    method: 'POST',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}

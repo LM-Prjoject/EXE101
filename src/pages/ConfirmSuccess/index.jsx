@@ -1,13 +1,67 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "../../components/NotificationBell";
+
+function formatCurrency(value) {
+  if (value == null) return "Liên hệ";
+  return `${Number(value).toLocaleString("vi-VN")}₫`;
+}
+
+function formatDate(date) {
+  if (!date) return "Đang cập nhật";
+  return new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+function formatTimeOnly(timeStr) {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+  return timeStr;
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    return new Intl.DateTimeFormat("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    }).format(d);
+  } catch {
+    return dateStr;
+  }
+}
 
 export default function ConfirmSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, userProfile } = useAuth();
   
+  const { workshop, schedule, selectedTicket, pricing, confirmedAt, email } = location.state || {};
+  
   const isError = location.pathname.includes("error");
   const isCancel = location.pathname.includes("cancel");
+
+  const formattedConfirmedAt = confirmedAt ? formatDateTime(confirmedAt) : formatDateTime(new Date());
+
+  const resolvedEmail = email || userProfile?.email || userProfile?.Email || currentUser?.email || currentUser?.Email || "email của bạn";
+
+  const handleSendManualEmail = () => {
+    const subject = encodeURIComponent(`[Hands & Hour] Xác nhận đặt chỗ thành công - ${workshop?.title || "Workshop"}`);
+    const body = encodeURIComponent(
+      `Chào bạn,\n\nBạn đã đặt chỗ thành công cho workshop tại Hands & Hour!\n\nChi tiết đặt chỗ:\n- Workshop: ${workshop?.title || ""}\n- Lịch học: ${formatDate(schedule?.startOn)} lúc ${formatTimeOnly(selectedTicket?.startTime || selectedTicket?.StartTime)} - ${formatTimeOnly(selectedTicket?.endTime || selectedTicket?.EndTime)}\n- Địa điểm: ${workshop?.location || ""}\n- Vé: ${selectedTicket?.ticketType || selectedTicket?.TicketType || ""} (${formatCurrency(pricing?.total)})\n- Thời gian xác nhận: ${formattedConfirmedAt}\n\nCảm ơn bạn đã đồng hành cùng Hands & Hour!\nChúc bạn có những giờ phút trải nghiệm thật tuyệt vời.`
+    );
+    window.location.href = `mailto:${resolvedEmail}?subject=${subject}&body=${body}`;
+  };
 
   const BRAND = {
     primary: "#c3996c", // warm gold (text)
@@ -104,12 +158,7 @@ export default function ConfirmSuccess() {
             )}
 
             <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
-              <button className="relative group">
-                <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">
-                  notifications
-                </span>
-                <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
+              <NotificationBell />
 
               {currentUser ? (
                 <div className="flex items-center gap-2">
@@ -183,29 +232,135 @@ export default function ConfirmSuccess() {
             </div>
 
             <h1 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">
-              {isError ? "Thanh toán thất bại ❌" : isCancel ? "Giao dịch đã bị hủy ⚠️" : "Thanh toán thành công! 🎉"}
+              {isError ? "Đặt vé thất bại ❌" : isCancel ? "Giao dịch đã bị hủy ⚠️" : "Đặt chỗ thành công! 🎉"}
             </h1>
             <p className="text-slate-600 text-lg">
               {isError 
-                ? "Đã xảy ra lỗi trong quá trình thực hiện thanh toán qua SmartPay. Vui lòng kiểm tra lại tài khoản hoặc thử lại sau."
+                ? "Đã xảy ra lỗi trong quá trình thực hiện đặt vé. Vui lòng kiểm tra lại tài khoản hoặc thử lại sau."
                 : isCancel 
-                  ? "Bạn đã chủ động hủy quá trình thanh toán. Đơn đặt chỗ vẫn chưa hoàn tất."
-                  : "Cảm ơn bạn đã hoàn tất giao dịch thanh toán."}
+                  ? "Bạn đã chủ động hủy quá trình đăng ký. Đơn đặt chỗ vẫn chưa hoàn tất."
+                  : "Thông tin đặt chỗ của bạn đã được ghi nhận thành công."}
             </p>
           </div>
 
           {/* Success Card */}
           {!(isError || isCancel) && (
-            <div className="w-full max-w-[600px] p-8 rounded-3xl bg-white border shadow-[0_10px_35px_rgba(240,138,120,0.08)] text-center flex flex-col gap-6"
+            <div className="w-full max-w-[680px] p-8 rounded-3xl bg-white dark:bg-[#151822] border shadow-[0_10px_35px_rgba(240,138,120,0.08)] flex flex-col gap-6"
                  style={{ borderColor: `${BRAND.soft}99` }}>
-              <p className="text-slate-600 text-base leading-relaxed">
-                Giao dịch thanh toán đã được thực hiện thành công. Cảm ơn bạn đã tin tưởng dịch vụ của Hands & Hour!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-2">
+              
+              <div className="text-center pb-4 border-b border-dashed" style={{ borderColor: `${BRAND.soft}66` }}>
+                <p className="text-slate-600 dark:text-slate-300 text-base leading-relaxed mb-2 font-semibold">
+                  Đặt vé thành công! Cảm ơn bạn đã tin tưởng dịch vụ của Hands & Hour!
+                </p>
+                <span className="text-xs text-slate-400 dark:text-slate-500">
+                  Mã đặt chỗ: <span className="font-mono font-bold text-slate-700 dark:text-slate-200">#HH-{(workshop?.id || 'WS')}-{Date.now().toString().slice(-6)}</span>
+                </span>
+              </div>
+
+              {/* Booking Info Detail Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-[#c3996c] uppercase tracking-wider text-left">Thông tin đặt vé</h3>
+                
+                {workshop && (
+                  <div className="flex gap-4 items-start bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border text-left" style={{ borderColor: `${BRAND.soft}22` }}>
+                    <img 
+                      src={workshop?.thumbnailLink || "/img/onlyLogo.png"} 
+                      alt={workshop?.title} 
+                      className="size-16 object-cover rounded-xl border shrink-0" 
+                      style={{ borderColor: `${BRAND.soft}44` }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 truncate">{workshop?.title}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{workshop?.location}</p>
+                      <span className="inline-block mt-2 px-2 py-0.5 bg-[#f08a78]/15 text-[#f08a78] text-[10px] font-bold rounded">
+                        Vé {selectedTicket?.ticketType || selectedTicket?.TicketType}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-[#fffaf5] dark:bg-slate-800/20 p-5 rounded-2xl border text-left" style={{ borderColor: `${BRAND.soft}33` }}>
+                  <div className="space-y-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#c3996c] uppercase tracking-wider">Ngày diễn ra</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{schedule ? formatDate(schedule.startOn || schedule.StartOn) : "Đang cập nhật"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#c3996c] uppercase tracking-wider">Khung giờ</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">
+                        {selectedTicket ? `${formatTimeOnly(selectedTicket.startTime || selectedTicket.StartTime)} - ${formatTimeOnly(selectedTicket.endTime || selectedTicket.EndTime)}` : "Đang cập nhật"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#c3996c] uppercase tracking-wider">Thời gian xác nhận</span>
+                      <span className="font-semibold text-[#f08a78] mt-0.5">{formattedConfirmedAt}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#c3996c] uppercase tracking-wider">Khách tham gia</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200 mt-0.5 truncate">
+                        {userProfile?.name || currentUser?.name || currentUser?.email?.split('@')[0] || "Khách"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {pricing && (
+                  <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border text-sm space-y-2 text-left" style={{ borderColor: `${BRAND.soft}22` }}>
+                    <div className="flex justify-between text-slate-500">
+                      <span>Giá vé</span>
+                      <span>{formatCurrency(pricing.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-500">
+                      <span>Phí dịch vụ</span>
+                      <span>{formatCurrency(pricing.serviceFee)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-800 dark:text-slate-100 border-t border-dashed pt-2 mt-2">
+                      <span>Tổng tiền</span>
+                      <span className="text-[#f08a78]">{formatCurrency(pricing.total)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Email notification status */}
+              <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-4 rounded-2xl flex gap-3 items-start text-left">
+                <span className="material-symbols-outlined text-emerald-500">mail</span>
+                <div className="text-left text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                  <p className="font-bold">Mẫu thư thông báo đặt lịch thành công đã được gửi!</p>
+                  <p className="mt-1">Một email xác nhận chi tiết đã được gửi đến địa chỉ <strong>{resolvedEmail}</strong>. Vui lòng kiểm tra hộp thư (bao gồm cả thư mục Spam) để nhận vé điện tử.</p>
+                </div>
+              </div>
+
+              {/* Navigation and Print Actions */}
+              <div className="flex flex-col sm:flex-row gap-4 mt-2 print:hidden">
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 h-12 rounded-xl border-2 font-black flex items-center justify-center gap-2 transition-all hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-white"
+                  style={{ borderColor: BRAND.soft }}
+                >
+                  <span className="material-symbols-outlined text-lg">print</span>
+                  In xác nhận
+                </button>
+                {workshop && (
+                  <button
+                    onClick={handleSendManualEmail}
+                    className="flex-1 h-12 rounded-xl border-2 font-black flex items-center justify-center gap-2 transition-all hover:bg-slate-50 dark:hover:bg-slate-800 text-[#f08a78] hover:text-[#ee7a66]"
+                    style={{ borderColor: BRAND.accent }}
+                  >
+                    <span className="material-symbols-outlined text-lg">send</span>
+                    Gửi lại mail (Thủ công)
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 print:hidden">
                 <button
                   onClick={() => navigate("/my-schedule")}
-                  className="flex-1 h-12 rounded-xl border-2 font-black flex items-center justify-center gap-2 transition-all hover:bg-slate-50"
-                  style={{ borderColor: BRAND.soft, color: "#2b2b2b" }}
+                  className="flex-1 h-12 rounded-xl border-2 font-black flex items-center justify-center gap-2 transition-all hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-white"
+                  style={{ borderColor: BRAND.soft }}
                 >
                   Xem lịch đặt chỗ
                 </button>

@@ -12,7 +12,6 @@ import AdminUserList from "./pages/AdminUserList";
 import StaffWorkshopList from "./pages/StaffWorkshopList";
 import StaffSystemConfig from "./pages/WebsiteManagement";
 import StaffHostApprovals from "./pages/StaffHostApprovals";
-import StaffWithdrawRequests from "./pages/StaffWithdrawRequests";
 
 // ── Pages ─────────────────────────────────────────────────────────────────
 import LoginPage from "./pages/LoginPage";
@@ -136,10 +135,6 @@ export default function App() {
               />
               <Route path="/staff/hosts" element={<StaffHostApprovals />} />
               <Route path="/staff/workshops" element={<StaffWorkshopList />} />
-              <Route
-                path="/staff/withdrawals"
-                element={<StaffWithdrawRequests />}
-              />
               <Route
                 path="/staff/bookings"
                 element={
