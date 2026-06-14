@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { getWorkshops } from "../../api/workshop";
+import NotificationBell from "../../components/NotificationBell";
 import { useAuth } from "../../context/AuthContext";
 
 function getWorkshopList(data) {
@@ -467,10 +468,7 @@ export default function AdvancedSearch() {
             )}
 
             <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
-              <button className="relative group">
-                <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">notifications</span>
-                <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#151822]"></span>
-              </button>
+              <NotificationBell />
 
               {currentUser ? (
                 <div className="flex items-center gap-2">

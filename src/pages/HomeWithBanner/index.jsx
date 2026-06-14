@@ -2,6 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getWorkshops } from "../../api/workshop";
+import NotificationBell from "../../components/NotificationBell";
 
 function getWorkshopList(data) {
   if (Array.isArray(data)) return data;
@@ -328,12 +329,7 @@ export default function HomeWithBanner() {
               )}
 
               <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
-                <button className="relative group">
-                  <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">
-                    notifications
-                  </span>
-                  <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
+                <NotificationBell />
 
                 {currentUser ? (
                   <div className="flex items-center gap-2">

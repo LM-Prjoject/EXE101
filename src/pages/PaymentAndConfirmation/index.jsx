@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getWorkshopById, getScheduleDetails } from "../../api/workshop";
-import { proceedPayment } from "../../api/payment";
+import { proceedPayment, directBookTicket } from "../../api/payment";
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "../../components/NotificationBell";
 
 function formatCurrency(value) {
   if (value == null) return "Liên hệ";
@@ -103,54 +104,60 @@ export default function PaymentAndConfirmation() {
     return { subtotal, serviceFee, total };
   }, [selectedTicket, paymentInfo]);
 
-  const handleCheckoutSubmit = () => {
-    if (!paymentInfo) {
-      setPaymentError("Thông tin thanh toán chưa sẵn sàng. Vui lòng thử lại.");
-      return;
-    }
-
+  const handleCheckoutSubmit = async () => {
     setPaymentLoading(true);
     setPaymentError("");
 
     try {
-      const merchantId = paymentInfo.merchant ?? paymentInfo.Merchant ?? "";
-      const isSandbox = merchantId.toLowerCase().includes("test");
-      const checkoutUrl = isSandbox 
-        ? "https://pay-sandbox.sepay.vn/v1/checkout/init" 
-        : "https://pay.sepay.vn/v1/checkout/init";
+      // Call backend direct book endpoint to persist booking and trigger real email sending
+      await directBookTicket(ticketId);
 
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = checkoutUrl;
-      
-      const fields = {
-        order_amount: paymentInfo.order_amount ?? paymentInfo.OrderAmount ?? "",
-        merchant: paymentInfo.merchant ?? paymentInfo.Merchant ?? "",
-        currency: paymentInfo.currency ?? paymentInfo.Currency ?? "VND",
-        operation: paymentInfo.operation ?? paymentInfo.Operation ?? "PURCHASE",
-        order_description: paymentInfo.order_description ?? paymentInfo.OrderDescription ?? "",
-        order_invoice_number: paymentInfo.order_invoice_number ?? paymentInfo.OrderInvoiceNumber ?? "",
-        success_url: paymentInfo.success_url ?? paymentInfo.SuccessUrl ?? "",
-        error_url: paymentInfo.error_url ?? paymentInfo.ErrorUrl ?? "",
-        cancel_url: paymentInfo.cancel_url ?? paymentInfo.CancelUrl ?? "",
-        signature: paymentInfo.signature ?? paymentInfo.Signature ?? "",
+      const confirmedAt = new Date().toISOString();
+      const localBooking = {
+        id: `local-${ticketId}-${Date.now()}`,
+        workshopId: Number(workshopId),
+        workshopTitle: workshop?.title || workshop?.Title || "Workshop",
+        workshopThumbnailLink: workshop?.thumbnailLink || "/img/onlyLogo.png",
+        workshopLocation: workshop?.location || workshop?.Location || "Đang cập nhật",
+        startOn: schedule?.startOn || schedule?.StartOn,
+        confirmedAt,
+        tickets: [
+          {
+            id: ticketId,
+            ticketType: selectedTicket?.ticketType || selectedTicket?.TicketType || "Đã đặt",
+            startTime: selectedTicket?.startTime || selectedTicket?.StartTime,
+            endTime: selectedTicket?.endTime || selectedTicket?.EndTime,
+            price: selectedTicket?.price,
+          }
+        ]
       };
 
-      console.log("Redirecting to SePay with fields:", fields);
+      const existing = localStorage.getItem("localBookings");
+      let list = [];
+      if (existing) {
+        try {
+          list = JSON.parse(existing);
+        } catch (e) {
+          list = [];
+        }
+      }
+      list.push(localBooking);
+      localStorage.setItem("localBookings", JSON.stringify(list));
 
-      Object.entries(fields).forEach(([key, val]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = val;
-        form.appendChild(input);
+      setPaymentLoading(false);
+      navigate("/confirm-success", {
+        state: {
+          workshop,
+          schedule,
+          selectedTicket,
+          pricing,
+          confirmedAt,
+          email: userProfile?.email || userProfile?.Email || currentUser?.email || currentUser?.Email || ""
+        }
       });
-
-      document.body.appendChild(form);
-      form.submit();
     } catch (err) {
-      console.error("Redirection failed:", err);
-      setPaymentError("Lỗi chuyển hướng thanh toán. Chi tiết: " + err.message);
+      console.error("Booking failed:", err);
+      setPaymentError("Lỗi đăng ký đặt vé. Chi tiết: " + (err.message || "Không thể kết nối đến máy chủ."));
       setPaymentLoading(false);
     }
   };
@@ -264,12 +271,7 @@ export default function PaymentAndConfirmation() {
             )}
 
             <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
-              <button className="relative group">
-                <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">
-                  notifications
-                </span>
-                <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
+              <NotificationBell />
 
               {currentUser ? (
                 <div className="flex items-center gap-2">
@@ -472,37 +474,17 @@ export default function PaymentAndConfirmation() {
                   </div>
 
                   {/* Payment Tabs */}
-                  <div
-                    className="flex gap-2 p-1 rounded-lg mb-6 border"
-                    style={{
-                      background: `${BRAND.soft}22`,
-                      borderColor: `${BRAND.soft}99`,
-                    }}
-                  >
-                    <button
-                      className="flex-1 py-2 text-sm font-extrabold rounded shadow-sm transition-all"
-                      style={{
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#0f172a",
-                        border: `1px solid ${BRAND.soft}99`,
-                      }}
-                      type="button"
-                    >
-                      Cổng SmartPay
-                    </button>
-                  </div>
-
-                  {/* SmartPay Redirection Details */}
+                  {/* Direct Booking Details */}
                   <div className="flex flex-col items-center py-6 text-center border rounded-2xl p-4 bg-white/50 mb-6" style={{ borderColor: `${BRAND.soft}44` }}>
                     <span
-                      className="material-symbols-outlined text-5xl mb-4 animate-bounce"
+                      className="material-symbols-outlined text-5xl mb-4 animate-pulse"
                       style={{ color: BRAND.accent }}
                     >
-                      payment
+                      assignment_turned_in
                     </span>
-                    <h3 className="font-black text-base text-slate-800 mb-2">SmartPay Checkout</h3>
+                    <h3 className="font-black text-base text-slate-800 mb-2">Xác nhận đặt vé</h3>
                     <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
-                      Hệ thống sẽ chuyển hướng bạn đến cổng thanh toán trực tuyến bảo mật của SmartPay. Bạn có thể thanh toán nhanh chóng bằng quét mã VietQR hoặc Thẻ nội địa/quốc tế.
+                      Bạn sẽ được đăng ký tham gia workshop trực tiếp. Thông tin vé và lịch trình sẽ được gửi về email của bạn ngay lập tức.
                     </p>
                   </div>
                 </div>
@@ -555,12 +537,12 @@ export default function PaymentAndConfirmation() {
                     {paymentLoading ? (
                       <>
                         <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
-                        Đang chuyển hướng...
+                        Đang ghi nhận đặt vé...
                       </>
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-lg">lock</span>
-                        Thanh toán qua SmartPay
+                        <span className="material-symbols-outlined text-lg">check_circle</span>
+                        Xác nhận đặt vé
                       </>
                     )}
                   </button>
@@ -580,7 +562,7 @@ export default function PaymentAndConfirmation() {
                     <span className="material-symbols-outlined text-[12px]">
                       verified
                     </span>{" "}
-                    Giao dịch bảo mật chuẩn PCI-DSS
+                    Thông tin đặt chỗ của bạn được bảo mật
                   </p>
                 </div>
               </section>

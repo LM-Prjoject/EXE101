@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getPurchasedSchedules } from "../../api/workshop";
+import NotificationBell from "../../components/NotificationBell";
 
 function formatCurrency(value) {
   if (value == null) return "Liên hệ";
@@ -56,7 +57,31 @@ export default function MySchedule() {
       try {
         const response = await getPurchasedSchedules(authToken, 1, 50);
         if (!ignore) {
-          setSchedules(response?.data || []);
+          const remoteSchedules = response?.data || [];
+          
+          const localStr = localStorage.getItem("localBookings");
+          let localList = [];
+          if (localStr) {
+            try {
+              localList = JSON.parse(localStr);
+            } catch (e) {
+              localList = [];
+            }
+          }
+          
+          const remoteTicketIds = new Set(
+            remoteSchedules.flatMap(item => {
+              const ticketList = item.tickets || item.Tickets || item.workshopTickets || item.WorkshopTickets || [];
+              return ticketList.map(t => (t.id || t.Id));
+            })
+          );
+          
+          const filteredLocal = localList.filter(localItem => {
+            const localTicketId = localItem.tickets?.[0]?.id;
+            return localTicketId && !remoteTicketIds.has(localTicketId);
+          });
+          
+          setSchedules([...filteredLocal, ...remoteSchedules]);
         }
       } catch (err) {
         if (!ignore) {
@@ -294,10 +319,7 @@ export default function MySchedule() {
               )}
 
               <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
-                <button className="relative group">
-                  <span className="material-symbols-outlined text-[#c3996c]/70 hover:text-[#f08a78] transition-colors">notifications</span>
-                  <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#151822]"></span>
-                </button>
+                <NotificationBell />
 
                 <div className="flex items-center gap-2">
                   <span className="hidden sm:block text-sm font-semibold text-[#c3996c]">

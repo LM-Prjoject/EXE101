@@ -206,4 +206,26 @@ export async function checkInParticipant(ticketId, participantId) {
   return body;
 }
 
+/**
+ * Gets bookings made on the current Host's workshops.
+ * Calls GET /api/Workshop/tickets/bookings
+ */
+export async function getHostBookings(page = 1, pageSize = 50) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetchWithFallback(`/api/Workshop/tickets/bookings?${params}`, {
+    method: 'GET',
+  });
+
+  const body = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw buildError(response, body);
+  }
+
+  return body;
+}
+
 
