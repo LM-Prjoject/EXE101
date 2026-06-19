@@ -55,7 +55,7 @@ export default function HostScheduleManagement() {
         <main className="flex-1 flex flex-col">
           <HostHeader title="Quản lý Lịch trình" />
 
-          <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+          <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h3 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">
@@ -111,7 +111,7 @@ export default function HostScheduleManagement() {
                     />
                   </div>
 
-                  <div className="border-t border-slate-200 dark:border-slate-800 p-8">
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-4 sm:p-8">
                     <div className="flex items-center justify-between mb-6">
                       <h5 className="text-xl font-bold flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">
