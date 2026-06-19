@@ -243,7 +243,7 @@ export default function UserProfile() {
                     />
                   </div>
 
-                  <h2 className="text-xl font-black tracking-tight">
+                  <h2 className="hidden min-[400px]:block text-xl font-black tracking-tight">
                     <span className="text-[#c3996c]">Hands</span>{" "}
                     <span className="text-[#f08a78]">&amp;</span>{" "}
                     <span className="text-[#c3996c]">Hour</span>
@@ -309,10 +309,13 @@ export default function UserProfile() {
                       navigate("/host/verification");
                     }
                   }}
-                  className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"
+                  className="flex min-w-[50px] sm:min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 sm:px-6 bg-[#f08a78] hover:bg-[#ee7a66] text-white text-xs sm:text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-[#f08a78]/25"
                 >
-                  <span className="truncate">
+                  <span className="sm:inline hidden truncate">
                     {isUserHost ? "Chế độ Host" : "Trở thành Host"}
+                  </span>
+                  <span className="inline sm:hidden truncate">
+                    {isUserHost ? "Host" : "Lên Host"}
                   </span>
                 </button>
 
