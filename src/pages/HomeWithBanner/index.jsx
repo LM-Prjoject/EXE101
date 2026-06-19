@@ -258,8 +258,8 @@ export default function HomeWithBanner() {
       >
         <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
           {/* Header */}
-          <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
-            <div className="flex items-center gap-8">
+          <header className="flex items-center justify-between border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-4 md:px-10 py-3 sticky top-0 z-50">
+            <div className="flex items-center gap-3 md:gap-8">
               <Link to="/home" className="flex items-center gap-4">
                 <div className="flex size-10 items-center justify-center overflow-visible">
                   <img
@@ -293,7 +293,7 @@ export default function HomeWithBanner() {
               </label>
             </div>
 
-            <div className="flex flex-1 justify-end gap-8 items-center">
+            <div className="flex flex-1 justify-end gap-3 md:gap-8 items-center">
               <div className="hidden lg:flex items-center gap-9">
                 <Link
                   className="text-[#c3996c] hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal"
@@ -328,7 +328,7 @@ export default function HomeWithBanner() {
                 </button>
               )}
 
-              <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 pl-6">
+              <div className="flex items-center gap-2 sm:gap-4 border-l border-[#fbc4ae]/60 pl-3 sm:pl-6">
                 <NotificationBell />
 
                 {currentUser ? (
@@ -352,7 +352,7 @@ export default function HomeWithBanner() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     <Link
                       className="text-sm font-semibold text-[#c3996c] hover:text-[#f08a78] transition-colors hidden sm:block"
                       to="/login"
@@ -361,7 +361,7 @@ export default function HomeWithBanner() {
                     </Link>
                     <Link
                       to="/register"
-                      className="bg-[#f08a78] hover:bg-[#ee7a66] text-white font-extrabold py-2 px-5 rounded-xl transition-colors shadow-sm shadow-[#f08a78]/25 text-sm"
+                      className="bg-[#f08a78] hover:bg-[#ee7a66] text-white font-extrabold py-2 px-3 sm:px-5 rounded-xl transition-colors shadow-sm shadow-[#f08a78]/25 text-sm"
                     >
                       Đăng ký
                     </Link>
@@ -412,7 +412,7 @@ export default function HomeWithBanner() {
                     />
                     <button
                       onClick={handleSearch}
-                      className="mr-2 rounded-xl px-6 py-2 text-sm font-bold text-white transition-colors"
+                      className="mr-2 rounded-xl px-3 sm:px-6 py-2 text-sm font-bold text-white transition-colors animate-in"
                       style={{ background: PRIMARY }}
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.background = "#e87462")

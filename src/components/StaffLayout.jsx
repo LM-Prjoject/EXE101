@@ -7,6 +7,26 @@ export default function StaffLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close sidebar on location change (navigation)
+  React.useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -23,7 +43,66 @@ export default function StaffLayout() {
   const displayName = currentUser?.name || currentUser?.email?.split('@')[0] || 'Staff';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', height: '100vh', background: '#F6F2E9', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', height: '100vh', background: '#F6F2E9', fontFamily: "'Be Vietnam Pro', sans-serif", flexDirection: isMobile ? 'column' : 'row' }}>
+      
+      {/* Mobile Top Header */}
+      {isMobile && (
+        <header style={{
+          height: '60px',
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          boxSizing: 'border-box',
+          width: '100%',
+          flexShrink: 0
+        }}>
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#64748b',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.5rem'
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>menu</span>
+          </button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img
+              src="/img/onlyLogo.png"
+              alt="Hands & Hour Logo"
+              style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+            />
+            <h2 style={{ fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: 0 }}>
+              Hands <span style={{ color: '#3b82f6' }}>&amp;</span> Hour
+            </h2>
+          </div>
+          
+          <div style={{ width: '40px' }} />
+        </header>
+      )}
+
+      {/* Backdrop overlay for mobile */}
+      {isMobile && isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 40,
+            backdropFilter: 'blur(2px)'
+          }}
+        />
+      )}
       {/* Left Sidebar */}
       <aside style={{
         width: '280px',
@@ -36,8 +115,12 @@ export default function StaffLayout() {
         boxShadow: '4px 0 24px rgba(0, 0, 0, 0.02)',
         height: '100vh',
         boxSizing: 'border-box',
-        position: 'sticky',
-        top: 0
+        position: isMobile ? 'fixed' : 'sticky',
+        top: 0,
+        left: 0,
+        zIndex: 50,
+        transform: isMobile ? (isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}>
         <div>
           {/* Logo / Header */}
@@ -144,7 +227,7 @@ export default function StaffLayout() {
       </aside>
 
       {/* Right Main Content Area */}
-      <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', boxSizing: 'border-box' }}>
+      <main style={{ flex: 1, padding: isMobile ? '1.25rem 1rem' : '2.5rem', overflowY: 'auto', boxSizing: 'border-box', height: isMobile ? 'calc(100vh - 60px)' : '100vh' }}>
         <Outlet />
       </main>
     </div>

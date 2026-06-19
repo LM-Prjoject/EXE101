@@ -22,6 +22,14 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const location = useLocation();
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     setShowPassword(false);
     setShowNewPassword(false);
@@ -113,46 +121,48 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ fontFamily: "'Be Vietnam Pro', sans-serif", height: '100vh', overflow: 'hidden', background: 'linear-gradient(180deg,#fbc4ae 0%,#fff 40%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 1100, background: '#fff', borderRadius: 24, boxShadow: '0 10px 40px rgba(195,153,108,0.12)', overflow: 'hidden', display: 'flex', minHeight: 680 }}>
+    <div style={{ fontFamily: "'Be Vietnam Pro', sans-serif", height: isMobile ? 'auto' : '100vh', minHeight: isMobile ? '100vh' : 'auto', overflow: isMobile ? 'auto' : 'hidden', background: 'linear-gradient(180deg,#fbc4ae 0%,#fff 40%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '1.5rem 0.75rem' : '1rem' }}>
+      <div style={{ width: '100%', maxWidth: 1100, background: '#fff', borderRadius: isMobile ? 16 : 24, boxShadow: '0 10px 40px rgba(195,153,108,0.12)', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: isMobile ? 'auto' : 680 }}>
 
         {/* ── LEFT: Hero panel ── */}
-        <div style={{ flex: '0 0 48%', background: 'linear-gradient(170deg, #fbc4ae 0%, #d5ddce 100%)', position: 'relative', display: 'flex', flexDirection: 'column', padding: '2.5rem', paddingRight: '6.5rem' }}>
+        {!isMobile && (
+          <div style={{ flex: '0 0 48%', background: 'linear-gradient(170deg, #fbc4ae 0%, #d5ddce 100%)', position: 'relative', display: 'flex', flexDirection: 'column', padding: '2.5rem', paddingRight: '6.5rem' }}>
 
-          {/* Logo — click về home */}
-          <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', zIndex: 2 }}>
-            <img src="/img/onlyLogo.png" alt="Logo" style={{ height: 140, objectFit: 'contain' }} />
-            <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#c3996c', letterSpacing: '-0.02em' }}>Hands &amp; Hour</span>
-          </Link>
+            {/* Logo — click về home */}
+            <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', zIndex: 2 }}>
+              <img src="/img/onlyLogo.png" alt="Logo" style={{ height: 140, objectFit: 'contain' }} />
+              <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#c3996c', letterSpacing: '-0.02em' }}>Hands &amp; Hour</span>
+            </Link>
 
-          {/* Main copy */}
-          <div style={{ marginTop: '0rem', marginBottom: 0, zIndex: 2, paddingTop: 0 }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#2b2b2b', lineHeight: 1.2, margin: '0 0 1rem' }}>
-              Giải phóng<br />
-              <span style={{ color: '#f08a78' }}>Sáng tạo</span> của Bạn<br />
-              Ngay Hôm Nay.
-            </h1>
+            {/* Main copy */}
+            <div style={{ marginTop: '0rem', marginBottom: 0, zIndex: 2, paddingTop: 0 }}>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#2b2b2b', lineHeight: 1.2, margin: '0 0 1rem' }}>
+                Giải phóng<br />
+                <span style={{ color: '#f08a78' }}>Sáng tạo</span> của Bạn<br />
+                Ngay Hôm Nay.
+              </h1>
+            </div>
+
+            {/* Hero image bottom-right */}
+            <div style={{ position: 'absolute', right: 0, bottom: 0, width: '60%', height: '45%', pointerEvents: 'none', zIndex: 1 }}>
+              <div style={{
+                width: '100%', height: '100%', borderTopLeftRadius: 40,
+                backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDVuYw4Ml7FWZHuzPBEVU7Xp02fj1WwEDd7InL0SFz1iWQ-OaoUPHPgW0zRRBst7fQiVJ-UwaU1PlWVbaz8pe2Wvhscb4gaA64U0xSUY5WP5cwnbF3ADOYVQnXwSWvtTd1sGq9AJorjNOZgyOsJldxp2GWxP8S5L-ymMPBKWVMpuMia1Ffyi_hSHSHjVWXodBof_LMeFvBjgDoOiUU_J5mmYISANOOeejUXGcSSt1lfgJ2thpwhxs_5xqgNoJ_EggMfchns3i-KOIb_')",
+                backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: '-8px -8px 32px rgba(195,153,108,0.08)',
+              }} />
+            </div>
+
+            {/* Decorative blobs */}
+            <div style={{ position: 'absolute', bottom: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'rgba(240,138,120,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: 60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(195,153,108,0.08)', filter: 'blur(50px)', pointerEvents: 'none' }} />
           </div>
-
-          {/* Hero image bottom-right */}
-          <div style={{ position: 'absolute', right: 0, bottom: 0, width: '60%', height: '45%', pointerEvents: 'none', zIndex: 1 }}>
-            <div style={{
-              width: '100%', height: '100%', borderTopLeftRadius: 40,
-              backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDVuYw4Ml7FWZHuzPBEVU7Xp02fj1WwEDd7InL0SFz1iWQ-OaoUPHPgW0zRRBst7fQiVJ-UwaU1PlWVbaz8pe2Wvhscb4gaA64U0xSUY5WP5cwnbF3ADOYVQnXwSWvtTd1sGq9AJorjNOZgyOsJldxp2GWxP8S5L-ymMPBKWVMpuMia1Ffyi_hSHSHjVWXodBof_LMeFvBjgDoOiUU_J5mmYISANOOeejUXGcSSt1lfgJ2thpwhxs_5xqgNoJ_EggMfchns3i-KOIb_')",
-              backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: '-8px -8px 32px rgba(195,153,108,0.08)',
-            }} />
-          </div>
-
-          {/* Decorative blobs */}
-          <div style={{ position: 'absolute', bottom: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'rgba(240,138,120,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', top: 60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(195,153,108,0.08)', filter: 'blur(50px)', pointerEvents: 'none' }} />
-        </div>
+        )}
 
         {/* ── RIGHT: Login form ── */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '3rem 3.5rem' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '2.5rem 1.25rem' : '3rem 3.5rem' }}>
 
           {/* Mobile logo */}
-          <Link to="/home" style={{ display: 'none', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: '1.5rem' }}>
+          <Link to="/home" style={{ display: isMobile ? 'flex' : 'none', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: '1.5rem' }}>
             <img src="/img/onlyLogo.png" alt="Logo" style={{ height: 32, objectFit: 'contain' }} />
             <span style={{ fontWeight: 900, color: '#2b2b2b' }}>Hands &amp; Hour</span>
           </Link>

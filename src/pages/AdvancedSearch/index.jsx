@@ -415,8 +415,8 @@ export default function AdvancedSearch() {
         className="min-h-screen flex flex-col overflow-x-hidden w-full font-display bg-[#f6f2e9] text-slate-900 dark:bg-[#0b0f14] dark:text-slate-100"
       >
         {/* Header */}
-        <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
-          <div className="flex items-center gap-8">
+        <header className="flex items-center justify-between border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-4 md:px-10 py-3 sticky top-0 z-50">
+          <div className="flex items-center gap-3 md:gap-8">
             <Link className="flex items-center gap-4 hover:opacity-90 transition-opacity" to="/home">
               <div className="flex size-10 items-center justify-center overflow-visible">
                 <img src="/img/onlyLogo.png" alt="Hands & Hour logo" className="h-8 w-8 object-contain scale-150 origin-center" />
@@ -444,7 +444,7 @@ export default function AdvancedSearch() {
             </label>
           </div>
 
-          <div className="flex flex-1 justify-end gap-8 items-center">
+          <div className="flex flex-1 justify-end gap-3 md:gap-8 items-center">
             <div className="hidden lg:flex items-center gap-9">
               <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/home">Workshops</Link>
               <Link className="text-[#c3996c] dark:text-slate-200 hover:text-[#f08a78] transition-colors text-sm font-medium leading-normal" to="/advanced-search">Khám phá</Link>
@@ -467,7 +467,7 @@ export default function AdvancedSearch() {
               </button>
             )}
 
-            <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
+            <div className="flex items-center gap-2 sm:gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-3 sm:pl-6">
               <NotificationBell />
 
               {currentUser ? (
@@ -483,9 +483,9 @@ export default function AdvancedSearch() {
                   </Link>
                 </div>
               ) : (
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <Link className="text-sm font-semibold hover:text-[#f08a78] transition-colors hidden sm:block" to="/login">Đăng nhập</Link>
-                  <Link to="/register" className="bg-[#f08a78] hover:bg-[#f08a78]/90 text-white font-extrabold py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-[#f08a78]/25">Đăng ký</Link>
+                  <Link to="/register" className="bg-[#f08a78] hover:bg-[#f08a78]/90 text-white font-extrabold py-2.5 px-3 sm:px-5 rounded-xl transition-colors shadow-sm shadow-[#f08a78]/25">Đăng ký</Link>
                 </div>
               )}
             </div>

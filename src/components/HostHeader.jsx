@@ -21,9 +21,15 @@ export default function HostHeader({ title, children, profileOverride }) {
     `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=6f8b6f&color=fff`;
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-8 flex items-center justify-between sticky top-0 z-10 w-full shrink-0">
-      <div className="flex items-center gap-4">
-        <h2 className="text-lg font-bold">{title}</h2>
+    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 md:px-8 flex items-center justify-between sticky top-0 z-10 w-full shrink-0">
+      <div className="flex items-center gap-2 md:gap-4">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('toggle-host-sidebar'))}
+          className="md:hidden p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center justify-center"
+        >
+          <span className="material-symbols-outlined text-[24px]">menu</span>
+        </button>
+        <h2 className="text-sm md:text-lg font-bold truncate max-w-[150px] sm:max-w-none" title={title}>{title}</h2>
       </div>
       <div className="flex items-center gap-4">
         {children}
