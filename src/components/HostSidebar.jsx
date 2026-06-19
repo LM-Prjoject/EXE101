@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -5,8 +6,26 @@ export default function HostSidebar({ onNavigateRequest }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, userProfile, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
   const path = location.pathname;
+
+  useEffect(() => {
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    const handleClose = () => setIsOpen(false);
+    
+    window.addEventListener("toggle-host-sidebar", handleToggle);
+    window.addEventListener("close-host-sidebar", handleClose);
+    
+    return () => {
+      window.removeEventListener("toggle-host-sidebar", handleToggle);
+      window.removeEventListener("close-host-sidebar", handleClose);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   function handleNavigate(event, to) {
     if (!onNavigateRequest) return;
@@ -20,7 +39,15 @@ export default function HostSidebar({ onNavigateRequest }) {
   }
 
   return (
-    <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 sticky top-0 h-screen z-20">
+    <>
+      {/* Mobile Sidebar backdrop */}
+      {isOpen && (
+        <div
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-20 md:hidden"
+        />
+      )}
+      <aside className={`w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 fixed md:sticky top-0 left-0 h-screen z-30 transition-transform duration-300 md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
       <div className="p-6 flex items-center gap-3">
         <img
           src="/img/logo.png"
@@ -198,5 +225,6 @@ export default function HostSidebar({ onNavigateRequest }) {
         </div>
       </div>
     </aside>
+    </>
   );
 }

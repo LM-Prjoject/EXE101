@@ -232,8 +232,8 @@ export default function UserProfile() {
           {isHost ? (
             <HostHeader title="Hồ sơ của tôi" profileOverride={user} />
           ) : (
-            <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-10 py-3 sticky top-0 z-50">
-              <div className="flex items-center gap-8">
+            <header className="flex items-center justify-between border-b border-solid border-[#fbc4ae]/60 dark:border-slate-800 bg-[#FEFEFD] dark:bg-[#151822] px-4 md:px-10 py-3 sticky top-0 z-50">
+              <div className="flex items-center gap-3 md:gap-8">
                 <Link to="/home" className="flex items-center gap-4">
                   <div className="flex size-10 items-center justify-center overflow-visible">
                     <img
@@ -275,7 +275,7 @@ export default function UserProfile() {
                 </form>
               </div>
 
-              <div className="flex flex-1 justify-end gap-8 items-center">
+              <div className="flex flex-1 justify-end gap-3 md:gap-8 items-center">
                 <div className="hidden lg:flex items-center gap-9">
                   <button
                     type="button"
@@ -316,7 +316,7 @@ export default function UserProfile() {
                   </span>
                 </button>
 
-                <div className="flex items-center gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-6">
+                <div className="flex items-center gap-2 sm:gap-4 border-l border-[#fbc4ae]/60 dark:border-slate-700 pl-3 sm:pl-6">
                   <NotificationBell />
 
                   <div className="flex items-center gap-2">
