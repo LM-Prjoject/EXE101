@@ -150,13 +150,13 @@ export default function HostManageParticipants() {
 
             {/* Error and Success Notifications */}
             {error && (
-              <div className="mx-8 mt-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 text-sm flex items-center gap-2">
+              <div className="mx-4 sm:mx-8 mt-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined">error</span>
                 <span>{error}</span>
               </div>
             )}
             {success && (
-              <div className="mx-8 mt-6 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-xl border border-green-200 dark:border-green-800 text-sm flex items-center gap-2">
+              <div className="mx-4 sm:mx-8 mt-6 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-xl border border-green-200 dark:border-green-800 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined">check_circle</span>
                 <span>{success}</span>
               </div>
@@ -166,7 +166,7 @@ export default function HostManageParticipants() {
               tickets.length > 0 &&
               selectedTicket &&
               !selectedTicket.isOngoing && (
-                <div className="mx-8 mt-6 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 text-sm flex items-start gap-2">
+                <div className="mx-4 sm:mx-8 mt-6 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 text-sm flex items-start gap-2">
                   <span className="material-symbols-outlined shrink-0 text-amber-600 dark:text-amber-400">
                     warning
                   </span>
@@ -186,7 +186,7 @@ export default function HostManageParticipants() {
                 </div>
               )}
 
-            <div className="p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+            <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col">
               {loadingTickets ? (
                 <div className="flex flex-col items-center justify-center py-20 flex-1">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

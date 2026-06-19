@@ -465,7 +465,7 @@ export default function AdvancedSearch() {
                   {currentUser?.role === "host" ? "Chế độ Host" : "Trở thành Host"}
                 </span>
                 <span className="inline sm:hidden truncate">
-                  {currentUser?.role === "host" ? "Host" : "Lên Host"}
+                  {currentUser?.role === "host" ? "Kênh Host" : "Đăng ký Host"}
                 </span>
               </button>
             )}

@@ -315,7 +315,7 @@ export default function UserProfile() {
                     {isUserHost ? "Chế độ Host" : "Trở thành Host"}
                   </span>
                   <span className="inline sm:hidden truncate">
-                    {isUserHost ? "Host" : "Lên Host"}
+                    {isUserHost ? "Kênh Host" : "Đăng ký Host"}
                   </span>
                 </button>
 

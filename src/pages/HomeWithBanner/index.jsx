@@ -327,8 +327,8 @@ export default function HomeWithBanner() {
                   </span>
                   <span className="inline sm:hidden truncate">
                     {currentUser?.role === "host"
-                      ? "Host"
-                      : "Lên Host"}
+                      ? "Kênh Host"
+                      : "Đăng ký Host"}
                   </span>
                 </button>
               )}

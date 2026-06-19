@@ -112,7 +112,7 @@ export default function HostDashboard() {
           <main className="flex-1 flex flex-col min-w-0 w-full overflow-hidden">
             <HostHeader title="Tổng quan Dashboard" />
             
-            <div className="p-8 max-w-7xl mx-auto space-y-8 w-full">
+            <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8 w-full">
               {/* Page Title & Quick Action */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
