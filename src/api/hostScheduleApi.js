@@ -1,4 +1,5 @@
 import { getToken } from "../utils/token";
+import { SESSION_EXPIRED_EVENT } from "./client";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE || "https://exe.kakgonbri.party"
@@ -15,6 +16,7 @@ export async function apiGet(path) {
   });
 
   if (res.status === 401) {
+    window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
     throw new Error("Bạn không có quyền truy cập trang này.");
   }
 

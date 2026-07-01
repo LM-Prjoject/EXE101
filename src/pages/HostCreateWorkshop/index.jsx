@@ -68,8 +68,10 @@ export default function HostCreateWorkshop() {
       <HostSidebar onNavigateRequest={(to) => navigate(to)} />
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <HostHeader title={editingWorkshop ? "Chỉnh sửa Workshop" : "Tạo Workshop Mới"} />
-        <main className="flex-1 w-full max-w-[960px] mx-auto px-4 py-8 md:py-12 pb-24 overflow-y-auto">
+        <HostHeader
+          title={editingWorkshop ? "Chỉnh sửa Workshop" : "Tạo Workshop Mới"}
+        />
+        <main className="scrollbar-none flex-1 w-full max-w-[960px] mx-auto px-4 py-8 md:py-12 pb-24 overflow-y-auto">
           <div className="mb-10 animate-fade-in-up">
             <h1 className="text-slate-900 dark:text-white text-4xl md:text-5xl font-black leading-tight tracking-tight mb-3">
               {editingWorkshop ? "Chỉnh sửa Workshop" : "Tạo Workshop Mới"}
