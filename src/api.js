@@ -1,8 +1,35 @@
 const PRIMARY_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party');
+const SESSION_EXPIRED_EVENT = 'auth:session-expired';
+
+function decodeJwtPayload(token) {
+  try {
+    const payload = token.split('.')[1];
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(normalizedPayload));
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+
+  return payload.exp * 1000 <= Date.now();
+}
+
+function notifySessionExpired() {
+  window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+}
 
 async function fetchWithFallback(path, options = {}) {
   const url = `${PRIMARY_BASE}${path}`;
   const authToken = localStorage.getItem('authToken');
+  if (authToken && isTokenExpired(authToken)) {
+    notifySessionExpired();
+    return new Response(null, { status: 401, statusText: 'Session Expired' });
+  }
+
   const requestOptions = {
     ...options,
     headers: {
@@ -11,7 +38,13 @@ async function fetchWithFallback(path, options = {}) {
     },
   };
 
-  return fetch(url, requestOptions);
+  const response = await fetch(url, requestOptions);
+
+  if (response.status === 401 && authToken) {
+    notifySessionExpired();
+  }
+
+  return response;
 }
 
 async function parseJsonResponse(response) {

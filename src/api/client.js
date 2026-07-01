@@ -1,4 +1,26 @@
 const PRIMARY_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://exe.kakgonbri.party');
+const SESSION_EXPIRED_EVENT = 'auth:session-expired';
+
+function decodeJwtPayload(token) {
+  try {
+    const payload = token.split('.')[1];
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(normalizedPayload));
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+
+  return payload.exp * 1000 <= Date.now();
+}
+
+function notifySessionExpired() {
+  window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+}
 
 // Thực hiện gọi API trực tiếp đến server chính với tùy chọn đính kèm Authorization header tự động
 async function fetchWithFallback(path, options = {}) {
@@ -6,13 +28,23 @@ async function fetchWithFallback(path, options = {}) {
 
   // Tự động đính kèm Authorization header nếu có token trong localStorage
   const token = localStorage.getItem('authToken');
+  if (token && isTokenExpired(token)) {
+    notifySessionExpired();
+    return new Response(null, { status: 401, statusText: 'Session Expired' });
+  }
   const headers = { ...options.headers };
   if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`;
   }
   const mergedOptions = { ...options, headers };
 
-  return fetch(url, mergedOptions);
+  const response = await fetch(url, mergedOptions);
+
+  if (response.status === 401 && token) {
+    notifySessionExpired();
+  }
+
+  return response;
 }
 
 async function parseJsonResponse(response) {
@@ -42,4 +74,4 @@ function buildError(response, body) {
   return new Error(defaultMessage);
 }
 
-export { fetchWithFallback, parseJsonResponse, buildError };
+export { SESSION_EXPIRED_EVENT, fetchWithFallback, parseJsonResponse, buildError };
