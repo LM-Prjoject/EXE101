@@ -23,6 +23,8 @@ export default function BookingSidebar({
   ticketsLoading,
   selectedTicketId,
   setSelectedTicketId,
+  ticketQuantity,
+  setTicketQuantity,
   paymentError,
   handleProceedPayment,
   activeSchedule,
@@ -59,6 +61,13 @@ export default function BookingSidebar({
               activeSchedule={activeSchedule}
             />
 
+            <QuantitySelector
+              quantity={ticketQuantity}
+              onChange={setTicketQuantity}
+              maxQuantity={activeRemainingTickets}
+              disabled={!selectedTicketId || isActiveTicketPast || activeRemainingTickets === 0}
+            />
+
             <BuyerInfo currentUser={currentUser} userProfile={userProfile} />
           </div>
 
@@ -72,6 +81,7 @@ export default function BookingSidebar({
             currentUser={currentUser}
             navigate={navigate}
             selectedTicketId={selectedTicketId}
+            ticketQuantity={ticketQuantity}
             isActiveTicketPast={isActiveTicketPast}
             activeRemainingTickets={activeRemainingTickets}
             onPay={handleProceedPayment}
@@ -341,6 +351,97 @@ function TicketSelector({
   );
 }
 
+function QuantitySelector({ quantity, onChange, maxQuantity, disabled }) {
+  const hasLimit = maxQuantity !== null && maxQuantity !== undefined;
+  const max = hasLimit ? Math.max(1, Number(maxQuantity) || 1) : 99;
+  const safeQuantity = Math.min(Math.max(1, Number(quantity) || 1), max);
+  const limitText = hasLimit ? `Còn tối đa ${max} vé` : "Chọn số vé cần đặt";
+
+  function updateQuantity(nextValue) {
+    const normalized = Math.min(Math.max(1, Number(nextValue) || 1), max);
+    onChange(normalized);
+  }
+
+  return (
+    <div className="space-y-2">
+      <div
+        className="rounded-2xl border p-3.5 flex items-center justify-between gap-3"
+        style={{
+          background: disabled ? "#f1f5f9" : `${BRAND.soft}12`,
+          borderColor: disabled ? "#cbd5e1" : `${BRAND.soft}88`,
+          opacity: disabled ? 0.7 : 1,
+        }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className="size-11 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: `${BRAND.soft}40`, color: BRAND.primary }}
+          >
+            <span className="material-symbols-outlined">confirmation_number</span>
+          </div>
+
+          <div className="min-w-0">
+            <label className="block text-sm font-black" style={{ color: "#334155" }}>
+              Số lượng vé
+            </label>
+            <p className="text-xs font-semibold truncate" style={{ color: "#94a3b8" }}>
+              {limitText}
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="h-11 rounded-full border bg-white flex items-center gap-1 px-1.5 shrink-0 shadow-sm"
+          style={{ borderColor: `${BRAND.soft}88` }}
+        >
+          <QuantityButton
+            icon="remove"
+            disabled={disabled || safeQuantity <= 1}
+            onClick={() => updateQuantity(safeQuantity - 1)}
+            label="Giảm số lượng vé"
+          />
+
+          <span
+            className="h-9 min-w-11 px-2 rounded-full flex items-center justify-center text-lg font-black tabular-nums"
+            style={{
+              background: `${BRAND.soft}18`,
+              color: "#0f172a",
+            }}
+            aria-label="Số lượng vé"
+          >
+            {safeQuantity}
+          </span>
+
+          <QuantityButton
+            icon="add"
+            disabled={disabled || safeQuantity >= max}
+            onClick={() => updateQuantity(safeQuantity + 1)}
+            label="Tăng số lượng vé"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuantityButton({ icon, disabled, onClick, label }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="size-8 rounded-full flex items-center justify-center transition-all disabled:opacity-35"
+      style={{
+        background: disabled ? "transparent" : `${BRAND.accent}14`,
+        color: disabled ? "#94a3b8" : BRAND.accent,
+      }}
+      aria-label={label}
+    >
+      <span className="material-symbols-outlined text-lg">{icon}</span>
+    </button>
+  );
+}
+
 function BuyerInfo({ currentUser, userProfile }) {
   return (
     <div className="space-y-2">
@@ -455,9 +556,9 @@ function TicketWarning() {
       }}
     >
       <span className="material-symbols-outlined text-lg shrink-0">
-        local_fire_department
+        confirmation_number
       </span>
-      <span>Mỗi tài khoản chỉ được mua tối đa 1 vé cho mỗi workshop!</span>
+      <span>Bạn có thể chọn nhiều vé nếu số lượng còn đủ.</span>
     </div>
   );
 }
@@ -466,12 +567,16 @@ function PaymentButton({
   currentUser,
   navigate,
   selectedTicketId,
+  ticketQuantity,
   isActiveTicketPast,
   activeRemainingTickets,
   onPay,
 }) {
   const disabled =
-    !selectedTicketId || isActiveTicketPast || activeRemainingTickets === 0;
+    !selectedTicketId ||
+    isActiveTicketPast ||
+    activeRemainingTickets === 0 ||
+    (activeRemainingTickets !== null && ticketQuantity > activeRemainingTickets);
 
   if (!currentUser) {
     return (

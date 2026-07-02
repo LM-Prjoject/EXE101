@@ -33,6 +33,7 @@ export default function PaymentAndConfirmation() {
   const { currentUser, userProfile } = useAuth();
   
   const { ticketId, scheduleId, workshopId } = location.state || {};
+  const quantity = Math.max(1, Number(location.state?.quantity) || 1);
 
   const [workshop, setWorkshop] = useState(null);
   const [schedule, setSchedule] = useState(null);
@@ -98,11 +99,14 @@ export default function PaymentAndConfirmation() {
 
   const pricing = useMemo(() => {
     if (!selectedTicket || !paymentInfo) return { subtotal: 0, serviceFee: 0, total: 0 };
-    const subtotal = selectedTicket.price;
-    const total = Number(paymentInfo.order_amount || paymentInfo.OrderAmount || 0);
-    const serviceFee = Math.max(0, total - subtotal);
+    const unitSubtotal = Number(selectedTicket.price || selectedTicket.Price || 0);
+    const unitTotal = Number(paymentInfo.order_amount || paymentInfo.OrderAmount || unitSubtotal);
+    const unitServiceFee = Math.max(0, unitTotal - unitSubtotal);
+    const subtotal = unitSubtotal * quantity;
+    const serviceFee = unitServiceFee * quantity;
+    const total = unitTotal * quantity;
     return { subtotal, serviceFee, total };
-  }, [selectedTicket, paymentInfo]);
+  }, [selectedTicket, paymentInfo, quantity]);
 
   const handleCheckoutSubmit = async () => {
     setPaymentLoading(true);
@@ -128,6 +132,7 @@ export default function PaymentAndConfirmation() {
             startTime: selectedTicket?.startTime || selectedTicket?.StartTime,
             endTime: selectedTicket?.endTime || selectedTicket?.EndTime,
             price: selectedTicket?.price,
+            quantity,
           }
         ]
       };
@@ -150,6 +155,7 @@ export default function PaymentAndConfirmation() {
           workshop,
           schedule,
           selectedTicket,
+          quantity,
           pricing,
           confirmedAt,
           email: userProfile?.email || userProfile?.Email || currentUser?.email || currentUser?.Email || ""
@@ -386,7 +392,7 @@ export default function PaymentAndConfirmation() {
                           },
                           { 
                             icon: "person", 
-                            text: `1 Người (Tài khoản: ${userProfile?.name || currentUser?.name || currentUser?.email?.split('@')[0] || "Khách"})` 
+                            text: `${quantity} vé (Tài khoản: ${userProfile?.name || currentUser?.name || currentUser?.email?.split('@')[0] || "Khách"})` 
                           },
                           {
                             icon: "location_on",
@@ -413,7 +419,7 @@ export default function PaymentAndConfirmation() {
                   style={{ borderColor: `${BRAND.soft}99` }}
                 >
                   <div className="flex justify-between items-center text-slate-600 text-sm mb-2">
-                    <span>Giá vé ({selectedTicket?.ticketType})</span>
+                    <span>Giá vé ({selectedTicket?.ticketType}) x {quantity}</span>
                     <span>{formatCurrency(pricing.subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 text-sm mb-2">

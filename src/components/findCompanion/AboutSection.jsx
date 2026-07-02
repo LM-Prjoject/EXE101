@@ -95,7 +95,42 @@ function formatDuration(duration) {
   return `${value} phút`;
 }
 
+function formatDescription(description) {
+  const text = String(description || "").trim();
+
+  if (!text) {
+    return {
+      intro: "Chưa có mô tả cho workshop này.",
+      bullets: [],
+    };
+  }
+
+  const normalized = text.replace(/\s+-\s+/g, "\n- ");
+  const lines = normalized
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const introLines = [];
+  const bullets = [];
+
+  lines.forEach((line) => {
+    if (line.startsWith("-")) {
+      bullets.push(line.replace(/^-\s*/, ""));
+    } else {
+      introLines.push(line);
+    }
+  });
+
+  return {
+    intro: introLines.join(" "),
+    bullets,
+  };
+}
+
 export default function AboutSection({ detail, activeRemainingTickets }) {
+  const description = formatDescription(detail.description);
+
   const items = [
     {
       label: "Thời lượng",
@@ -137,10 +172,21 @@ export default function AboutSection({ detail, activeRemainingTickets }) {
         Về buổi Workshop
       </h2>
 
-      <div className="max-w-none leading-relaxed" style={{ color: "#475569" }}>
-        <p className="mb-4">
-          {detail.description || "Chưa có mô tả cho workshop này."}
-        </p>
+      <div className="max-w-none leading-relaxed space-y-4" style={{ color: "#475569" }}>
+        {description.intro ? <p>{description.intro}</p> : null}
+
+        {description.bullets.length > 0 ? (
+          <ul className="space-y-2">
+            {description.bullets.map((item, index) => (
+              <li key={`${item}-${index}`} className="flex gap-2">
+                <span className="font-black" style={{ color: BRAND.accent }}>
+                  -
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <div

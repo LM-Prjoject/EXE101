@@ -43,6 +43,7 @@ export function useFindCompanion() {
   const [tickets, setTickets] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState("");
+  const [ticketQuantity, setTicketQuantity] = useState(1);
   const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
@@ -198,10 +199,13 @@ export function useFindCompanion() {
 
           if (firstAvailableTicket) {
             setSelectedTicketId(firstAvailableTicket.id);
+            setTicketQuantity(1);
           } else if (ticketList.length > 0) {
             setSelectedTicketId(ticketList[0].id);
+            setTicketQuantity(1);
           } else {
             setSelectedTicketId("");
+            setTicketQuantity(1);
           }
         }
       } catch (err) {
@@ -234,11 +238,17 @@ export function useFindCompanion() {
       return;
     }
 
+    if (activeRemainingTickets !== null && ticketQuantity > activeRemainingTickets) {
+      setPaymentError(`Chỉ còn ${activeRemainingTickets} vé cho loại vé này.`);
+      return;
+    }
+
     navigate("/payment", {
       state: {
         ticketId: selectedTicketId,
         scheduleId: selectedScheduleId,
         workshopId: Number(workshopId),
+        quantity: ticketQuantity,
       },
     });
   }
@@ -376,6 +386,15 @@ export function useFindCompanion() {
       : isPast;
   }, [activeSchedule, activeTicket, isPast]);
 
+  useEffect(() => {
+    if (activeRemainingTickets === null) return;
+
+    setTicketQuantity((current) => {
+      const normalized = Math.max(1, Number(current) || 1);
+      return Math.min(normalized, Math.max(activeRemainingTickets, 1));
+    });
+  }, [activeRemainingTickets, selectedTicketId]);
+
   return {
     navigate,
     workshopId,
@@ -401,6 +420,8 @@ export function useFindCompanion() {
 
     selectedTicketId,
     setSelectedTicketId,
+    ticketQuantity,
+    setTicketQuantity,
 
     paymentError,
     handleProceedPayment,
