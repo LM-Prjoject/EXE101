@@ -25,6 +25,49 @@ function formatDuration(minutes) {
   return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} giờ`;
 }
 
+function formatScheduleDate(startOn) {
+  if (!startOn) return "";
+
+  const date = new Date(`${String(startOn).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function getWorkshopSchedules(workshop) {
+  const schedules = workshop.schedules ?? workshop.Schedules ?? [];
+  if (Array.isArray(schedules) && schedules.length > 0) {
+    return schedules
+      .map((schedule) => ({
+        id: schedule.id ?? schedule.Id ?? schedule.startOn ?? schedule.StartOn,
+        startOn: schedule.startOn ?? schedule.StartOn,
+      }))
+      .filter((schedule) => schedule.startOn)
+      .sort(
+        (a, b) =>
+          new Date(`${a.startOn}T00:00:00`) -
+          new Date(`${b.startOn}T00:00:00`),
+      );
+  }
+
+  const nextSchedule = workshop.nextSchedule ?? workshop.NextSchedule;
+  return nextSchedule ? [{ id: nextSchedule, startOn: nextSchedule }] : [];
+}
+
+function formatSchedulePreview(workshop) {
+  const schedules = getWorkshopSchedules(workshop);
+  if (schedules.length === 0) return "Đang cập nhật";
+
+  const visibleSchedules = schedules
+    .map((schedule) => formatScheduleDate(schedule.startOn))
+    .filter(Boolean);
+
+  return visibleSchedules.join(", ");
+}
+
 function toCard(workshop) {
   const price = workshop.price ?? workshop.priceLower ?? workshop.priceUpper;
   return {
@@ -36,7 +79,7 @@ function toCard(workshop) {
     title: workshop.title || "Workshop",
     desc: workshop.description || "Thông tin workshop đang được cập nhật.",
     duration: formatDuration(workshop.duration),
-    schedule: workshop.nextSchedule || "Đang cập nhật",
+    schedule: formatSchedulePreview(workshop),
     location: workshop.location || "Đang cập nhật",
     instructorName: workshop.instructorName || "Người hướng dẫn",
     instructorImg: workshop.instructorImgLink,

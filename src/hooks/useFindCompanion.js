@@ -22,6 +22,19 @@ import {
 
 const PAGE_SIZE = 5;
 
+function getWorkshopSchedules(workshop) {
+  const schedules = workshop?.schedules ?? workshop?.Schedules ?? [];
+  return Array.isArray(schedules) ? schedules : [];
+}
+
+function getScheduleId(schedule) {
+  return schedule?.id ?? schedule?.Id;
+}
+
+function getScheduleDate(schedule) {
+  return schedule?.startOn ?? schedule?.StartOn;
+}
+
 export function useFindCompanion() {
   const navigate = useNavigate();
   const { workshopId } = useParams();
@@ -151,17 +164,19 @@ export function useFindCompanion() {
   }
 
   useEffect(() => {
-    if (workshop?.schedules?.length > 0) {
+    const schedules = getWorkshopSchedules(workshop);
+
+    if (schedules.length > 0) {
       const todayStr = getTodayDateKey();
 
-      const firstFuture = workshop.schedules.find(
-        (schedule) => schedule.startOn >= todayStr,
+      const firstFuture = schedules.find(
+        (schedule) => getScheduleDate(schedule) >= todayStr,
       );
 
       if (firstFuture) {
-        setSelectedScheduleId(firstFuture.id);
+        setSelectedScheduleId(getScheduleId(firstFuture));
       } else {
-        setSelectedScheduleId(workshop.schedules[0].id);
+        setSelectedScheduleId(getScheduleId(schedules[0]));
       }
     }
   }, [workshop]);
@@ -178,18 +193,18 @@ export function useFindCompanion() {
         const data = await getScheduleDetails(selectedScheduleId);
 
         if (!ignore) {
-          const ticketList = data?.tickets ?? [];
+          const ticketList = data?.tickets ?? data?.Tickets ?? [];
 
           setTickets(ticketList);
 
-          const scheduleObj = workshop?.schedules?.find(
+          const scheduleObj = getWorkshopSchedules(workshop).find(
             (schedule) =>
-              schedule.id.toString() === selectedScheduleId.toString(),
+              getScheduleId(schedule)?.toString() === selectedScheduleId.toString(),
           );
 
           const firstAvailableTicket = ticketList.find((ticket) => {
             const isTicketPast = scheduleObj
-              ? isPastSlot(scheduleObj.startOn, ticket.startTime)
+              ? isPastSlot(getScheduleDate(scheduleObj), ticket.startTime ?? ticket.StartTime)
               : false;
 
             const isSoldOut = ticket.remainingTickets <= 0;
@@ -254,7 +269,8 @@ export function useFindCompanion() {
   }
 
   const detail = useMemo(() => {
-    const firstSchedule = workshop?.schedules?.[0] || {};
+    const schedules = getWorkshopSchedules(workshop);
+    const firstSchedule = schedules[0] || {};
 
     const priceLower =
       workshop?.priceLower ?? firstSchedule.priceLower ?? workshop?.price;
@@ -328,7 +344,7 @@ export function useFindCompanion() {
     Number(priceLower) !== Number(priceUpper)
       ? `${formatCurrency(priceLower)} - ${formatCurrency(priceUpper)}`
       : formatCurrency(priceLower),
-  schedules: workshop?.schedules || workshop?.Schedules || [],
+  schedules,
   remainingTickets: getNumberValue(
     workshop?.remainingTickets,
     workshop?.RemainingTickets,
@@ -339,14 +355,14 @@ export function useFindCompanion() {
   }, [workshop]);
 
   const activeSchedule = useMemo(() => {
-    return workshop?.schedules?.find(
+    return getWorkshopSchedules(workshop).find(
       (schedule) =>
-        schedule.id.toString() === selectedScheduleId.toString(),
+        getScheduleId(schedule)?.toString() === selectedScheduleId.toString(),
     );
   }, [workshop, selectedScheduleId]);
 
   const isPast = useMemo(() => {
-    return activeSchedule ? isPastSchedule(activeSchedule.startOn) : false;
+    return activeSchedule ? isPastSchedule(getScheduleDate(activeSchedule)) : false;
   }, [activeSchedule]);
 
   const activeTicket = useMemo(() => {
@@ -382,7 +398,10 @@ export function useFindCompanion() {
 
   const isActiveTicketPast = useMemo(() => {
     return activeSchedule && activeTicket
-      ? isPastSlot(activeSchedule.startOn, activeTicket.startTime)
+      ? isPastSlot(
+          getScheduleDate(activeSchedule),
+          activeTicket.startTime ?? activeTicket.StartTime,
+        )
       : isPast;
   }, [activeSchedule, activeTicket, isPast]);
 

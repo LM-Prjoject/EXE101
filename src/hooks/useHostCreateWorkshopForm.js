@@ -3,6 +3,7 @@ import { createWorkshop, uploadImage, updateWorkshop } from "../api";
 import {
   categoryOptions,
   getOldWorkshopValues,
+  hasValue,
   keepValue,
   levelOptions,
   normalizeDate,
@@ -152,40 +153,197 @@ function getExistingImageLinks(editingWorkshop, thumbnailLink) {
   return [...new Set(result)].slice(0, 5);
 }
 
-function normalizeSchedulesForPayload(schedules) {
-  return schedules.map((schedule) => ({
-    startOn: normalizeDate(schedule.startOn),
-    tickets: schedule.tickets.map((ticket) => ({
-      ticketType: ticket.ticketType || "standard",
-      startTime: normalizeTime(ticket.startTime),
-      endTime: normalizeTime(ticket.endTime),
-      maxTickets: Number(ticket.maxTickets),
-      price: Number(ticket.price),
-    })),
-  }));
+function hasTicketValue(ticket = {}) {
+  return (
+    hasValue(ticket.startTime) ||
+    hasValue(ticket.endTime) ||
+    hasValue(ticket.price) ||
+    hasValue(ticket.maxTickets)
+  );
 }
 
-function validateSchedules(schedules) {
+function hasNonDefaultTicketValue(ticket = {}) {
+  return (
+    hasValue(ticket.price) ||
+    hasValue(ticket.maxTickets) ||
+    (hasValue(ticket.startTime) && normalizeTime(ticket.startTime) !== "09:00") ||
+    (hasValue(ticket.endTime) && normalizeTime(ticket.endTime) !== "12:00")
+  );
+}
+
+function hasScheduleValue(schedule = {}) {
+  return (
+    hasValue(schedule.startOn) ||
+    (Array.isArray(schedule.tickets) &&
+      schedule.tickets.some(hasNonDefaultTicketValue))
+  );
+}
+
+function normalizeNumberInput(value) {
+  if (!hasValue(value)) return 0;
+  return Number(String(value).replace(/\D/g, ""));
+}
+
+function normalizeSchedulesForPayload(schedules) {
+  return schedules
+    .filter(hasScheduleValue)
+    .map((schedule) => ({
+      startOn: normalizeDate(schedule.startOn),
+      tickets: (schedule.tickets ?? [])
+        .filter(hasTicketValue)
+        .map((ticket) => ({
+          ticketType: ticket.ticketType || "standard",
+          startTime: normalizeTime(ticket.startTime),
+          endTime: normalizeTime(ticket.endTime),
+          maxTickets: normalizeNumberInput(ticket.maxTickets),
+          price: normalizeNumberInput(ticket.price),
+        })),
+    }));
+}
+
+function getScheduleValidationError(schedules) {
   if (!Array.isArray(schedules) || schedules.length === 0) {
-    return false;
+    return "Vui lòng thêm ít nhất 1 lịch học.";
   }
 
-  return schedules.every((schedule) => {
-    if (!schedule.startOn) return false;
+  for (let scheduleIndex = 0; scheduleIndex < schedules.length; scheduleIndex += 1) {
+    const schedule = schedules[scheduleIndex];
+    const scheduleLabel = `Lịch ${scheduleIndex + 1}`;
 
-    if (!Array.isArray(schedule.tickets) || schedule.tickets.length === 0) {
-      return false;
+    if (!schedule.startOn) {
+      return `${scheduleLabel}: vui lòng chọn ngày mở lớp.`;
     }
 
-    return schedule.tickets.every((ticket) => {
-      if (!ticket.startTime || !ticket.endTime) return false;
-      if (ticket.endTime <= ticket.startTime) return false;
-      if (Number(ticket.price) <= 0) return false;
-      if (Number(ticket.maxTickets) <= 0) return false;
+    if (!Array.isArray(schedule.tickets) || schedule.tickets.length === 0) {
+      return `${scheduleLabel}: vui lòng thêm ít nhất 1 khung giờ.`;
+    }
 
-      return true;
+    for (let ticketIndex = 0; ticketIndex < schedule.tickets.length; ticketIndex += 1) {
+      const ticket = schedule.tickets[ticketIndex];
+      const ticketLabel = `${scheduleLabel}, khung giờ ${ticketIndex + 1}`;
+
+      if (!ticket.startTime || !ticket.endTime) {
+        return `${ticketLabel}: vui lòng điền giờ bắt đầu và kết thúc.`;
+      }
+
+      if (ticket.endTime <= ticket.startTime) {
+        return `${ticketLabel}: thời gian kết thúc phải lớn hơn thời gian bắt đầu.`;
+      }
+
+      if (Number(ticket.price) <= 0) {
+        return `${ticketLabel}: giá vé phải lớn hơn 0.`;
+      }
+
+      if (Number(ticket.maxTickets) <= 0) {
+        return `${ticketLabel}: số vé phải lớn hơn 0.`;
+      }
+    }
+  }
+
+  return "";
+}
+
+function getFieldKey(scheduleIndex, ticketIndex, field) {
+  if (ticketIndex === null || ticketIndex === undefined) {
+    return `schedules.${scheduleIndex}.${field}`;
+  }
+
+  return `schedules.${scheduleIndex}.tickets.${ticketIndex}.${field}`;
+}
+
+function buildFieldErrors({ title, location, categoryId, schedules }) {
+  const errors = {};
+
+  if (!title) {
+    errors.title = "Vui lòng nhập tên workshop.";
+  }
+
+  if (!location) {
+    errors.location = "Vui lòng nhập địa điểm.";
+  }
+
+  if (!categoryId) {
+    errors.categoryId = "Vui lòng chọn danh mục.";
+  }
+
+  const activeSchedules = (Array.isArray(schedules) ? schedules : [])
+    .map((schedule, index) => ({ schedule, index }))
+    .filter(({ schedule }) => hasScheduleValue(schedule));
+
+  if (activeSchedules.length === 0) {
+    errors[getFieldKey(0, null, "startOn")] = "Vui lòng chọn ngày mở lớp.";
+    return errors;
+  }
+
+  activeSchedules.forEach(({ schedule, index: scheduleIndex }) => {
+    if (!normalizeDate(schedule.startOn)) {
+      errors[getFieldKey(scheduleIndex, null, "startOn")] =
+        "Vui lòng chọn ngày mở lớp.";
+    }
+
+    const activeTickets = (Array.isArray(schedule.tickets)
+      ? schedule.tickets
+      : [])
+      .map((ticket, index) => ({ ticket, index }))
+      .filter(({ ticket }) => hasTicketValue(ticket));
+
+    if (activeTickets.length === 0) {
+      errors[getFieldKey(scheduleIndex, 0, "startTime")] =
+        "Vui lòng thêm ít nhất 1 khung giờ.";
+      return;
+    }
+
+    activeTickets.forEach(({ ticket, index: ticketIndex }) => {
+      const startTime = normalizeTime(ticket.startTime);
+      const endTime = normalizeTime(ticket.endTime);
+      const price = normalizeNumberInput(ticket.price);
+      const maxTickets = normalizeNumberInput(ticket.maxTickets);
+
+      if (!startTime) {
+        errors[getFieldKey(scheduleIndex, ticketIndex, "startTime")] =
+          "Vui lòng nhập giờ bắt đầu.";
+      }
+
+      if (!endTime) {
+        errors[getFieldKey(scheduleIndex, ticketIndex, "endTime")] =
+          "Vui lòng nhập giờ kết thúc.";
+      }
+
+      if (startTime && endTime && endTime <= startTime) {
+        errors[getFieldKey(scheduleIndex, ticketIndex, "endTime")] =
+          "Giờ kết thúc phải lớn hơn giờ bắt đầu.";
+      }
+
+      if (price <= 0) {
+        errors[getFieldKey(scheduleIndex, ticketIndex, "price")] =
+          "Giá vé phải lớn hơn 0.";
+      }
+
+      if (maxTickets <= 0) {
+        errors[getFieldKey(scheduleIndex, ticketIndex, "maxTickets")] =
+          "Số vé phải lớn hơn 0.";
+      }
     });
   });
+
+  return errors;
+}
+
+function getFriendlySubmitError(error, editingWorkshop) {
+  const message = error?.message || "";
+
+  if (/500|internal server error/i.test(message)) {
+    return editingWorkshop
+      ? "Không thể cập nhật workshop lúc này. Vui lòng kiểm tra lại thông tin và thử lại."
+      : "Không thể tạo workshop lúc này. Vui lòng kiểm tra lại thông tin và thử lại.";
+  }
+
+  return (
+    message ||
+    (editingWorkshop
+      ? "Không thể cập nhật workshop. Vui lòng thử lại."
+      : "Không thể tạo workshop. Vui lòng thử lại.")
+  );
 }
 
 export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
@@ -206,6 +364,7 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
   const [schedules, setSchedules] = useState([createEmptySchedule()]);
 
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   const [files, setFiles] = useState([]);
@@ -215,6 +374,16 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
   const [imageTouched, setImageTouched] = useState(false);
 
   const hasAnyImage = existingImageLinks.length > 0 || previews.length > 0;
+
+  function clearFieldError(fieldKey) {
+    setFieldErrors((currentErrors) => {
+      if (!currentErrors[fieldKey]) return currentErrors;
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[fieldKey];
+      return nextErrors;
+    });
+  }
 
   useEffect(() => {
     if (!editingWorkshop) return;
@@ -300,6 +469,7 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
 
     const oldValues = getOldWorkshopValues(editingWorkshop);
 
@@ -365,15 +535,29 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
       );
 
       const finalSchedules = normalizeSchedulesForPayload(schedules);
+      const scheduleValidationError = getScheduleValidationError(finalSchedules);
+
+      const nextFieldErrors = buildFieldErrors({
+        title: finalTitle,
+        location: finalLocation,
+        categoryId: finalCategoryId,
+        schedules,
+      });
+
+      if (Object.keys(nextFieldErrors).length > 0) {
+        setFieldErrors(nextFieldErrors);
+        return;
+      }
 
       if (
         !finalTitle ||
         !finalLocation ||
         !finalCategoryId ||
-        !validateSchedules(finalSchedules)
+        scheduleValidationError
       ) {
         setError(
-          "Vui lòng điền đủ: tên, danh mục, ngày mở lớp, khung giờ, giá vé và số lượng. Thời gian kết thúc phải lớn hơn thời gian bắt đầu."
+          scheduleValidationError ||
+            "Vui lòng điền đủ: tên, danh mục, ngày mở lớp, khung giờ, giá vé và số lượng."
         );
         return;
       }
@@ -406,7 +590,7 @@ export default function useHostCreateWorkshopForm(editingWorkshop, onSuccess) {
   categoryId: payload.categoryId,
   levelId: payload.levelId,
   language: payload.language,
-  status: keepValue(oldValues.status, payload.status, "pending"),
+  status: oldValues.status === "draft" ? payload.status : keepValue(oldValues.status, payload.status, "pending"),
   schedules: payload.schedules.map((schedule) => ({
     startOn: schedule.startOn,
     tickets: schedule.tickets.map((ticket) => ({
@@ -428,12 +612,7 @@ await updateWorkshop(editingWorkshopId, updatePayload);
 
       onSuccess?.();
     } catch (err) {
-      setError(
-        err?.message ||
-          (editingWorkshop
-            ? "Không thể cập nhật workshop. Vui lòng thử lại."
-            : "Không thể tạo workshop. Vui lòng thử lại.")
-      );
+      setError(getFriendlySubmitError(err, editingWorkshop));
     } finally {
       setSubmitting(false);
     }
@@ -455,6 +634,8 @@ await updateWorkshop(editingWorkshopId, updatePayload);
   setSchedules,
 
   error,
+  fieldErrors,
+  clearFieldError,
   submitting,
 
   fileInputRef,

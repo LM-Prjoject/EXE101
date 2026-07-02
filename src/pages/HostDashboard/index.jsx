@@ -4,6 +4,19 @@ import HostHeader from '../../components/HostHeader';
 import HostSidebar from '../../components/HostSidebar';
 import { getMyWorkshops } from '../../api';
 
+function formatDateDMY(value) {
+  if (!value) return '';
+
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
 export default function HostDashboard() {
   const navigate = useNavigate();
 
@@ -14,7 +27,7 @@ export default function HostDashboard() {
 
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // all | verified | pending | draft
+  const [statusFilter, setStatusFilter] = useState('all'); // all | verified | pending | removed
 
   const fetchHostWorkshops = async () => {
     setLoading(true);
@@ -38,18 +51,28 @@ export default function HostDashboard() {
     fetchHostWorkshops();
   }, []);
 
+  const visibleWorkshops = workshops.filter((w) => {
+    const status = String(w.status ?? w.Status ?? '').trim().toLowerCase();
+    return status !== 'draft';
+  });
+
   // Compute overall stats
-  let totalWorkshops = workshops.length;
+  let totalWorkshops = visibleWorkshops.length;
   let totalMaxTickets = 0;
   let totalRemainingTickets = 0;
 
-  workshops.forEach(w => {
+  visibleWorkshops.forEach(w => {
+    const status = String(w.status ?? w.Status ?? '').trim().toLowerCase();
+    const isActiveWorkshop = status === 'verified';
     const schedules = w.schedules || w.Schedules || [];
+
     schedules.forEach(s => {
       const tickets = s.tickets || s.Tickets || [];
       tickets.forEach(t => {
         totalMaxTickets += t.maxTickets ?? t.MaxTickets ?? 0;
-        totalRemainingTickets += t.remainingTickets ?? t.RemainingTickets ?? 0;
+        if (isActiveWorkshop) {
+          totalRemainingTickets += t.remainingTickets ?? t.RemainingTickets ?? 0;
+        }
       });
     });
   });
@@ -58,7 +81,7 @@ export default function HostDashboard() {
   let fillRate = totalMaxTickets > 0 ? Math.round((totalSoldTickets / totalMaxTickets) * 100) : 0;
 
   // Filtered workshops
-  const filteredWorkshops = workshops.filter(w => {
+  const filteredWorkshops = visibleWorkshops.filter(w => {
     const title = (w.title || w.Title || '').toLowerCase();
     const status = (w.status || w.Status || '').toLowerCase();
     
@@ -85,11 +108,11 @@ export default function HostDashboard() {
             Chờ duyệt
           </span>
         );
-      case 'draft':
+      case 'removed':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-            <span className="size-1.5 rounded-full bg-slate-400"></span>
-            Bản nháp
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
+            <span className="size-1.5 rounded-full bg-rose-500"></span>
+            Đã xóa
           </span>
         );
       default:
@@ -226,7 +249,7 @@ export default function HostDashboard() {
                     { value: 'all', label: 'Tất cả' },
                     { value: 'verified', label: 'Hoạt động' },
                     { value: 'pending', label: 'Chờ duyệt' },
-                    { value: 'draft', label: 'Bản nháp' },
+                    { value: 'removed', label: 'Đã xóa' },
                   ].map(tab => {
                     const active = statusFilter === tab.value;
                     return (
@@ -313,13 +336,7 @@ export default function HostDashboard() {
 
                           // Find upcoming dates
                           const dates = wSchedules.map(s => s.startOn ?? s.StartOn).filter(Boolean);
-                          const formattedDates = dates.map(d => {
-                            try {
-                              return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                            } catch {
-                              return d;
-                            }
-                          });
+                          const formattedDates = dates.map(formatDateDMY);
 
                           return (
                             <tr key={wId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">

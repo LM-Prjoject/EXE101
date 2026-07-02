@@ -25,11 +25,6 @@ const statusTabs = [
     countKey: "active",
   },
   {
-    value: WORKSHOP_STATUS.DRAFT,
-    label: "Bản nháp",
-    countKey: "draft",
-  },
-  {
     value: WORKSHOP_STATUS.COMPLETED,
     label: "Đã hoàn thành",
     countKey: "completed",
@@ -38,6 +33,11 @@ const statusTabs = [
     value: WORKSHOP_STATUS.PENDING,
     label: "Đang chờ duyệt",
     countKey: "pending",
+  },
+  {
+    value: WORKSHOP_STATUS.REMOVED,
+    label: "Đã xóa",
+    countKey: "removed",
   },
 ];
 
@@ -214,6 +214,8 @@ export default function HostMyWorkshops() {
   const { currentUser } = useAuth();
 
   const [statusFilter, setStatusFilter] = useState(WORKSHOP_STATUS.ACTIVE);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { workshops, loading, error, setError, removeWorkshop } =
     useHostWorkshops(currentUser);
@@ -241,13 +243,21 @@ export default function HostMyWorkshops() {
     });
   }
 
-  async function handleDelete(workshop) {
-    if (!confirm("Bạn có chắc muốn xóa workshop này?")) return;
+  function handleDelete(workshop) {
+    setDeleteTarget(workshop);
+  }
+
+  async function confirmDeleteWorkshop() {
+    if (!deleteTarget) return;
 
     try {
-      await removeWorkshop(workshop);
+      setDeleting(true);
+      await removeWorkshop(deleteTarget);
+      setDeleteTarget(null);
     } catch (err) {
       setError(err?.message || "Không thể xóa workshop.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -295,13 +305,10 @@ export default function HostMyWorkshops() {
                   const imageSrc = getWorkshopImage(workshop);
 
                   const summary = getWorkshopScheduleSummary(workshop);
+                  const workshopStatus = getWorkshopStatus(workshop);
 
                   const scheduleText = summary.nextDate
-                    ? `Tiếp theo: ${formatScheduleDate(summary.nextDate)}${
-                        summary.scheduleCount > 1 || summary.slotCount > 1
-                          ? ` • ${summary.scheduleCount} lịch / ${summary.slotCount} ca`
-                          : ""
-                      }`
+                    ? formatScheduleDate(summary.nextDate)
                     : "Chưa có lịch";
 
                   const seatText =
@@ -373,6 +380,15 @@ export default function HostMyWorkshops() {
                             {workshop.title}
                           </h3>
 
+                          {workshopStatus === WORKSHOP_STATUS.REMOVED ? (
+                            <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-600">
+                              <span className="material-symbols-outlined text-[14px]">
+                                delete
+                              </span>
+                              Đã xóa
+                            </span>
+                          ) : null}
+
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             {scheduleText}
                           </p>
@@ -420,6 +436,54 @@ export default function HostMyWorkshops() {
           </main>
         </div>
       </div>
+
+      {deleteTarget ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <div className="flex items-start gap-4">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-900/20">
+                <span className="material-symbols-outlined">delete</span>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  Xóa workshop?
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-300">
+                  Bạn có chắc muốn xóa workshop{" "}
+                  <span className="font-bold text-slate-800 dark:text-white">
+                    {deleteTarget.title ?? deleteTarget.Title ?? "này"}
+                  </span>
+                  ?
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={confirmDeleteWorkshop}
+                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-60"
+              >
+                {deleting ? "Đang xóa..." : "Xóa workshop"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -16,6 +16,64 @@ function getWorkshopList(data) {
 function getWorkshopPrice(workshop) {
   return workshop.price ?? workshop.priceLower ?? workshop.priceUpper;
 }
+
+function formatScheduleDate(startOn) {
+  if (!startOn) return "";
+
+  const date = new Date(`${String(startOn).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function getWorkshopSchedules(workshop) {
+  const schedules = workshop.schedules ?? workshop.Schedules ?? [];
+  if (Array.isArray(schedules) && schedules.length > 0) {
+    return schedules
+      .map((schedule) => ({
+        id: schedule.id ?? schedule.Id ?? schedule.startOn ?? schedule.StartOn,
+        startOn: schedule.startOn ?? schedule.StartOn,
+      }))
+      .filter((schedule) => schedule.startOn)
+      .sort(
+        (a, b) =>
+          new Date(`${a.startOn}T00:00:00`) -
+          new Date(`${b.startOn}T00:00:00`),
+      );
+  }
+
+  const nextSchedule = workshop.nextSchedule ?? workshop.NextSchedule;
+  return nextSchedule ? [{ id: nextSchedule, startOn: nextSchedule }] : [];
+}
+
+function WorkshopSchedulePreview({ workshop }) {
+  const schedules = getWorkshopSchedules(workshop);
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+      <span className="material-symbols-outlined text-[16px] text-[#c3996c]">
+        event_available
+      </span>
+      {schedules.length > 0 ? (
+        <>
+          {schedules.map((schedule) => (
+            <span
+              key={schedule.id}
+              className="rounded-md bg-[#fbc4ae]/35 px-2 py-1 text-[#4a6663]"
+            >
+              {formatScheduleDate(schedule.startOn)}
+            </span>
+          ))}
+        </>
+      ) : (
+        <span className="text-[#4a6663]">Đang cập nhật lịch</span>
+      )}
+    </div>
+  );
+}
 const CATEGORY_LABELS = {
   1: "Làm gốm",
   2: "Hội họa",
@@ -706,6 +764,8 @@ export default function HomeWithBanner() {
                         >
                           {workshop.title}
                         </h3>
+
+                        <WorkshopSchedulePreview workshop={workshop} />
 
                         <div
                           className="mt-auto flex items-center justify-between border-t pt-3"

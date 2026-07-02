@@ -11,6 +11,38 @@ import {
 import HostInfoCard from "./HostInfoCard";
 import PolicyCard from "./PolicyCard";
 
+function getScheduleId(schedule) {
+  return schedule?.id ?? schedule?.Id;
+}
+
+function getScheduleDate(schedule) {
+  return schedule?.startOn ?? schedule?.StartOn;
+}
+
+function getTicketId(ticket) {
+  return ticket?.id ?? ticket?.Id;
+}
+
+function getTicketStartTime(ticket) {
+  return ticket?.startTime ?? ticket?.StartTime;
+}
+
+function getTicketEndTime(ticket) {
+  return ticket?.endTime ?? ticket?.EndTime;
+}
+
+function getTicketRemaining(ticket) {
+  return ticket?.remainingTickets ?? ticket?.RemainingTickets;
+}
+
+function getTicketPrice(ticket) {
+  return ticket?.price ?? ticket?.Price;
+}
+
+function getTicketType(ticket) {
+  return ticket?.ticketType ?? ticket?.TicketType;
+}
+
 export default function BookingSidebar({
   navigate,
   workshop,
@@ -156,15 +188,17 @@ function ScheduleSelector({ schedules, selectedScheduleId, onSelect }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {schedules.length > 0 ? (
           schedules.map((schedule) => {
-            const schedulePast = isPastSchedule(schedule.startOn);
+            const scheduleId = getScheduleId(schedule);
+            const scheduleDate = getScheduleDate(schedule);
+            const schedulePast = isPastSchedule(scheduleDate);
             const isSelected =
-              selectedScheduleId.toString() === schedule.id.toString();
+              selectedScheduleId.toString() === scheduleId?.toString();
 
             return (
               <button
-                key={schedule.id}
+                key={scheduleId}
                 disabled={schedulePast}
-                onClick={() => onSelect(schedule.id)}
+                onClick={() => onSelect(scheduleId)}
                 className={`p-3.5 rounded-xl border text-left flex flex-col justify-between gap-1 relative ${
                   isSelected ? "ring-2 ring-offset-1" : ""
                 }`}
@@ -194,7 +228,7 @@ function ScheduleSelector({ schedules, selectedScheduleId, onSelect }) {
                     >
                       calendar_month
                     </span>
-                    {formatDate(schedule.startOn)}
+                    {formatDate(scheduleDate)}
                   </span>
 
                   {isSelected && !schedulePast ? (
@@ -268,18 +302,22 @@ function TicketSelector({
       ) : (
         <div className="space-y-3">
           {tickets.map((ticket) => {
-            const isSelected = selectedTicketId === ticket.id;
-            const isSoldOut = ticket.remainingTickets <= 0;
+            const ticketId = getTicketId(ticket);
+            const ticketStartTime = getTicketStartTime(ticket);
+            const ticketEndTime = getTicketEndTime(ticket);
+            const ticketRemaining = getTicketRemaining(ticket);
+            const isSelected = selectedTicketId === ticketId;
+            const isSoldOut = ticketRemaining <= 0;
             const isTicketPast = activeSchedule
-              ? isPastSlot(activeSchedule.startOn, ticket.startTime)
+              ? isPastSlot(getScheduleDate(activeSchedule), ticketStartTime)
               : false;
             const disabled = isSoldOut || isTicketPast;
 
             return (
               <button
-                key={ticket.id}
+                key={ticketId}
                 disabled={disabled}
-                onClick={() => onSelect(ticket.id)}
+                onClick={() => onSelect(ticketId)}
                 className={`w-full p-4 rounded-xl border text-left flex flex-col gap-2 ${
                   isSelected ? "ring-2 ring-offset-1" : ""
                 }`}
@@ -302,7 +340,7 @@ function TicketSelector({
                 <div className="flex items-start justify-between w-full">
                   <div>
                     <h5 className="font-black text-sm flex items-center gap-1.5">
-                      {ticket.ticketType}
+                      {getTicketType(ticket)}
                       {isSelected ? (
                         <span
                           className="material-symbols-outlined text-base"
@@ -317,8 +355,8 @@ function TicketSelector({
                       <span className="material-symbols-outlined text-sm">
                         schedule
                       </span>
-                      {formatTimeOnly(ticket.startTime)} -{" "}
-                      {formatTimeOnly(ticket.endTime)}
+                      {formatTimeOnly(ticketStartTime)} -{" "}
+                      {formatTimeOnly(ticketEndTime)}
                     </p>
                   </div>
 
@@ -327,7 +365,7 @@ function TicketSelector({
                       className="text-sm font-black"
                       style={{ color: BRAND.accent }}
                     >
-                      {formatCurrency(ticket.price)}
+                      {formatCurrency(getTicketPrice(ticket))}
                     </div>
 
                     <div
@@ -338,7 +376,7 @@ function TicketSelector({
                         ? "Đã diễn ra"
                         : isSoldOut
                           ? "Hết vé"
-                          : `Còn ${ticket.remainingTickets} vé`}
+                          : `Còn ${ticketRemaining} vé`}
                     </div>
                   </div>
                 </div>

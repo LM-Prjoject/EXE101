@@ -45,7 +45,6 @@ export default function StaffWorkshopList() {
     { label: "Tất cả", value: "" },
     { label: "Chờ duyệt", value: "pending", count: pendingCount },
     { label: "Đang hoạt động", value: "verified" },
-    { label: "Bản nháp", value: "draft" },
     { label: "Từ chối", value: "removed" },
     { label: "Hoàn thành", value: "ended" },
   ];
@@ -56,8 +55,14 @@ export default function StaffWorkshopList() {
 
     try {
       const data = await fetchAllWorkshops(status, page, pageSize);
-      setWorkshops(getWorkshopList(data));
-      setTotal(getWorkshopTotal(data));
+      const list = getWorkshopList(data);
+      const visibleList =
+        status === ""
+          ? list.filter((workshop) => String(workshop.status || "").toLowerCase() !== "draft")
+          : list;
+
+      setWorkshops(visibleList);
+      setTotal(status === "" ? visibleList.length : getWorkshopTotal(data));
     } catch (err) {
       setError(err.message || "Lỗi khi tải danh sách workshop");
     } finally {
@@ -145,8 +150,6 @@ export default function StaffWorkshopList() {
       case "rejected":
       case "removed":
         return "bg-rose-50 text-rose-700 border-rose-100";
-      case "draft":
-        return "bg-slate-100 text-slate-700 border-slate-200";
       case "completed":
       case "ended":
         return "bg-blue-50 text-blue-700 border-blue-100";
@@ -167,8 +170,6 @@ export default function StaffWorkshopList() {
       case "rejected":
       case "removed":
         return "Từ chối";
-      case "draft":
-        return "Bản nháp";
       case "completed":
       case "ended":
         return "Hoàn thành";

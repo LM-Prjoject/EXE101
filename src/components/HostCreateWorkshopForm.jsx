@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { categoryOptions, levelOptions } from "../utils/workshopFormatters";
 
 export default function HostCreateWorkshopForm({
@@ -6,7 +7,7 @@ export default function HostCreateWorkshopForm({
   onCancel,
 }) {
   return (
-    <form className="space-y-12" onSubmit={form.handleSubmit}>
+    <form className="space-y-12" onSubmit={form.handleSubmit} noValidate>
       {form.error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-200">
           {form.error}
@@ -26,6 +27,12 @@ export default function HostCreateWorkshopForm({
       />
     </form>
   );
+}
+
+function FieldError({ message }) {
+  if (!message) return null;
+
+  return <p className="mt-1.5 text-xs font-semibold text-red-500">{message}</p>;
 }
 
 function BasicInfoSection({ form }) {
@@ -48,13 +55,16 @@ function BasicInfoSection({ form }) {
           </label>
 
           <input
-            required
             value={form.title}
-            onChange={(event) => form.setTitle(event.target.value)}
+            onChange={(event) => {
+              form.clearFieldError?.("title");
+              form.setTitle(event.target.value);
+            }}
             className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
             placeholder="vd: Lớp học làm gốm ngắm hoàng hôn trên biển"
             type="text"
           />
+          <FieldError message={form.fieldErrors?.title} />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -65,11 +75,15 @@ function BasicInfoSection({ form }) {
 
             <input
               value={form.location}
-              onChange={(event) => form.setLocation(event.target.value)}
+              onChange={(event) => {
+                form.clearFieldError?.("location");
+                form.setLocation(event.target.value);
+              }}
               className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
               placeholder="vd: 123 Phố Hội An, Đà Nẵng"
               type="text"
             />
+            <FieldError message={form.fieldErrors?.location} />
           </div>
 
           <div>
@@ -106,7 +120,10 @@ function BasicInfoSection({ form }) {
               <button
                 key={category.id}
                 type="button"
-                onClick={() => form.setCategoryId(category.id)}
+                onClick={() => {
+                  form.clearFieldError?.("categoryId");
+                  form.setCategoryId(category.id);
+                }}
                 className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
                   form.categoryId === category.id
                     ? "border-primary bg-primary/5"
@@ -135,6 +152,7 @@ function BasicInfoSection({ form }) {
               </button>
             ))}
           </div>
+          <FieldError message={form.fieldErrors?.categoryId} />
         </div>
 
         <div>
@@ -171,17 +189,149 @@ function createEmptySchedule() {
   };
 }
 
+function formatDateForInput(value) {
+  if (!value) return "";
+
+  const parts = String(value).slice(0, 10).split("-");
+  if (parts.length !== 3) return "";
+
+  const [year, month, day] = parts;
+  if (!year || !month || !day) return "";
+
+  return `${day}/${month}/${year}`;
+}
+
+function parseDisplayDate(value) {
+  const match = String(value).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+
+  const [, dayRaw, monthRaw, yearRaw] = match;
+  const day = Number(dayRaw);
+  const month = Number(monthRaw);
+  const year = Number(yearRaw);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${yearRaw}-${String(month).padStart(2, "0")}-${String(day).padStart(
+    2,
+    "0",
+  )}`;
+}
+
+function ScheduleDateInput({ value, onChange }) {
+  const [displayValue, setDisplayValue] = useState(formatDateForInput(value));
+  const dateInputRef = useRef(null);
+
+  useEffect(() => {
+    setDisplayValue(formatDateForInput(value));
+  }, [value]);
+
+  function handleChange(event) {
+    const nextValue = event.target.value
+      .replace(/[^\d/]/g, "")
+      .slice(0, 10);
+
+    setDisplayValue(nextValue);
+
+    if (!nextValue) {
+      onChange("");
+      return;
+    }
+
+    const parsedDate = parseDisplayDate(nextValue);
+    if (parsedDate) {
+      onChange(parsedDate);
+    }
+  }
+
+  function handleBlur() {
+    const parsedDate = parseDisplayDate(displayValue);
+    setDisplayValue(parsedDate ? formatDateForInput(parsedDate) : "");
+    if (!parsedDate) {
+      onChange("");
+    }
+  }
+
+  function openDatePicker() {
+    const input = dateInputRef.current;
+    if (!input) return;
+
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+
+    input.focus();
+    input.click();
+  }
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        inputMode="numeric"
+        value={displayValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="dd/mm/yyyy"
+        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5 pr-12 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+      />
+
+      <button
+        type="button"
+        onClick={openDatePicker}
+        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800"
+        aria-label="Chọn ngày"
+      >
+        <span className="material-symbols-outlined text-xl">
+          calendar_month
+        </span>
+      </button>
+
+      <input
+        ref={dateInputRef}
+        type="date"
+        value={value || ""}
+        onChange={(event) => onChange(event.target.value)}
+        tabIndex={-1}
+        className="pointer-events-none absolute right-4 top-1/2 size-px -translate-y-1/2 opacity-0"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
 function ScheduleTicketSection({ form }) {
   const schedules =
     Array.isArray(form.schedules) && form.schedules.length > 0
       ? form.schedules
       : [createEmptySchedule()];
+  const fieldErrors = form.fieldErrors || {};
+
+  function getScheduleError(scheduleIndex, field) {
+    return fieldErrors[`schedules.${scheduleIndex}.${field}`];
+  }
+
+  function getTicketError(scheduleIndex, ticketIndex, field) {
+    return fieldErrors[
+      `schedules.${scheduleIndex}.tickets.${ticketIndex}.${field}`
+    ];
+  }
 
   function updateSchedules(nextSchedules) {
     form.setSchedules(nextSchedules);
   }
 
   function updateScheduleDate(scheduleIndex, value) {
+    form.clearFieldError?.(`schedules.${scheduleIndex}.startOn`);
+
     const nextSchedules = schedules.map((schedule, index) =>
       index === scheduleIndex ? { ...schedule, startOn: value } : schedule,
     );
@@ -247,6 +397,15 @@ function ScheduleTicketSection({ form }) {
   }
 
   function updateTicket(scheduleIndex, ticketIndex, field, value) {
+    form.clearFieldError?.(
+      `schedules.${scheduleIndex}.tickets.${ticketIndex}.${field}`,
+    );
+    if (field === "startTime" || field === "endTime") {
+      form.clearFieldError?.(
+        `schedules.${scheduleIndex}.tickets.${ticketIndex}.endTime`,
+      );
+    }
+
     const nextSchedules = schedules.map((schedule, index) => {
       if (index !== scheduleIndex) return schedule;
 
@@ -297,14 +456,12 @@ function ScheduleTicketSection({ form }) {
                   Ngày mở lớp <span className="text-red-500">*</span>
                 </label>
 
-                <input
-                  required
-                  type="date"
+                <ScheduleDateInput
                   value={schedule.startOn}
-                  onChange={(event) =>
-                    updateScheduleDate(scheduleIndex, event.target.value)
-                  }
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  onChange={(value) => updateScheduleDate(scheduleIndex, value)}
+                />
+                <FieldError
+                  message={getScheduleError(scheduleIndex, "startOn")}
                 />
               </div>
 
@@ -343,7 +500,6 @@ function ScheduleTicketSection({ form }) {
                     </label>
 
                     <input
-                      required
                       type="time"
                       value={ticket.startTime}
                       onChange={(event) =>
@@ -356,6 +512,13 @@ function ScheduleTicketSection({ form }) {
                       }
                       className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
                     />
+                    <FieldError
+                      message={getTicketError(
+                        scheduleIndex,
+                        ticketIndex,
+                        "startTime",
+                      )}
+                    />
                   </div>
 
                   <div>
@@ -364,7 +527,6 @@ function ScheduleTicketSection({ form }) {
                     </label>
 
                     <input
-                      required
                       type="time"
                       value={ticket.endTime}
                       onChange={(event) =>
@@ -376,6 +538,13 @@ function ScheduleTicketSection({ form }) {
                         )
                       }
                       className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
+                    />
+                    <FieldError
+                      message={getTicketError(
+                        scheduleIndex,
+                        ticketIndex,
+                        "endTime",
+                      )}
                     />
                   </div>
 
@@ -390,7 +559,6 @@ function ScheduleTicketSection({ form }) {
                       </span>
 
                       <input
-                        required
                         min="1"
                         type="number"
                         inputMode="numeric"
@@ -409,6 +577,13 @@ function ScheduleTicketSection({ form }) {
                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
                       />
                     </div>
+                    <FieldError
+                      message={getTicketError(
+                        scheduleIndex,
+                        ticketIndex,
+                        "price",
+                      )}
+                    />
                   </div>
 
                   <div>
@@ -417,7 +592,6 @@ function ScheduleTicketSection({ form }) {
                     </label>
 
                     <input
-                      required
                       min="1"
                       type="number"
                       inputMode="numeric"
@@ -434,6 +608,13 @@ function ScheduleTicketSection({ form }) {
                       }}
                       placeholder="10"
                       className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0"
+                    />
+                    <FieldError
+                      message={getTicketError(
+                        scheduleIndex,
+                        ticketIndex,
+                        "maxTickets",
+                      )}
                     />
                   </div>
 
