@@ -46,7 +46,8 @@ export default function ConfirmSuccess() {
   const location = useLocation();
   const { currentUser, userProfile } = useAuth();
   
-  const { workshop, schedule, selectedTicket, pricing, confirmedAt, email } = location.state || {};
+  const { workshop, schedule, selectedTicket, quantity = 1, pricing, confirmedAt, email } = location.state || {};
+  const ticketQuantity = Math.max(1, Number(quantity) || 1);
   
   const isError = location.pathname.includes("error");
   const isCancel = location.pathname.includes("cancel");
@@ -58,7 +59,7 @@ export default function ConfirmSuccess() {
   const handleSendManualEmail = () => {
     const subject = encodeURIComponent(`[Hands & Hour] Xác nhận đặt chỗ thành công - ${workshop?.title || "Workshop"}`);
     const body = encodeURIComponent(
-      `Chào bạn,\n\nBạn đã đặt chỗ thành công cho workshop tại Hands & Hour!\n\nChi tiết đặt chỗ:\n- Workshop: ${workshop?.title || ""}\n- Lịch học: ${formatDate(schedule?.startOn)} lúc ${formatTimeOnly(selectedTicket?.startTime || selectedTicket?.StartTime)} - ${formatTimeOnly(selectedTicket?.endTime || selectedTicket?.EndTime)}\n- Địa điểm: ${workshop?.location || ""}\n- Vé: ${selectedTicket?.ticketType || selectedTicket?.TicketType || ""} (${formatCurrency(pricing?.total)})\n- Thời gian xác nhận: ${formattedConfirmedAt}\n\nCảm ơn bạn đã đồng hành cùng Hands & Hour!\nChúc bạn có những giờ phút trải nghiệm thật tuyệt vời.`
+      `Chào bạn,\n\nBạn đã đặt chỗ thành công cho workshop tại Hands & Hour!\n\nChi tiết đặt chỗ:\n- Workshop: ${workshop?.title || ""}\n- Lịch học: ${formatDate(schedule?.startOn)} lúc ${formatTimeOnly(selectedTicket?.startTime || selectedTicket?.StartTime)} - ${formatTimeOnly(selectedTicket?.endTime || selectedTicket?.EndTime)}\n- Địa điểm: ${workshop?.location || ""}\n- Vé: ${selectedTicket?.ticketType || selectedTicket?.TicketType || ""}\n- Số lượng: ${ticketQuantity} vé\n- Tổng tiền: ${formatCurrency(pricing?.total)}\n- Thời gian xác nhận: ${formattedConfirmedAt}\n\nCảm ơn bạn đã đồng hành cùng Hands & Hour!\nChúc bạn có những giờ phút trải nghiệm thật tuyệt vời.`
     );
     window.location.href = `mailto:${resolvedEmail}?subject=${subject}&body=${body}`;
   };
@@ -304,13 +305,19 @@ export default function ConfirmSuccess() {
                         {userProfile?.name || currentUser?.name || currentUser?.email?.split('@')[0] || "Khách"}
                       </span>
                     </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#c3996c] uppercase tracking-wider">Số lượng vé</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">
+                        {ticketQuantity} vé
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {pricing && (
                   <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border text-sm space-y-2 text-left" style={{ borderColor: `${BRAND.soft}22` }}>
                     <div className="flex justify-between text-slate-500">
-                      <span>Giá vé</span>
+                      <span>Giá vé x {ticketQuantity}</span>
                       <span>{formatCurrency(pricing.subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-slate-500">

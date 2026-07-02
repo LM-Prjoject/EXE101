@@ -37,6 +37,8 @@ export default function FindCompanion() {
     ticketsLoading,
     selectedTicketId,
     setSelectedTicketId,
+    ticketQuantity,
+    setTicketQuantity,
 
     paymentError,
     handleProceedPayment,
@@ -107,6 +109,8 @@ export default function FindCompanion() {
             ticketsLoading={ticketsLoading}
             selectedTicketId={selectedTicketId}
             setSelectedTicketId={setSelectedTicketId}
+            ticketQuantity={ticketQuantity}
+            setTicketQuantity={setTicketQuantity}
             paymentError={paymentError}
             handleProceedPayment={handleProceedPayment}
             activeSchedule={activeSchedule}
