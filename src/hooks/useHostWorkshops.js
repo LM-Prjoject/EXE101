@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { getMyWorkshops, deleteWorkshop } from "../api";
-import { getWorkshopId } from "../utils/workshopStatus";
+import {
+  getWorkshopId,
+  getWorkshopStatus,
+  WORKSHOP_STATUS,
+} from "../utils/workshopStatus";
 
 export default function useHostWorkshops(currentUser) {
   const [workshops, setWorkshops] = useState([]);
@@ -55,7 +59,23 @@ export default function useHostWorkshops(currentUser) {
 
     await deleteWorkshop(id);
 
-    setWorkshops((prev) => prev.filter((w) => getWorkshopId(w) !== id));
+    if (getWorkshopStatus(workshop) === WORKSHOP_STATUS.DRAFT) {
+      setWorkshops((prev) => prev.filter((w) => getWorkshopId(w) !== id));
+      setError("");
+      return;
+    }
+
+    setWorkshops((prev) =>
+      prev.map((w) =>
+        getWorkshopId(w) === id
+          ? {
+              ...w,
+              status: "removed",
+              Status: "removed",
+            }
+          : w,
+      ),
+    );
     setError("");
   }
 

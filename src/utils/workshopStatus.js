@@ -47,5 +47,9 @@ export function getWorkshopStatusCounts(workshops) {
     completed: workshops.filter(
       (workshop) => getWorkshopStatus(workshop) === WORKSHOP_STATUS.COMPLETED,
     ).length,
+
+    removed: workshops.filter(
+      (workshop) => getWorkshopStatus(workshop) === WORKSHOP_STATUS.REMOVED,
+    ).length,
   };
 }
